@@ -20,9 +20,6 @@ package com.wire.bots.hold;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
-import com.wire.bots.sdk.crypto.CryptoDatabase;
-import com.wire.bots.sdk.crypto.storage.RedisStorage;
-import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.state.RedisState;
 import io.dropwizard.setup.Environment;
@@ -39,7 +36,7 @@ public class Service extends Server<Config> {
 
     @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
-        return new MessageHandler(null, new Database(config.storage));
+        return new MessageHandler(new Database(config.storage));
     }
 
     @Override
@@ -76,11 +73,11 @@ public class Service extends Server<Config> {
      * @param config Config
      * @return CryptoFactory
      */
-    @Override
-    protected CryptoFactory getCryptoFactory(Config config) {
-        return (botId) -> {
-            RedisStorage storage = new RedisStorage(config.db.host, config.db.port, config.db.password);
-            return new CryptoDatabase(botId, storage);
-        };
-    }
+//    @Override
+//    protected CryptoFactory getCryptoFactory(Config config) {
+//        return (botId) -> {
+//            RedisStorage storage = new RedisStorage(config.db.host, config.db.port, config.db.password);
+//            return new CryptoDatabase(botId, storage);
+//        };
+//    }
 }

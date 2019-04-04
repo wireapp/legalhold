@@ -71,7 +71,7 @@ public class LoginResource {
             newBot.id = botId.toString();
             newBot.client = clientId;
             newBot.conversation = new Conversation();
-            newBot.token = config.auth;
+            newBot.token = token;
             newBot.origin = new com.wire.bots.sdk.server.model.User();
             newBot.origin.handle = "legal";
             newBot.origin.id = botId.toString();
@@ -87,7 +87,7 @@ public class LoginResource {
 
             database.insertAccess(botId, clientId, token, cookie);
 
-            Logger.debug("Access: %s:%s token: %s cookie: %s",
+            Logger.info("Access: %s:%s token: %s cookie: %s",
                     botId,
                     clientId,
                     token,

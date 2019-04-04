@@ -29,7 +29,6 @@ public class NotificationProcessor implements Runnable {
         this.client = client;
         this.config = config;
         this.database = new Database(config.storage);
-
     }
 
     @Override
@@ -37,7 +36,7 @@ public class NotificationProcessor implements Runnable {
         while (true) {
             try {
                 ArrayList<Database._Access> access = database.getAccess();
-                Logger.info("Devices: %d", access.size());
+                Logger.debug("Devices: %d", access.size());
 
                 for (Database._Access a : access) {
                     try {
@@ -45,14 +44,13 @@ public class NotificationProcessor implements Runnable {
                         if (notificationList.notifications.isEmpty())
                             continue;
 
-                        Logger.info("");
-                        Logger.info("Processing %d msg. %s:%s, last: %s",
+                        Logger.debug("Processing %d msg. %s:%s, last: %s",
                                 notificationList.notifications.size(),
                                 a.userId,
                                 a.clientId,
                                 a.last);
 
-                        process(a.userId, notificationList);
+                        process(a.userId, a.clientId, notificationList);
                     } catch (AuthenticationException e) {
                         refreshToken(a.userId, a.token, a.cookie);
                     } catch (Exception e) {
@@ -65,7 +63,7 @@ public class NotificationProcessor implements Runnable {
 
             try {
                 int seconds = 30;
-                Logger.info("Sleeping %d seconds...\n", seconds);
+                Logger.debug("Sleeping %d seconds...\n", seconds);
                 Thread.sleep(seconds * 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -76,42 +74,49 @@ public class NotificationProcessor implements Runnable {
     private void refreshToken(UUID userId, String token, String cookie) {
         try {
             Logger.debug("Refreshing token for: %s", userId);
-
             API api = new API(client, null, token);
             Access newAccess = api.renewAccessToken(cookie);
             cookie = newAccess.cookie != null ? newAccess.cookie : cookie;
             if (!database.updateAccess(userId, newAccess.token, cookie))
-                Logger.warning("refreshToken failed to update");
+                Logger.error("refreshToken failed to update");
         } catch (Exception e) {
             Logger.error("refreshToken: %s %s", userId, e);
         }
     }
 
-    private void process(UUID userId, NotificationList notificationList) throws SQLException {
+    private void process(UUID userId, String clientId, NotificationList notificationList) throws SQLException {
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
-                if (!process(userId, payload)) {
-                    //Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
-                    //return;
+                if (!process(userId, clientId, payload)) {
+                    Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
+                    return;
                 }
             }
 
             if (!database.updateLast(userId, notif.id))
-                Logger.warning("Failed to update Last. user: %s notif: %s", userId, notif.id);
+                Logger.error("Failed to update Last. user: %s notif: %s", userId, notif.id);
         }
     }
 
-    private boolean process(UUID userId, Payload payload) {
+    private boolean process(UUID userId, String clientId, Payload payload) {
         if (!payload.type.equals("conversation.otr-message-add")) {
             return true;
         }
 
-        Logger.info("Payload: %s:%s, from: %s:%s",
+        if (!payload.data.recipient.equals(clientId)) {
+            Logger.error("user: %s:%s received payload with wrong recipient: %s",
+                    userId,
+                    clientId,
+                    payload.data.recipient);
+            return false;
+        }
+
+        Logger.debug("Payload: %s:%s, from: %s:%s",
                 userId,
                 payload.data.recipient,
                 payload.from,
                 payload.data.sender);
-        
+
         Response response = client.target(config.baseUrl)
                 .path("bots")
                 .path(userId.toString())

@@ -6,16 +6,16 @@ import com.wire.bots.sdk.models.AttachmentMessage;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.tools.Logger;
+import org.postgresql.util.PSQLException;
+import org.postgresql.util.ServerErrorMessage;
 
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
     private final Database db;
-    private final Database._Access owner;
 
-    MessageHandler(Database._Access owner, Database db) {
+    MessageHandler(Database db) {
         this.db = db;
-        this.owner = owner;
     }
 
     @Override
@@ -23,17 +23,31 @@ public class MessageHandler extends MessageHandlerBase {
         UUID messageId = UUID.fromString(msg.getMessageId());
         UUID conversationId = UUID.fromString(msg.getConversationId());
         UUID senderId = UUID.fromString(msg.getUserId());
-        String clientId = msg.getClientId();
-        Logger.info("onText(%s:%s) sender %s:%s",
-                owner.userId,
-                owner.clientId,
+        String userId = client.getId();
+        Logger.info("onText %s -> %s msg:%s",
                 senderId,
-                clientId);
-
+                userId,
+                messageId);
         try {
-            db.insertTextRecord(conversationId, messageId, senderId, msg.getText());
+            boolean insertTextRecord = db.insertTextRecord(conversationId, messageId, senderId, msg.getText());
+            if (!insertTextRecord) {
+                String error = String.format("Failed to persist msg: %s, userId: %s, senderId: %s",
+                        messageId,
+                        userId,
+                        senderId);
+                throw new RuntimeException(error);
+            }
+        } catch (PSQLException e) {
+            Logger.debug("onText: msg: %s code: %d, %s", messageId, e.getErrorCode(), e);
+            ServerErrorMessage err = e.getServerErrorMessage();
+            String constraint = err.getConstraint();
+            if (constraint == null || !constraint.equals("hold_pkey")) {
+                String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+                throw new RuntimeException(error);
+            }
         } catch (Exception e) {
-            Logger.error("OnText: %s %s ex: %s", conversationId, messageId, e);
+            String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+            throw new RuntimeException(error);
         }
     }
 

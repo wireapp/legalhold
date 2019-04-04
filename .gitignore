@@ -1,0 +1,8 @@
+target/
+data/
+images/
+.idea/
+*.iml
+*.log
+*.lck
+*.pdf

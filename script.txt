@@ -1,0 +1,18 @@
+CREATE TABLE Hold (
+ messageId UUID PRIMARY KEY,
+ conversationId UUID NOT NULL,
+ senderId UUID NOT NULL,
+ mimeType varchar NOT NULL,
+ text varchar,
+ uri varchar,
+ timestamp INTEGER NOT NULL
+);
+
+CREATE TABLE Hold_Tokens (
+ userId UUID PRIMARY KEY,
+ clientId varchar NOT NULL,
+ token varchar NOT NULL,
+ cookie varchar NOT NULL
+);
+
+ALTER TABLE Hold_Tokens ADD COLUMN last varchar;

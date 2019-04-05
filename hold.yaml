@@ -29,7 +29,7 @@ auth: ${HOLD_SERVICE_TOKEN}
 
 baseUrl: ${HOLD_BASE_URL}
 
-storage:
+db:
   host: localhost
   port: 5432
   database: postgres
@@ -37,8 +37,3 @@ storage:
   user: admin
   password: ${POSTGRES_PASSWORD}
 
-db:
-  host: localhost
-  port: 6379 #redis
-  user: admin
-  password: ${REDIS_PASSWORD}

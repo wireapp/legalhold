@@ -25,10 +25,10 @@ public class NotificationProcessor implements Runnable {
     private final Config config;
     private final Database database;
 
-    NotificationProcessor(Client client, Config config) {
+    NotificationProcessor(Client client, Database database, Config config) {
         this.client = client;
         this.config = config;
-        this.database = new Database(config.storage);
+        this.database = database;
     }
 
     @Override

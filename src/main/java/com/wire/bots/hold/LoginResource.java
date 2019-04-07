@@ -15,12 +15,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
@@ -31,8 +29,6 @@ import java.util.UUID;
 
 @Api
 @Path("/authorize")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 public class LoginResource {
     private final Client client;
     private final Database database;
@@ -51,10 +47,11 @@ public class LoginResource {
 
     @POST
     @ApiOperation(value = "Auth")
-    public Response auth(@ApiParam("Email/Password") @Valid Payload payload) {
+    public Response auth(@ApiParam @FormParam("email") String email,
+                         @ApiParam @FormParam("password") String password) {
         try {
             LoginClient loginClient = new LoginClient(client);
-            User login = loginClient.login(payload.email, payload.password, true);
+            User login = loginClient.login(email, password, true);
             UUID botId = login.getUserId();
             String token = login.getToken();
             String cookie = login.getCookie();
@@ -64,8 +61,16 @@ public class LoginResource {
             try (Crypto crypto = cryptoFactory.create(botId.toString())) {
                 ArrayList<PreKey> preKeys = crypto.newPreKeys(50, 100);
                 PreKey lastKey = crypto.newLastPreKey();
-                clientId = loginClient.registerClient(token, payload.password, preKeys, lastKey);
+                clientId = loginClient.registerClient(token, password, preKeys, lastKey);
             }
+
+            database.removeAccess(botId);
+            database.insertAccess(botId, clientId, token, cookie);
+
+            Logger.info("Access: %s:%s  email: %s",
+                    botId,
+                    clientId,
+                    email);
 
             NewBot newBot = new NewBot();
             newBot.id = botId.toString();
@@ -85,20 +90,12 @@ public class LoginResource {
             if (response.getStatus() >= 400)
                 return response;
 
-            database.insertAccess(botId, clientId, token, cookie);
-
-            Logger.info("Access: %s:%s token: %s cookie: %s",
-                    botId,
-                    clientId,
-                    token,
-                    cookie);
-
             return Response.
                     ok("Hooray", MediaType.TEXT_HTML_TYPE).
                     status(201).
                     build();
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             Logger.error("LoginResource.auth: %s", e);
             return Response
                     .ok(e)

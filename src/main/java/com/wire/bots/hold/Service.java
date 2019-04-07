@@ -27,6 +27,8 @@ import com.wire.bots.sdk.crypto.storage.PgStorage;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.state.PostgresState;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class Service extends Server<Config> {
@@ -34,6 +36,13 @@ public class Service extends Server<Config> {
 
     public static void main(String[] args) throws Exception {
         new Service().run(args);
+    }
+
+    @Override
+    public void initialize(Bootstrap<Config> bootstrap) {
+        super.initialize(bootstrap);
+
+        bootstrap.addBundle(new AssetsBundle("/hold/assets/"));
     }
 
     @Override

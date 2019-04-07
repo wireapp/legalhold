@@ -32,8 +32,8 @@ baseUrl: ${HOLD_BASE_URL}
 db:
   host: localhost
   port: 5432
-  database: postgres
+#  database: postgres
   driver: postgresql
   user: admin
-  password: ${POSTGRES_PASSWORD}
+#  password: ${POSTGRES_PASSWORD}
 

@@ -24,12 +24,16 @@ public class MessageHandler extends MessageHandlerBase {
         UUID conversationId = UUID.fromString(msg.getConversationId());
         UUID senderId = UUID.fromString(msg.getUserId());
         String userId = client.getId();
-        Logger.info("onText %s -> %s msg:%s",
+        String text = msg.getText();
+        String time = msg.getTime();
+
+        Logger.info("onText %s -> %s msg:%s at %s",
                 senderId,
                 userId,
-                messageId);
+                messageId,
+                time);
         try {
-            boolean insertTextRecord = db.insertTextRecord(conversationId, messageId, senderId, msg.getText());
+            boolean insertTextRecord = db.insertTextRecord(conversationId, messageId, senderId, time, text);
             if (!insertTextRecord) {
                 String error = String.format("Failed to persist msg: %s, userId: %s, senderId: %s",
                         messageId,

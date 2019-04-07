@@ -14,7 +14,7 @@ class Database {
         this.conf = conf;
     }
 
-    boolean insertTextRecord(UUID conversationId, UUID messageId, UUID senderId, String text)
+    boolean insertTextRecord(UUID conversationId, UUID messageId, UUID senderId, String time, String text)
             throws SQLException {
         try (Connection c = newConnection()) {
             String sql = "INSERT INTO Hold (conversationId, messageId, senderId, mimeType, text, timestamp)" +
@@ -55,6 +55,14 @@ class Database {
             stmt.setString(2, clientId);
             stmt.setString(3, token);
             stmt.setString(4, cookie);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+    boolean removeAccess(UUID userId) throws SQLException {
+        try (Connection c = newConnection()) {
+            PreparedStatement stmt = c.prepareStatement("DELETE FROM Hold_Tokens WHERE userId = ?");
+            stmt.setObject(1, userId);
             return stmt.executeUpdate() == 1;
         }
     }

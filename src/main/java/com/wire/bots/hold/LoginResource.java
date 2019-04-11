@@ -1,7 +1,5 @@
 package com.wire.bots.hold;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
@@ -15,7 +13,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -45,6 +42,10 @@ public class LoginResource {
         this.config = config;
     }
 
+    private static String bearer(String token) {
+        return String.format("Bearer %s", token);
+    }
+
     @POST
     @ApiOperation(value = "Auth")
     public Response auth(@ApiParam @FormParam("email") String email,
@@ -59,7 +60,7 @@ public class LoginResource {
 
             // register new device
             try (Crypto crypto = cryptoFactory.create(botId.toString())) {
-                ArrayList<PreKey> preKeys = crypto.newPreKeys(50, 100);
+                ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
                 PreKey lastKey = crypto.newLastPreKey();
                 clientId = loginClient.registerClient(token, password, preKeys, lastKey);
             }
@@ -91,31 +92,15 @@ public class LoginResource {
                 return response;
 
             return Response.
-                    ok("Hooray", MediaType.TEXT_HTML_TYPE).
+                    ok("Legal Hold enabled for: " + email, MediaType.TEXT_HTML_TYPE).
                     status(201).
                     build();
         } catch (Exception e) {
-            //e.printStackTrace();
             Logger.error("LoginResource.auth: %s", e);
             return Response
                     .ok(e)
                     .status(500)
                     .build();
         }
-    }
-
-    private static String bearer(String token) {
-        return "Bearer " + token;
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Payload {
-        @NotNull
-        @JsonProperty
-        String email;
-
-        @NotNull
-        @JsonProperty
-        String password;
     }
 }

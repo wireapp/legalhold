@@ -17,16 +17,14 @@
 
 package com.wire.bots.hold;
 
-import com.wire.bots.cryptobox.IStorage;
 import com.wire.bots.hold.model.Config;
-import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.crypto.CryptoDatabase;
-import com.wire.bots.sdk.crypto.storage.PgStorage;
+import com.wire.bots.sdk.crypto.storage.RedisStorage;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.factories.StorageFactory;
-import com.wire.bots.sdk.state.PostgresState;
+import com.wire.bots.sdk.state.RedisState;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -49,7 +47,7 @@ public class Service extends Server<Config> {
     protected void initialize(Config config, Environment env) {
         env.jersey().setUrlPattern("/hold/*");
 
-        database = new Database(config.db);
+        database = new Database(config.storage);
     }
 
     @Override
@@ -70,16 +68,43 @@ public class Service extends Server<Config> {
         thread.start();
     }
 
+//    @Override
+//    protected StorageFactory getStorageFactory(Config config) {
+//        return botId -> new PostgresState(botId, config.db);
+//    }
+//
+//    @Override
+//    protected CryptoFactory getCryptoFactory(Config config) {
+//        return (botId) -> {
+//            Configuration.DB db = config.db;
+//            IStorage storage = new PgStorage(db.user, db.password, db.database, db.host, db.port);
+//            return new CryptoDatabase(botId, storage);
+//        };
+//    }
+
+    /**
+     * Instructs the framework to use Storage Service for the state.
+     * Remove this override in order to use local File system storage
+     *
+     * @param config Config
+     * @return Storage
+     */
     @Override
     protected StorageFactory getStorageFactory(Config config) {
-        return botId -> new PostgresState(botId, config.db);
+        return botId -> new RedisState(botId, config.db);
     }
 
+    /**
+     * Instructs the framework to use Crypto Service for the crypto keys.
+     * Remove this override in order to store cryptobox onto your local File system
+     *
+     * @param config Config
+     * @return CryptoFactory
+     */
     @Override
     protected CryptoFactory getCryptoFactory(Config config) {
         return (botId) -> {
-            Configuration.DB db = config.db;
-            IStorage storage = new PgStorage(db.user, db.password, db.database, db.host, db.port);
+            RedisStorage storage = new RedisStorage(config.db.host, config.db.port, config.db.password);
             return new CryptoDatabase(botId, storage);
         };
     }

@@ -12,7 +12,7 @@ logging:
     "com.wire.bots.logger": INFO
 
 swagger:
-  resourcePackage: com.wire.bots.sdk.server.resources
+  resourcePackage: com.wire.bots.sdk.server.resources,com.wire.bots.hold
   uriPrefix: /hold
   schemes:
     - http

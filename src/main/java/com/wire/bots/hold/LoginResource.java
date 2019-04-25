@@ -46,6 +46,29 @@ public class LoginResource {
         return String.format("Bearer %s", token);
     }
 
+    private static String hexify(byte bytes[]) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < bytes.length; i += 2) {
+            buf.append((char) bytes[i]);
+            buf.append((char) bytes[i + 1]);
+            if (i == 30)
+                buf.append("<br>");
+            else
+                buf.append(" ");
+        }
+        return buf.toString().trim();
+    }
+
+    private static String render(String clientId) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < clientId.length(); i += 2) {
+            buf.append(clientId.charAt(i));
+            buf.append(clientId.charAt(i + 1));
+            buf.append(" ");
+        }
+        return buf.toString().trim();
+    }
+
     @POST
     @ApiOperation(value = "Auth")
     public Response auth(@ApiParam @FormParam("email") String email,
@@ -57,12 +80,16 @@ public class LoginResource {
             String token = login.getToken();
             String cookie = login.getCookie();
             String clientId;
+            byte[] fingerprint;
+            byte[] identity;
 
             // register new device
             try (Crypto crypto = cryptoFactory.create(botId.toString())) {
                 ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
                 PreKey lastKey = crypto.newLastPreKey();
                 clientId = loginClient.registerClient(token, password, preKeys, lastKey);
+                fingerprint = crypto.getLocalFingerprint();
+                identity = crypto.getIdentity();
             }
 
             database.removeAccess(botId);
@@ -91,8 +118,14 @@ public class LoginResource {
             if (response.getStatus() >= 400)
                 return response;
 
+            String format = String.format("Legal Hold enabled for: %s<br><br>" +
+                            "Identity: %s<br><br>" +
+                            "Key Fingerprint:<br>%s",
+                    email,
+                    render(clientId),
+                    hexify(fingerprint));
             return Response.
-                    ok("Legal Hold enabled for: " + email, MediaType.TEXT_HTML_TYPE).
+                    ok(format, MediaType.TEXT_HTML_TYPE).
                     status(201).
                     build();
         } catch (Exception e) {

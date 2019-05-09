@@ -1,5 +1,6 @@
-package com.wire.bots.hold;
+package com.wire.bots.hold.resource;
 
+import com.wire.bots.hold.Database;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
@@ -16,6 +17,7 @@ import io.swagger.annotations.ApiParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
@@ -26,16 +28,17 @@ import java.util.UUID;
 
 @Api
 @Path("/authorize")
-public class LoginResource {
+@Produces(MediaType.APPLICATION_JSON)
+public class RegisterDeviceResource {
     private final Client client;
     private final Database database;
     private final CryptoFactory cryptoFactory;
     private final Config config;
 
-    LoginResource(Client client,
-                  Database database,
-                  CryptoFactory cryptoFactory,
-                  Config config) {
+    public RegisterDeviceResource(Client client,
+                                  Database database,
+                                  CryptoFactory cryptoFactory,
+                                  Config config) {
         this.client = client;
         this.database = database;
         this.cryptoFactory = cryptoFactory;

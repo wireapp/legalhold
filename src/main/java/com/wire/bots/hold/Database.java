@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
-class Database {
+public class Database {
     private final Configuration.DB conf;
 
     Database(Configuration.DB conf) {
@@ -45,7 +45,7 @@ class Database {
         }
     }
 
-    boolean insertAccess(UUID userId, String clientId, String token, String cookie)
+    public boolean insertAccess(UUID userId, String clientId, String token, String cookie)
             throws SQLException {
         try (Connection c = newConnection()) {
             String sql = "INSERT INTO Hold_Tokens (userId, clientId, token, cookie)" +
@@ -59,7 +59,7 @@ class Database {
         }
     }
 
-    boolean removeAccess(UUID userId) throws SQLException {
+    public boolean removeAccess(UUID userId) throws SQLException {
         try (Connection c = newConnection()) {
             PreparedStatement stmt = c.prepareStatement("DELETE FROM Hold_Tokens WHERE userId = ?");
             stmt.setObject(1, userId);

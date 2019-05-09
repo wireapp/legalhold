@@ -117,7 +117,7 @@ public class NotificationProcessor implements Runnable {
                 payload.from,
                 payload.data.sender);
 
-        Response response = client.target(config.baseUrl)
+        Response response = client.target("http://localhost:8080/hold")
                 .path("bots")
                 .path(userId.toString())
                 .path("messages")

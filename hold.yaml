@@ -1,8 +1,4 @@
 server:
-  applicationConnectors:
-    - type: http
-      port: 8080
-
   requestLog:
     appenders: []
 
@@ -12,7 +8,7 @@ logging:
     "com.wire.bots.logger": INFO
 
 swagger:
-  resourcePackage: com.wire.bots.sdk.server.resources,com.wire.bots.hold
+  resourcePackage: com.wire.bots.sdk.server.resources,com.wire.bots.hold.resource
   uriPrefix: /hold
   schemes:
     - http
@@ -31,14 +27,15 @@ baseUrl: ${HOLD_BASE_URL}
 
 #redis DB
 db:
+  driver: redis
   host: localhost
   port: 6379    #redis default port
 
 storage:
   host: localhost
   port: 5432
-#  database: postgres
+  database: postgres
   driver: postgresql
-  user: admin
+#  user: admin
 #  password: ${POSTGRES_PASSWORD}
 

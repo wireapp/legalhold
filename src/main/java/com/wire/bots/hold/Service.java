@@ -17,7 +17,10 @@
 
 package com.wire.bots.hold;
 
+import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.model.Config;
+import com.wire.bots.hold.resource.RegisterDeviceResource;
+import com.wire.bots.hold.resource.SettingsResource;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import io.dropwizard.assets.AssetsBundle;
@@ -25,10 +28,13 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class Service extends Server<Config> {
+    public static Service instance;
+    private final AdminResourceBundle admin = new AdminResourceBundle();
+
     private Database database;
 
     public static void main(String[] args) throws Exception {
-        Service instance = new Service();
+        instance = new Service();
         instance.run(args);
     }
 
@@ -37,6 +43,7 @@ public class Service extends Server<Config> {
         super.initialize(bootstrap);
 
         bootstrap.addBundle(new AssetsBundle("/hold/assets/"));
+        bootstrap.addBundle(admin);
     }
 
     @Override
@@ -53,12 +60,14 @@ public class Service extends Server<Config> {
 
     @Override
     protected void onRun(Config config, Environment env) {
-        LoginResource loginResource = new LoginResource(client,
+        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client,
                 database,
                 getCryptoFactory(),
                 config);
 
-        addResource(loginResource, env);
+        addResource(registerDeviceResource, env);
+
+        admin.getJerseyEnvironment().register(new SettingsResource());
 
         Thread thread = new Thread(new NotificationProcessor(client, database, config));
         thread.start();

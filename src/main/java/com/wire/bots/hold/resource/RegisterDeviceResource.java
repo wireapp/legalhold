@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 @Api
-@Path("/authorize")
+@Path("/register")
 @Produces(MediaType.APPLICATION_JSON)
 public class RegisterDeviceResource {
     private final Client client;
@@ -73,7 +73,7 @@ public class RegisterDeviceResource {
     }
 
     @POST
-    @ApiOperation(value = "Auth")
+    @ApiOperation(value = "(Obsolete) Register new Legal Device")
     public Response auth(@ApiParam @FormParam("email") String email,
                          @ApiParam @FormParam("password") String password) {
         try {

@@ -19,10 +19,13 @@ package com.wire.bots.hold;
 
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.model.Config;
+import com.wire.bots.hold.resource.ConfirmResource;
+import com.wire.bots.hold.resource.InitiateResource;
 import com.wire.bots.hold.resource.RegisterDeviceResource;
 import com.wire.bots.hold.resource.SettingsResource;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
+import com.wire.bots.sdk.tools.AuthValidator;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -42,13 +45,13 @@ public class Service extends Server<Config> {
     public void initialize(Bootstrap<Config> bootstrap) {
         super.initialize(bootstrap);
 
-        bootstrap.addBundle(new AssetsBundle("/hold/assets/"));
+        bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
         bootstrap.addBundle(admin);
     }
 
     @Override
     protected void initialize(Config config, Environment env) {
-        env.jersey().setUrlPattern("/hold/*");
+        env.jersey().setUrlPattern("/legalhold/*");
 
         database = new Database(config.storage);
     }
@@ -66,6 +69,11 @@ public class Service extends Server<Config> {
                 config);
 
         addResource(registerDeviceResource, env);
+
+        AuthValidator validator = new AuthValidator(config.auth);
+
+        addResource(new InitiateResource(getCryptoFactory(), validator), env);
+        addResource(new ConfirmResource(database, getStorageFactory(), validator), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
 

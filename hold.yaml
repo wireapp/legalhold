@@ -9,7 +9,7 @@ logging:
 
 swagger:
   resourcePackage: com.wire.bots.sdk.server.resources,com.wire.bots.hold.resource
-  uriPrefix: /hold
+  uriPrefix: /legalhold
   schemes:
     - http
     - https

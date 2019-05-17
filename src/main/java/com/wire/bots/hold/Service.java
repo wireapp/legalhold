@@ -26,6 +26,7 @@ import com.wire.bots.hold.resource.SettingsResource;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.tools.AuthValidator;
+import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -47,6 +48,9 @@ public class Service extends Server<Config> {
 
         bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
         bootstrap.addBundle(admin);
+
+        Application<Config> application = bootstrap.getApplication();
+        instance = (Service) application;
     }
 
     @Override

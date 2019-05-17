@@ -6,6 +6,7 @@ import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.models.otr.PreKey;
 import com.wire.bots.sdk.server.model.Conversation;
+import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.server.model.NewBot;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.LoginClient;
@@ -30,6 +31,7 @@ import java.util.UUID;
 @Path("/register")
 @Produces(MediaType.APPLICATION_JSON)
 public class RegisterDeviceResource {
+    private static final String LEGALHOLD = "legalhold";
     private final Client client;
     private final Database database;
     private final CryptoFactory cryptoFactory;
@@ -78,21 +80,22 @@ public class RegisterDeviceResource {
                          @ApiParam @FormParam("password") String password) {
         try {
             LoginClient loginClient = new LoginClient(client);
-            User login = loginClient.login(email, password, true);
+            User login = loginClient.login(email, password, false);
             UUID botId = login.getUserId();
             String token = login.getToken();
             String cookie = login.getCookie();
             String clientId;
             byte[] fingerprint;
-            byte[] identity;
 
             // register new device
             try (Crypto crypto = cryptoFactory.create(botId.toString())) {
                 ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
                 PreKey lastKey = crypto.newLastPreKey();
-                clientId = loginClient.registerClient(token, password, preKeys, lastKey);
+                final String clazz = LEGALHOLD;
+                final String type = LEGALHOLD;
+                final String label = LEGALHOLD;
+                clientId = loginClient.registerClient(token, password, preKeys, lastKey, clazz, type, label);
                 fingerprint = crypto.getLocalFingerprint();
-                identity = crypto.getIdentity();
             }
 
             database.removeAccess(botId);
@@ -109,7 +112,7 @@ public class RegisterDeviceResource {
             newBot.conversation = new Conversation();
             newBot.token = token;
             newBot.origin = new com.wire.bots.sdk.server.model.User();
-            newBot.origin.handle = "legal";
+            newBot.origin.handle = LEGALHOLD;
             newBot.origin.id = botId.toString();
 
             Response response = client.target(config.baseUrl)
@@ -132,9 +135,10 @@ public class RegisterDeviceResource {
                     status(201).
                     build();
         } catch (Exception e) {
+            e.printStackTrace();
             Logger.error("LoginResource.auth: %s", e);
             return Response
-                    .ok(e)
+                    .ok(new ErrorMessage(e.getMessage()))
                     .status(500)
                     .build();
         }

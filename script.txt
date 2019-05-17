@@ -12,7 +12,9 @@ CREATE TABLE Hold_Tokens (
  userId UUID PRIMARY KEY,
  clientId varchar NOT NULL,
  token varchar NOT NULL,
- cookie varchar NOT NULL
+ cookie varchar NOT NULL,
+ last varchar NOT NULL,
+ timestamp INTEGER NOT NULL
 );
 
-ALTER TABLE Hold_Tokens ADD COLUMN last varchar;
+ALTER TABLE Hold_Tokens ADD COLUMN timestamp INTEGER;

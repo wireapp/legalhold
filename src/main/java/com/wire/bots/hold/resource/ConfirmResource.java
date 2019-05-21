@@ -65,7 +65,7 @@ public class ConfirmResource {
                     confirmPayload.accessToken,
                     confirmPayload.refreshToken);
 
-            Logger.info("Access: %s:%s",
+            Logger.info("ConfirmResource: %s:%s",
                     confirmPayload.userId,
                     confirmPayload.clientId);
 

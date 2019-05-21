@@ -67,11 +67,13 @@ public class InitiateResource {
             response.lastPreKey = lastKey;
             response.fingeprint = hexify(fingerprint);
 
+            Logger.info("InitiateResource: team: %s, user: %s", init.teamId, init.userId);
+
             return Response.
                     ok(response).
                     build();
         } catch (Exception e) {
-            Logger.error("InitiateResource.initiate: %s", e);
+            Logger.error("InitiateResource: %s", e);
             return Response
                     .ok(e)
                     .status(500)

@@ -6,8 +6,6 @@ import com.wire.bots.sdk.models.AttachmentMessage;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.tools.Logger;
-import org.postgresql.util.PSQLException;
-import org.postgresql.util.ServerErrorMessage;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -66,32 +64,33 @@ public class MessageHandler extends MessageHandlerBase {
         String text = msg.getText();
         String time = msg.getTime();
 
-        Logger.info("onText %s -> %s msg:%s at %s",
+        Logger.info("onText %s, %s -> %s msg:%s at %s",
+                conversationId,
                 senderId,
                 userId,
                 messageId,
                 time);
-        try {
-            boolean insertTextRecord = db.insertTextRecord(conversationId, messageId, senderId, time, text);
-            if (!insertTextRecord) {
-                String error = String.format("Failed to persist msg: %s, userId: %s, senderId: %s",
-                        messageId,
-                        userId,
-                        senderId);
-                throw new RuntimeException(error);
-            }
-        } catch (PSQLException e) {
-            Logger.debug("onText: msg: %s code: %d, %s", messageId, e.getErrorCode(), e);
-            ServerErrorMessage err = e.getServerErrorMessage();
-            String constraint = err.getConstraint();
-            if (constraint == null || !constraint.equals("hold_pkey")) {
-                String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
-                throw new RuntimeException(error);
-            }
-        } catch (Exception e) {
-            String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
-            throw new RuntimeException(error);
-        }
+//        try {
+//            boolean insertTextRecord = db.insertTextRecord(conversationId, messageId, senderId, time, text);
+//            if (!insertTextRecord) {
+//                String error = String.format("Failed to persist msg: %s, userId: %s, senderId: %s",
+//                        messageId,
+//                        userId,
+//                        senderId);
+//                throw new RuntimeException(error);
+//            }
+//        } catch (PSQLException e) {
+//            Logger.debug("onText: msg: %s code: %d, %s", messageId, e.getErrorCode(), e);
+//            ServerErrorMessage err = e.getServerErrorMessage();
+//            String constraint = err.getConstraint();
+//            if (constraint == null || !constraint.equals("hold_pkey")) {
+//                String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+//                throw new RuntimeException(error);
+//            }
+//        } catch (Exception e) {
+//            String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+//            throw new RuntimeException(error);
+//        }
     }
 
     public void onImage(WireClient client, ImageMessage msg) {
@@ -105,15 +104,15 @@ public class MessageHandler extends MessageHandlerBase {
                 senderId,
                 msg.getName(),
                 msg.getMimeType());
-        try {
-            db.insertAssetRecord(conversationId,
-                    messageId,
-                    senderId,
-                    msg.getMimeType(),
-                    uri);
-        } catch (Exception e) {
-            Logger.error("onImage: %s %s %s", conversationId, messageId, e);
-        }
+//        try {
+//            db.insertAssetRecord(conversationId,
+//                    messageId,
+//                    senderId,
+//                    msg.getMimeType(),
+//                    uri);
+//        } catch (Exception e) {
+//            Logger.error("onImage: %s %s %s", conversationId, messageId, e);
+//        }
     }
 
     @Override
@@ -128,24 +127,23 @@ public class MessageHandler extends MessageHandlerBase {
                 senderId,
                 msg.getName(),
                 msg.getMimeType());
-        try {
-            db.insertAssetRecord(conversationId,
-                    messageId,
-                    senderId,
-                    msg.getMimeType(),
-                    uri);
-        } catch (Exception e) {
-            Logger.error("onAttachment: %s %s %s", conversationId, messageId, e);
-        }
+//        try {
+//            db.insertAssetRecord(conversationId,
+//                    messageId,
+//                    senderId,
+//                    msg.getMimeType(),
+//                    uri);
+//        } catch (Exception e) {
+//            Logger.error("onAttachment: %s %s %s", conversationId, messageId, e);
+//        }
     }
 
     @Override
     public void onCalling(WireClient client, String userId, String clientId, String content) {
-        Logger.info("onCalling: user: %s from: %s:%s content: %s",
-                client.getId(),
+        Logger.info("onCalling: %s, %s -> %s",
+                client.getConversationId(),
                 userId,
-                clientId,
-                content);
+                client.getId());
     }
 
     @Override

@@ -3,9 +3,7 @@ package com.wire.bots.hold;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.ConfirmPayload;
 import com.wire.bots.hold.resource.ConfirmResource;
-import com.wire.bots.sdk.factories.StorageFactory;
 import com.wire.bots.sdk.server.resources.StatusResource;
-import com.wire.bots.sdk.state.FileState;
 import com.wire.bots.sdk.tools.AuthValidator;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -25,10 +23,6 @@ public class ConfirmResourceTest {
     public static ResourceTestRule resources;
     private static AuthValidator authValidator = new AuthValidator("secret");
 
-    private static StorageFactory getStorageFactory() {
-        return botId -> new FileState("data", botId);
-    }
-
     @Before
     public void init() {
         app = new DropwizardAppRule<>(Service.class, "hold.yaml");
@@ -40,7 +34,7 @@ public class ConfirmResourceTest {
     @Test
     public void test() {
         resources = ResourceTestRule.builder()
-                .addResource(new ConfirmResource(new Database(app.getConfiguration().storage), getStorageFactory(), authValidator))
+                .addResource(new ConfirmResource(new Database(app.getConfiguration().storage), authValidator))
                 .build();
 
         ConfirmPayload confirmPayload = new ConfirmPayload();

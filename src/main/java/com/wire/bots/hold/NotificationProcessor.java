@@ -25,13 +25,13 @@ import java.util.logging.Level;
 
 public class NotificationProcessor implements Runnable {
     private final Client client;
-    private final Config config;
     private final Database database;
+    private final Config config;
 
     NotificationProcessor(Client client, Database database, Config config) {
         this.client = client;
-        this.config = config;
         this.database = database;
+        this.config = config;
     }
 
     @Override
@@ -125,12 +125,10 @@ public class NotificationProcessor implements Runnable {
                 clientId,
                 payload.from);
 
-        Response response = client.target("http://localhost:8080/legalhold")
-                .path("bots")
+        Response response = client.target("http://localhost:8081/admin")
                 .path(userId.toString())
                 .path("messages")
                 .request(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, bearer(config.auth))
                 .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
 
         if (response.getStatus() != 200) {

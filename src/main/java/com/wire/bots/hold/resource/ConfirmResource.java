@@ -2,10 +2,7 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.Database;
 import com.wire.bots.hold.model.ConfirmPayload;
-import com.wire.bots.sdk.factories.StorageFactory;
-import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.ErrorMessage;
-import com.wire.bots.sdk.server.model.NewBot;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
 import io.swagger.annotations.Api;
@@ -26,12 +23,10 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class ConfirmResource {
     private final Database database;
-    private final StorageFactory storageF;
     private final AuthValidator validator;
 
-    public ConfirmResource(Database database, StorageFactory storageF, AuthValidator validator) {
+    public ConfirmResource(Database database, AuthValidator validator) {
         this.database = database;
-        this.storageF = storageF;
         this.validator = validator;
     }
 
@@ -39,25 +34,15 @@ public class ConfirmResource {
     @ApiOperation(value = "Confirm legal hold device")
     public Response confirm(@ApiParam @Valid ConfirmPayload confirmPayload,
                             @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
-        if (!validator.validate(auth)) {
-            Logger.warning("Invalid auth '%s'", auth);
-            return Response
-                    .status(401)
-                    .entity(new ErrorMessage("Invalid Authorization: " + auth))
-                    .build();
-        }
 
         try {
-            NewBot newBot = new NewBot();
-            newBot.id = confirmPayload.userId.toString();
-            newBot.client = confirmPayload.clientId;
-            newBot.conversation = new Conversation();
-            newBot.token = confirmPayload.accessToken;
-            newBot.origin = new com.wire.bots.sdk.server.model.User();
-            newBot.origin.handle = "legal";
-            newBot.origin.id = confirmPayload.userId.toString();
-
-            storageF.create(newBot.id).saveState(newBot);
+            if (!validator.validate(auth)) {
+                Logger.warning("Invalid auth '%s'", auth);
+                return Response
+                        .status(401)
+                        .entity(new ErrorMessage("Invalid Authorization: " + auth))
+                        .build();
+            }
 
             database.removeAccess(confirmPayload.userId);
             database.insertAccess(confirmPayload.userId,

@@ -5,9 +5,7 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.models.otr.PreKey;
-import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.ErrorMessage;
-import com.wire.bots.sdk.server.model.NewBot;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.LoginClient;
 import com.wire.bots.sdk.user.model.User;
@@ -20,8 +18,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
@@ -106,26 +102,8 @@ public class RegisterDeviceResource {
                     clientId,
                     email);
 
-            NewBot newBot = new NewBot();
-            newBot.id = botId.toString();
-            newBot.client = clientId;
-            newBot.conversation = new Conversation();
-            newBot.token = token;
-            newBot.origin = new com.wire.bots.sdk.server.model.User();
-            newBot.origin.handle = LEGALHOLD;
-            newBot.origin.id = botId.toString();
-
-            Response response = client.target(config.baseUrl)
-                    .path("bots")
-                    .request(MediaType.APPLICATION_JSON)
-                    .header(HttpHeaders.AUTHORIZATION, bearer(config.auth))
-                    .post(Entity.entity(newBot, MediaType.APPLICATION_JSON_TYPE));
-
-            if (response.getStatus() >= 400)
-                return response;
-
             String format = String.format("Legal Hold enabled for: %s <br><br>" +
-                            "UserId: %s<br>" +
+                            "UserId:   %s<br><br>" +
                             "Identity: %s<br><br>" +
                             "Key Fingerprint:<br>%s",
                     email,

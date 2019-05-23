@@ -19,10 +19,9 @@ package com.wire.bots.hold;
 
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.model.Config;
-import com.wire.bots.hold.resource.ConfirmResource;
-import com.wire.bots.hold.resource.InitiateResource;
-import com.wire.bots.hold.resource.RegisterDeviceResource;
-import com.wire.bots.hold.resource.SettingsResource;
+import com.wire.bots.hold.resource.*;
+import com.wire.bots.hold.utils.HoldClientRepo;
+import com.wire.bots.sdk.ClientRepo;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.tools.AuthValidator;
@@ -83,5 +82,16 @@ public class Service extends Server<Config> {
 
         Thread thread = new Thread(new NotificationProcessor(client, database, config));
         thread.start();
+    }
+
+    @Override
+    protected void messageResource(Config config, Environment env, MessageHandlerBase handler, ClientRepo repo) {
+        AuthValidator validator = new AuthValidator(config.getAuth());
+        addResource(new HoldMessageResource(new MessageHandler(database), validator, new HoldClientRepo(getCryptoFactory())), env);
+    }
+
+    @Override
+    protected void botResource(Config config, Environment env, MessageHandlerBase handler) {
+
     }
 }

@@ -140,6 +140,15 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
+    public void onCalling(WireClient client, String userId, String clientId, String content) {
+        Logger.info("onCalling: user: %s from: %s:%s content: %s",
+                client.getId(),
+                userId,
+                clientId,
+                content);
+    }
+
+    @Override
     public boolean onConnectRequest(WireClient client, UUID from, UUID to, String status) {
         return false;
     }

@@ -124,10 +124,12 @@ public class RegisterDeviceResource {
             if (response.getStatus() >= 400)
                 return response;
 
-            String format = String.format("Legal Hold enabled for: %s<br><br>" +
+            String format = String.format("Legal Hold enabled for: %s <br><br>" +
+                            "UserId: %s<br>" +
                             "Identity: %s<br><br>" +
                             "Key Fingerprint:<br>%s",
                     email,
+                    botId,
                     render(clientId),
                     hexify(fingerprint));
             return Response.

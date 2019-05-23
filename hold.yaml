@@ -5,7 +5,7 @@ server:
 logging:
   level: INFO
   loggers:
-    "com.wire.bots.logger": INFO
+    "com.wire.bots.logger": DEBUG
 
 swagger:
   resourcePackage: com.wire.bots.sdk.server.resources,com.wire.bots.hold.resource

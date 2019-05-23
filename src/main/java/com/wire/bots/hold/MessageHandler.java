@@ -9,6 +9,7 @@ import com.wire.bots.sdk.tools.Logger;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.ServerErrorMessage;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -16,6 +17,44 @@ public class MessageHandler extends MessageHandlerBase {
 
     MessageHandler(Database db) {
         this.db = db;
+    }
+
+    @Override
+    public void onMemberJoin(WireClient client, ArrayList<String> userIds) {
+        UUID conversationId = client.getConversationId();
+        String userId = client.getId();
+
+        try {
+            for (String memberId : userIds) {
+                Logger.info("onMemberJoin: user: %s, conv: %s, member: %s",
+                        userId,
+                        conversationId,
+                        memberId
+                );
+            }
+        } catch (Exception e) {
+            String error = String.format("onMemberJoin: %s ex: %s", userId, e);
+            throw new RuntimeException(error);
+        }
+    }
+
+    @Override
+    public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
+        UUID conversationId = client.getConversationId();
+        String userId = client.getId();
+
+        try {
+            for (String memberId : userIds) {
+                Logger.info("onMemberLeave: user: %s, conv: %s, member: %s",
+                        userId,
+                        conversationId,
+                        memberId
+                );
+            }
+        } catch (Exception e) {
+            String error = String.format("onMemberLeave: %s ex: %s", userId, e);
+            throw new RuntimeException(error);
+        }
     }
 
     @Override
@@ -98,5 +137,15 @@ public class MessageHandler extends MessageHandlerBase {
         } catch (Exception e) {
             Logger.error("onAttachment: %s %s %s", conversationId, messageId, e);
         }
+    }
+
+    @Override
+    public boolean onConnectRequest(WireClient client, UUID from, UUID to, String status) {
+        return false;
+    }
+
+    @Override
+    public void validatePreKeys(WireClient client, int size) {
+
     }
 }

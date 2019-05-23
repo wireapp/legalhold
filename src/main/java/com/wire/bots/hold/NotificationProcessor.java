@@ -1,5 +1,7 @@
 package com.wire.bots.hold;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
@@ -19,6 +21,7 @@ import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class NotificationProcessor implements Runnable {
     private final Client client;
@@ -40,7 +43,7 @@ public class NotificationProcessor implements Runnable {
 
                 for (Database._Access a : access) {
                     try {
-                        NotificationList notificationList = retrieveNotifications(a.clientId, a.last, a.token, 100);
+                        NotificationList notificationList = retrieveNotifications(a, 100);
                         if (notificationList.notifications.isEmpty())
                             continue;
 
@@ -81,15 +84,24 @@ public class NotificationProcessor implements Runnable {
                 Logger.error("refreshToken failed to update");
         } catch (Exception e) {
             Logger.error("refreshToken: %s %s", userId, e);
+            //removeAccess(userId);
         }
     }
 
-    private void process(UUID userId, String clientId, NotificationList notificationList) throws SQLException {
+    private void removeAccess(UUID userId) {
+        try {
+            database.removeAccess(userId);
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        }
+    }
+
+    private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
                 if (!process(userId, clientId, payload)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
-                    return;
+                    //return;
                 }
             }
 
@@ -98,24 +110,20 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private boolean process(UUID userId, String clientId, Payload payload) {
-        if (!payload.type.equals("conversation.otr-message-add")) {
+    private boolean process(UUID userId, String clientId, Payload payload) throws JsonProcessingException {
+        if (Logger.getLevel() == Level.FINE) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Logger.debug(objectMapper.writeValueAsString(payload));
+        }
+
+        if (payload.from == null || payload.data == null)
             return true;
-        }
 
-        if (!payload.data.recipient.equals(clientId)) {
-            Logger.error("user: %s:%s received payload with wrong recipient: %s",
-                    userId,
-                    clientId,
-                    payload.data.recipient);
-            return false;
-        }
-
-        Logger.debug("Payload: %s:%s, from: %s:%s",
+        Logger.info("Payload: %s %s:%s, from: %s",
+                payload.type,
                 userId,
-                payload.data.recipient,
-                payload.from,
-                payload.data.sender);
+                clientId,
+                payload.from);
 
         Response response = client.target("http://localhost:8080/legalhold")
                 .path("bots")
@@ -126,7 +134,7 @@ public class NotificationProcessor implements Runnable {
                 .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
 
         if (response.getStatus() != 200) {
-            Logger.debug("process: user: %s, error: %s, status: %d",
+            Logger.error("process: user: %s, error: %s, status: %d",
                     userId,
                     response.readEntity(String.class),
                     response.getStatus());
@@ -135,19 +143,23 @@ public class NotificationProcessor implements Runnable {
         return response.getStatus() == 200;
     }
 
-    private NotificationList retrieveNotifications(String clientId, String last, String token, int size)
+    private NotificationList retrieveNotifications(Database._Access access, int size)
             throws AuthenticationException {
         WebTarget target = client.target(Util.getHost())
                 .path("notifications")
-                .queryParam("client", clientId)
-                .queryParam("since", last)
+                .queryParam("client", access.clientId)
+                .queryParam("since", access.last)
                 .queryParam("size", size);
 
         Response response = target.request(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                .header(HttpHeaders.AUTHORIZATION, bearer(access.token))
                 .get();
 
-        Logger.debug("retrieveNotifications: %s, last: %s, status: %s", clientId, last, response.getStatus());
+        Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
+                access.userId,
+                access.clientId,
+                access.last,
+                response.getStatus());
 
         if (response.getStatus() == 401)
             throw new AuthenticationException(response.readEntity(String.class));

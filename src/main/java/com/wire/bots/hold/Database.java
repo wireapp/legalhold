@@ -48,13 +48,14 @@ public class Database {
     public boolean insertAccess(UUID userId, String clientId, String token, String cookie)
             throws SQLException {
         try (Connection c = newConnection()) {
-            String sql = "INSERT INTO Hold_Tokens (userId, clientId, token, cookie)" +
-                    " VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Hold_Tokens (userId, clientId, token, cookie, timestamp)" +
+                    " VALUES (?, ?, ?, ?, ?)";
             PreparedStatement stmt = c.prepareStatement(sql);
             stmt.setObject(1, userId);
             stmt.setString(2, clientId);
             stmt.setString(3, token);
             stmt.setString(4, cookie);
+            stmt.setInt(5, (int) (new Date().getTime() / 1000));
             return stmt.executeUpdate() == 1;
         }
     }
@@ -89,6 +90,7 @@ public class Database {
                 access.token = rs.getString("token");
                 access.cookie = rs.getString("cookie");
                 access.last = rs.getString("last");
+                access.timestamp = rs.getInt("timestamp");
                 ret.add(access);
             }
         }
@@ -115,5 +117,6 @@ public class Database {
         String clientId;
         String token;
         String cookie;
+        Integer timestamp;
     }
 }

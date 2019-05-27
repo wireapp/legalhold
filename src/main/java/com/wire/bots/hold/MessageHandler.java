@@ -18,17 +18,29 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
+    public void onNewConversation(WireClient client) {
+        UUID conversationId = client.getConversationId();
+        String userId = client.getId();
+
+        try {
+            Logger.info("onNewConversation: user: %s, conv: %s", userId, conversationId);
+        } catch (Exception e) {
+            String error = String.format("onNewConversation: %s ex: %s", userId, e);
+            throw new RuntimeException(error);
+        }
+    }
+
+    @Override
     public void onMemberJoin(WireClient client, ArrayList<String> userIds) {
         UUID conversationId = client.getConversationId();
         String userId = client.getId();
 
         try {
             for (String memberId : userIds) {
-                Logger.info("onMemberJoin: user: %s, conv: %s, member: %s",
-                        userId,
+                Logger.info("onMemberJoin: %s, user: %s, member: %s",
                         conversationId,
-                        memberId
-                );
+                        userId,
+                        memberId);
             }
         } catch (Exception e) {
             String error = String.format("onMemberJoin: %s ex: %s", userId, e);
@@ -43,11 +55,10 @@ public class MessageHandler extends MessageHandlerBase {
 
         try {
             for (String memberId : userIds) {
-                Logger.info("onMemberLeave: user: %s, conv: %s, member: %s",
-                        userId,
+                Logger.info("onMemberLeave: %s, user: %s, member: %s",
                         conversationId,
-                        memberId
-                );
+                        userId,
+                        memberId);
             }
         } catch (Exception e) {
             String error = String.format("onMemberLeave: %s ex: %s", userId, e);
@@ -97,13 +108,16 @@ public class MessageHandler extends MessageHandlerBase {
         UUID messageId = UUID.fromString(msg.getMessageId());
         UUID conversationId = UUID.fromString(msg.getConversationId());
         UUID senderId = UUID.fromString(msg.getUserId());
-        String uri = null;
-        Logger.debug("onImage: %s %s %s %s %s",
+        String userId = client.getId();
+        String time = msg.getTime();
+        Logger.info("onImage: %s, %s -> %s, %s %s msg: %s, time: %s",
                 conversationId,
-                messageId,
                 senderId,
+                userId,
                 msg.getName(),
-                msg.getMimeType());
+                msg.getMimeType(),
+                messageId,
+                time);
 //        try {
 //            db.insertAssetRecord(conversationId,
 //                    messageId,
@@ -120,13 +134,16 @@ public class MessageHandler extends MessageHandlerBase {
         UUID messageId = UUID.fromString(msg.getMessageId());
         UUID conversationId = UUID.fromString(msg.getConversationId());
         UUID senderId = UUID.fromString(msg.getUserId());
-        String uri = null;
-        Logger.debug("onAttachment: %s %s %s %s %s",
+        String userId = client.getId();
+        String time = msg.getTime();
+        Logger.info("onAttachment: %s %s -> %s, %s %s msg: %s, time: %s",
                 conversationId,
-                messageId,
                 senderId,
+                userId,
                 msg.getName(),
-                msg.getMimeType());
+                msg.getMimeType(),
+                messageId,
+                time);
 //        try {
 //            db.insertAssetRecord(conversationId,
 //                    messageId,

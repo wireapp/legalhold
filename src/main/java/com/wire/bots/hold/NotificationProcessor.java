@@ -116,14 +116,14 @@ public class NotificationProcessor implements Runnable {
             Logger.debug(objectMapper.writeValueAsString(payload));
         }
 
-        if (payload.from == null || payload.data == null)
-            return true;
-
-        Logger.info("Payload: %s %s:%s, from: %s",
+        Logger.debug("Payload: %s %s:%s, from: %s",
                 payload.type,
                 userId,
                 clientId,
                 payload.from);
+
+        if (payload.from == null || payload.data == null)
+            return true;
 
         Response response = client.target("http://localhost:8081/admin")
                 .path(userId.toString())

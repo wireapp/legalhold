@@ -8,9 +8,7 @@ import com.wire.bots.sdk.models.otr.PreKey;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -21,6 +19,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+
+import static com.wire.bots.hold.utils.Tools.hexify;
 
 @Api
 @Path("/initiate")
@@ -35,18 +35,12 @@ public class InitiateResource {
         this.validator = validator;
     }
 
-    private static String hexify(byte bytes[]) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < bytes.length; i += 2) {
-            buf.append((char) bytes[i]);
-            buf.append((char) bytes[i + 1]);
-            buf.append(" ");
-        }
-        return buf.toString().trim();
-    }
-
     @POST
-    @ApiOperation(value = "Initiate")
+    @ApiOperation(value = "Initiate", response = InitResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 500, message = "Something went wrong"),
+            @ApiResponse(code = 200, message = "CryptoBox initiated", response = InitResponse.class)})
     public Response initiate(@ApiParam @Valid InitPayload init,
                              @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
         if (!validator.validate(auth)) {
@@ -57,6 +51,8 @@ public class InitiateResource {
                     .build();
         }
 
+        //todo remove old CB
+
         try (Crypto crypto = cryptoFactory.create(init.userId.toString())) {
             ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
             PreKey lastKey = crypto.newLastPreKey();
@@ -65,7 +61,7 @@ public class InitiateResource {
             InitResponse response = new InitResponse();
             response.preKeys = preKeys;
             response.lastPreKey = lastKey;
-            response.fingeprint = hexify(fingerprint);
+            response.fingerprint = hexify(fingerprint);
 
             Logger.info("InitiateResource: team: %s, user: %s", init.teamId, init.userId);
 

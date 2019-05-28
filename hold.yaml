@@ -10,6 +10,11 @@ logging:
 swagger:
   resourcePackage: com.wire.bots.hold.resource
   uriPrefix: /legalhold
+  title: Legal Hold Service
+  description: Legal Hold Service documentation
+  contact: Dejan Kovačević
+  contactEmail: dejan@wire.com
+  contactUrl: "wire://user/eda5984e-3a23-495e-9110-73ed905876cf"
   schemes:
     - http
     - https

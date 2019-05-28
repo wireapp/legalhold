@@ -21,7 +21,7 @@
         <dependency>
             <groupId>com.wire.bots</groupId>
             <artifactId>lithium</artifactId>
-            <version>2.25.1</version>
+            <version>2.25.2</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
@@ -44,6 +44,11 @@
             <artifactId>dropwizard-testing</artifactId>
             <version>1.1.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spullara.mustache.java</groupId>
+            <artifactId>compiler</artifactId>
+            <version>0.9.5</version>
         </dependency>
     </dependencies>
     <build>

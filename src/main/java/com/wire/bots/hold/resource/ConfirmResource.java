@@ -5,9 +5,7 @@ import com.wire.bots.hold.model.ConfirmPayload;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -32,6 +30,10 @@ public class ConfirmResource {
 
     @POST
     @ApiOperation(value = "Confirm legal hold device")
+    @ApiResponses(value = {
+            @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 500, message = "Something went wrong"),
+            @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
     public Response confirm(@ApiParam @Valid ConfirmPayload confirmPayload,
                             @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
 
@@ -44,7 +46,6 @@ public class ConfirmResource {
                         .build();
             }
 
-            database.removeAccess(confirmPayload.userId);
             database.insertAccess(confirmPayload.userId,
                     confirmPayload.clientId,
                     confirmPayload.accessToken,

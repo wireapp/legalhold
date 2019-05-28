@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!-- Wire, Copyright (C) 2017 Wire Swiss GmbH -->
+<html>
+
+<head>
+    <title>Legal Hold Devices</title>
+</head>
+
+<body>
+
+<table style="width:100%">
+    <tr>
+        <th>UserId</th>
+        <th>Identity</th>
+        <th>Fingerprint</th>
+        <th>Last</th>
+        <th>Date</th>
+    </tr>
+    {{#legals}}
+    <tr>
+        <td>{{userId}}</td>
+        <td>{{clientId}}</td>
+        <td>{{fingerprint}}</td>
+        <td>{{last}}</td>
+        <td>{{enabled}}</td>
+    </tr>
+    {{/legals}}
+</table>
+
+</body>
+
+</html>

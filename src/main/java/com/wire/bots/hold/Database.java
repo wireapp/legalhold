@@ -78,7 +78,7 @@ public class Database {
         }
     }
 
-    ArrayList<_Access> getAccess() throws SQLException {
+    public ArrayList<_Access> getAccess() throws SQLException {
         ArrayList<_Access> ret = new ArrayList<>();
         try (Connection c = newConnection()) {
             PreparedStatement stmt = c.prepareStatement("SELECT * FROM Hold_Tokens");
@@ -90,7 +90,7 @@ public class Database {
                 access.token = rs.getString("token");
                 access.cookie = rs.getString("cookie");
                 access.last = rs.getString("last");
-                access.timestamp = rs.getInt("timestamp");
+                access.timestamp = rs.getLong("timestamp");
                 ret.add(access);
             }
         }
@@ -111,12 +111,12 @@ public class Database {
         }
     }
 
-    static class _Access {
-        String last;
-        UUID userId;
-        String clientId;
-        String token;
-        String cookie;
-        Integer timestamp;
+    public static class _Access {
+        public String last;
+        public UUID userId;
+        public String clientId;
+        public String token;
+        public String cookie;
+        public Long timestamp;
     }
 }

@@ -74,11 +74,12 @@ public class Service extends Server<Config> {
         addResource(new InitiateResource(getCryptoFactory(), validator), env);
         addResource(new ConfirmResource(database, validator), env);
         addResource(new ListingResource(database, getCryptoFactory()), env);
+        addResource(new RemoveResource(database, validator), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(database), new HoldClientRepo(getCryptoFactory())));
 
-        Thread thread = new Thread(new NotificationProcessor(client, database, config));
+        Thread thread = new Thread(new NotificationProcessor(client, database));
         thread.start();
     }
 

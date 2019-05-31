@@ -9,22 +9,21 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConfirmPayload {
     @JsonProperty("access_token")
-    @NotNull
     public String accessToken;
 
     @JsonProperty("refresh_token")
     @NotNull
     public String refreshToken;
 
-    @JsonProperty
+    @JsonProperty("client_id")
     @NotNull
     public String clientId;
 
-    @JsonProperty
+    @JsonProperty("user_id")
     @NotNull
     public UUID userId;
 
-    @JsonProperty
+    @JsonProperty("team_id")
     @NotNull
     public UUID teamId;
 }

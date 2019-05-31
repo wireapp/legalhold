@@ -8,11 +8,11 @@ import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InitPayload {
-    @JsonProperty
+    @JsonProperty("user_id")
     @NotNull
     public UUID userId;
 
-    @JsonProperty
+    @JsonProperty("team_id")
     @NotNull
     public UUID teamId;
 }

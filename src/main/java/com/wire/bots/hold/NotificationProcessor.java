@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
+import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Payload;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.tools.Util;
@@ -74,18 +75,8 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private void refreshToken(UUID userId, String token, String cookie) {
-        try {
-            Logger.debug("Refreshing token for: %s", userId);
-            API api = new API(client, null, token);
-            Access newAccess = api.renewAccessToken(cookie);
-            cookie = newAccess.cookie != null ? newAccess.cookie : cookie;
-            if (!database.updateAccess(userId, newAccess.token, cookie))
-                Logger.error("refreshToken failed to update");
-        } catch (Exception e) {
-            Logger.error("refreshToken: %s %s", userId, e);
-            //removeAccess(userId);
-        }
+    private static String bearer(String token) {
+        return token == null ? null : String.format("Bearer %s", token);
     }
 
     private void removeAccess(UUID userId) {
@@ -165,7 +156,19 @@ public class NotificationProcessor implements Runnable {
         return response.readEntity(NotificationList.class);
     }
 
-    private static String bearer(String token) {
-        return "Bearer " + token;
+    private void refreshToken(UUID userId, String token, String cookie) {
+        try {
+            Logger.debug("Refreshing token for: %s", userId);
+            API api = new API(client, null, token);
+            Access newAccess = api.renewAccessToken(cookie);
+            cookie = newAccess.cookie != null ? newAccess.cookie : cookie;
+            if (!database.updateAccess(userId, newAccess.token, cookie))
+                Logger.error("refreshToken failed to update");
+        } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
+            Logger.error("refreshToken: %s %s", userId, e);
+            //removeAccess(userId);
+        } catch (HttpException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

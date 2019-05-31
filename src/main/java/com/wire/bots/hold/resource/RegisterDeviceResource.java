@@ -95,7 +95,7 @@ public class RegisterDeviceResource {
             }
 
             database.removeAccess(botId);
-            database.insertAccess(botId, clientId, token, cookie);
+            database.insertAccess(botId, clientId, null, cookie);
 
             Logger.info("Access: %s:%s  email: %s",
                     botId,

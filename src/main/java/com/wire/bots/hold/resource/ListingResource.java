@@ -57,16 +57,10 @@ public class ListingResource {
                     legal.clientId = a.clientId;
                     legal.fingerprint = hexify(fingerprint);
                     legal.last = a.last;
-                    legal.enabled = new Date(a.timestamp * 1000).toString();
+                    legal.timestamp = new Date(a.timestamp * 1000).toString();
+                    legal.created = new Date(a.created * 1000).toString();
 
                     legals.add(legal);
-
-                    Logger.info("ListingResource.list: user: %s:%s, %s, %s, %s",
-                            legal.userId,
-                            legal.clientId,
-                            legal.fingerprint,
-                            legal.last,
-                            legal.enabled);
                 }
             }
 
@@ -100,11 +94,12 @@ public class ListingResource {
     }
 
     class Legal {
+        String created;
         UUID userId;
         String clientId;
         String fingerprint;
         String last;
-        String enabled;
+        String timestamp;
     }
 
     class Model {

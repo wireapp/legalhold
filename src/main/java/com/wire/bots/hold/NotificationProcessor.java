@@ -2,7 +2,6 @@ package com.wire.bots.hold;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
 import com.wire.bots.sdk.exceptions.HttpException;
@@ -27,12 +26,10 @@ import java.util.logging.Level;
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final Database database;
-    private final Config config;
 
-    NotificationProcessor(Client client, Database database, Config config) {
+    NotificationProcessor(Client client, Database database) {
         this.client = client;
         this.database = database;
-        this.config = config;
     }
 
     @Override
@@ -92,7 +89,7 @@ public class NotificationProcessor implements Runnable {
             for (Payload payload : notif.payload) {
                 if (!process(userId, clientId, payload)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
-                    //return;
+                    return;
                 }
             }
 

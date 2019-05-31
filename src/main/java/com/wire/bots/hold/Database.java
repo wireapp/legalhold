@@ -48,14 +48,15 @@ public class Database {
     public boolean insertAccess(UUID userId, String clientId, String token, String cookie)
             throws SQLException {
         try (Connection c = newConnection()) {
-            String sql = "INSERT INTO Hold_Tokens (userId, clientId, token, cookie, timestamp)" +
-                    " VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Hold_Tokens (userId, clientId, token, cookie, timestamp, created)" +
+                    " VALUES (?, ?, ?, ?, ?, ?)";
             PreparedStatement stmt = c.prepareStatement(sql);
             stmt.setObject(1, userId);
             stmt.setString(2, clientId);
             stmt.setString(3, token);
             stmt.setString(4, cookie);
             stmt.setInt(5, (int) (new Date().getTime() / 1000));
+            stmt.setInt(6, (int) (new Date().getTime() / 1000));
             return stmt.executeUpdate() == 1;
         }
     }
@@ -70,10 +71,12 @@ public class Database {
 
     boolean updateAccess(UUID userId, String token, String cookie) throws SQLException {
         try (Connection c = newConnection()) {
-            PreparedStatement stmt = c.prepareStatement("UPDATE Hold_Tokens SET token = ?, cookie = ? WHERE userId = ?");
+            PreparedStatement stmt = c.prepareStatement("UPDATE Hold_Tokens SET token = ?, cookie = ?, timestamp = ? WHERE userId = ?");
             stmt.setString(1, token);
             stmt.setString(2, cookie);
-            stmt.setObject(3, userId);
+            stmt.setInt(3, (int) (new Date().getTime() / 1000));
+            stmt.setObject(4, userId);
+
             return stmt.executeUpdate() == 1;
         }
     }
@@ -91,6 +94,7 @@ public class Database {
                 access.cookie = rs.getString("cookie");
                 access.last = rs.getString("last");
                 access.timestamp = rs.getLong("timestamp");
+                access.created = rs.getLong("created");
                 ret.add(access);
             }
         }
@@ -104,9 +108,10 @@ public class Database {
 
     boolean updateLast(UUID userId, String last) throws SQLException {
         try (Connection c = newConnection()) {
-            PreparedStatement stmt = c.prepareStatement("UPDATE Hold_Tokens SET last = ? WHERE userId = ?");
+            PreparedStatement stmt = c.prepareStatement("UPDATE Hold_Tokens SET last = ?, timestamp = ? WHERE userId = ?");
             stmt.setString(1, last);
-            stmt.setObject(2, userId);
+            stmt.setInt(2, (int) (new Date().getTime() / 1000));
+            stmt.setObject(3, userId);
             return stmt.executeUpdate() == 1;
         }
     }
@@ -118,5 +123,6 @@ public class Database {
         public String token;
         public String cookie;
         public Long timestamp;
+        public Long created;
     }
 }

@@ -60,16 +60,6 @@ public class RegisterDeviceResource {
         return buf.toString().trim();
     }
 
-    private static String render(String clientId) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < clientId.length(); i += 2) {
-            buf.append(clientId.charAt(i));
-            buf.append(clientId.charAt(i + 1));
-            buf.append(" ");
-        }
-        return buf.toString().trim();
-    }
-
     @POST
     @ApiOperation(value = "(Obsolete) Register new Legal Device")
     public Response auth(@ApiParam @FormParam("email") String email,
@@ -108,7 +98,7 @@ public class RegisterDeviceResource {
                             "Key Fingerprint:<br>%s",
                     email,
                     botId,
-                    render(clientId),
+                    clientId,
                     hexify(fingerprint));
             return Response.
                     ok(format, MediaType.TEXT_HTML_TYPE).

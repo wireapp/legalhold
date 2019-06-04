@@ -18,6 +18,7 @@
 package com.wire.bots.hold;
 
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.internal.HoldMessageResource;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
@@ -25,17 +26,19 @@ import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.sdk.ClientRepo;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
+import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.tools.AuthValidator;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.skife.jdbi.v2.DBI;
 
 public class Service extends Server<Config> {
     public static Service instance;
     private final AdminResourceBundle admin = new AdminResourceBundle();
-
-    private Database database;
 
     public static void main(String[] args) throws Exception {
         instance = new Service();
@@ -48,38 +51,34 @@ public class Service extends Server<Config> {
 
         bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
         bootstrap.addBundle(admin);
+        bootstrap.addBundle(new DBIExceptionsBundle());
 
         Application<Config> application = bootstrap.getApplication();
         instance = (Service) application;
     }
 
     @Override
-    protected void initialize(Config config, Environment env) {
-        env.jersey().setUrlPattern("/legalhold/*");
-
-        database = new Database(config.storage);
-    }
-
-    @Override
     protected void onRun(Config config, Environment env) {
-        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client,
-                database,
-                getCryptoFactory(),
-                config);
+        final CryptoFactory cryptoFactory = getCryptoFactory();
 
+        final DBIFactory factory = new DBIFactory();
+        final DBI jdbi = factory.build(environment, config.database, "postgresql");
+        final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
+
+        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cryptoFactory);
         addResource(registerDeviceResource, env);
 
         AuthValidator validator = new AuthValidator(config.auth);
 
-        addResource(new InitiateResource(getCryptoFactory(), validator), env);
-        addResource(new ConfirmResource(database, validator), env);
-        addResource(new ListingResource(database, getCryptoFactory()), env);
-        addResource(new RemoveResource(database, validator), env);
+        addResource(new InitiateResource(cryptoFactory, validator), env);
+        addResource(new ConfirmResource(accessDAO, validator), env);
+        addResource(new ListingResource(accessDAO, cryptoFactory), env);
+        addResource(new RemoveResource(accessDAO, validator), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
-        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(database), new HoldClientRepo(getCryptoFactory())));
+        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(), new HoldClientRepo(cryptoFactory)));
 
-        Thread thread = new Thread(new NotificationProcessor(client, database));
+        Thread thread = new Thread(new NotificationProcessor(client, accessDAO));
         thread.start();
     }
 

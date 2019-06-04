@@ -3,7 +3,8 @@ package com.wire.bots.hold.resource;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import com.wire.bots.hold.Database;
+import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.model.Access;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.tools.Logger;
@@ -31,12 +32,12 @@ import static com.wire.bots.hold.utils.Tools.hexify;
 @Produces(MediaType.TEXT_HTML)
 public class ListingResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
-    private final Database database;
     private final CryptoFactory cryptoFactory;
+    private final AccessDAO accessDAO;
 
-    public ListingResource(Database database, CryptoFactory cryptoFactory) {
-        this.database = database;
+    public ListingResource(AccessDAO accessDAO, CryptoFactory cryptoFactory) {
         this.cryptoFactory = cryptoFactory;
+        this.accessDAO = accessDAO;
     }
 
     @GET
@@ -46,10 +47,8 @@ public class ListingResource {
             @ApiResponse(code = 200, message = "Legal Hold Devices")})
     public Response list() {
         try {
-            ArrayList<Database._Access> access = database.getAccess();
             ArrayList<Legal> legals = new ArrayList<>();
-
-            for (Database._Access a : access) {
+            for (Access a : accessDAO.listAll()) {
                 try (Crypto crypto = cryptoFactory.create(a.userId.toString())) {
                     byte[] fingerprint = crypto.getLocalFingerprint();
                     Legal legal = new Legal();
@@ -57,8 +56,8 @@ public class ListingResource {
                     legal.clientId = a.clientId;
                     legal.fingerprint = hexify(fingerprint);
                     legal.last = a.last;
-                    legal.timestamp = new Date(a.timestamp * 1000).toString();
-                    legal.created = new Date(a.created * 1000).toString();
+                    legal.timestamp = new Date(a.timestamp * 1000L).toString();
+                    legal.created = new Date(a.created * 1000L).toString();
 
                     legals.add(legal);
                 }

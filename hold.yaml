@@ -1,4 +1,5 @@
 server:
+  rootPath: /legalhold/*
   requestLog:
     appenders: []
 
@@ -8,7 +9,7 @@ logging:
     "com.wire.bots.logger": INFO
 
 swagger:
-  resourcePackage: com.wire.bots.hold.resource
+  resourcePackage: com.wire.bots.hold.resource,com.wire.bots.sdk.server.resources
   uriPrefix: /legalhold
   title: Legal Hold Service
   description: Legal Hold Service documentation
@@ -28,19 +29,38 @@ jerseyClient:
 
 auth: ${HOLD_SERVICE_TOKEN}
 
-baseUrl: ${HOLD_BASE_URL}
-
 #redis DB
 db:
   driver: redis
   host: localhost
   port: 6379    #redis default port
 
-storage:
-  host: localhost
-  port: 5432
-  database: postgres
-  driver: postgresql
-#  user: admin
+database:
+  driverClass: org.postgresql.Driver
+#  user: pg-user
 #  password: ${POSTGRES_PASSWORD}
+  url: jdbc:postgresql://localhost/postgres
+  properties:
+    charSet: UTF-8
+
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  # the minimum number of connections to keep open
+  minSize: 8
+
+  # the maximum number of connections to keep open
+  maxSize: 32
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # the amount of time to sleep between runs of the idle connection validation, abandoned cleaner and idle pool resizing
+  evictionInterval: 10s
+
+  # the minimum amount of time an connection must sit idle in the pool before it is eligible for eviction
+  minIdleTime: 1 minute
 

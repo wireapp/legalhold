@@ -1,6 +1,6 @@
 package com.wire.bots.hold.resource;
 
-import com.wire.bots.hold.Database;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.ConfirmPayload;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
@@ -15,16 +15,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.Instant;
 
 @Api
 @Path("/confirm")
 @Produces(MediaType.APPLICATION_JSON)
 public class ConfirmResource {
-    private final Database database;
     private final AuthValidator validator;
+    private final AccessDAO accessDAO;
 
-    public ConfirmResource(Database database, AuthValidator validator) {
-        this.database = database;
+    public ConfirmResource(AccessDAO accessDAO, AuthValidator validator) {
+        this.accessDAO = accessDAO;
         this.validator = validator;
     }
 
@@ -45,11 +46,23 @@ public class ConfirmResource {
                         .entity(new ErrorMessage("Invalid Authorization: " + auth))
                         .build();
             }
+            int epochSecond = (int) Instant.now().getEpochSecond();
 
-            database.insertAccess(confirmPayload.userId,
+            int insert = accessDAO.insert(confirmPayload.userId,
                     confirmPayload.clientId,
                     confirmPayload.accessToken,
-                    confirmPayload.refreshToken);
+                    confirmPayload.refreshToken,
+                    epochSecond);
+
+            if (0 == insert) {
+                Logger.error("ConfirmResource: Failed to insert Access %s:%s",
+                        confirmPayload.userId,
+                        confirmPayload.clientId);
+
+                return Response.
+                        serverError().
+                        build();
+            }
 
             Logger.info("ConfirmResource: %s:%s",
                     confirmPayload.userId,

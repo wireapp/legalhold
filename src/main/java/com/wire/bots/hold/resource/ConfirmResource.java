@@ -2,13 +2,11 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.ConfirmPayload;
-import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -33,19 +31,21 @@ public class ConfirmResource {
     @ApiOperation(value = "Confirm legal hold device")
     @ApiResponses(value = {
             @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
     public Response confirm(@ApiParam @Valid ConfirmPayload confirmPayload,
-                            @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
+                            @ApiParam @HeaderParam("Authorization") String auth) {
 
         try {
-            if (!validator.validate(auth)) {
-                Logger.warning("Invalid auth '%s'", auth);
-                return Response
-                        .status(401)
-                        .entity(new ErrorMessage("Invalid Authorization: " + auth))
-                        .build();
-            }
+//            if (!validator.validate(auth)) {
+//                Logger.warning("Invalid auth '%s'", auth);
+//                return Response
+//                        .status(401)
+//                        .entity(new ErrorMessage("Invalid Authorization: " + auth))
+//                        .build();
+//            }
+
             int epochSecond = (int) Instant.now().getEpochSecond();
 
             int insert = accessDAO.insert(confirmPayload.userId,

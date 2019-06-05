@@ -1,7 +1,7 @@
 server:
   rootPath: /legalhold/*
-  requestLog:
-    appenders: []
+#  requestLog:
+#    appenders: []
 
 logging:
   level: INFO

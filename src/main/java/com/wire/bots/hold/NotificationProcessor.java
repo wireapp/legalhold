@@ -86,7 +86,7 @@ public class NotificationProcessor implements Runnable {
             for (Payload payload : notif.payload) {
                 if (!process(userId, clientId, payload)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
-                    return;
+                    //return;
                 }
             }
 

@@ -1,6 +1,6 @@
 package com.wire.bots.hold.resource;
 
-import com.wire.bots.hold.Database;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.InitPayload;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
@@ -20,11 +20,11 @@ import javax.ws.rs.core.Response;
 @Path("/remove")
 @Produces(MediaType.APPLICATION_JSON)
 public class RemoveResource {
-    private final Database database;
     private final AuthValidator validator;
+    private final AccessDAO accessDAO;
 
-    public RemoveResource(Database database, AuthValidator validator) {
-        this.database = database;
+    public RemoveResource(AccessDAO accessDAO, AuthValidator validator) {
+        this.accessDAO = accessDAO;
         this.validator = validator;
     }
 
@@ -32,6 +32,7 @@ public class RemoveResource {
     @ApiOperation(value = "Remove legal hold device")
     @ApiResponses(value = {
             @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
     public Response remove(@ApiParam @Valid InitPayload init,
@@ -46,7 +47,7 @@ public class RemoveResource {
                         .build();
             }
 
-            boolean removeAccess = database.removeAccess(init.userId);
+            int removeAccess = accessDAO.remove(init.userId);
 
             Logger.info("RemoveResource: user: %s, removed: %s",
                     init.userId,

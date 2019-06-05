@@ -2,6 +2,7 @@ package com.wire.bots.hold;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
 import com.wire.bots.sdk.exceptions.HttpException;
@@ -18,28 +19,28 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public class NotificationProcessor implements Runnable {
     private final Client client;
-    private final Database database;
+    private final AccessDAO accessDAO;
 
-    NotificationProcessor(Client client, Database database) {
+    NotificationProcessor(Client client, AccessDAO accessDAO) {
         this.client = client;
-        this.database = database;
+        this.accessDAO = accessDAO;
     }
 
     @Override
     public void run() {
         while (true) {
             try {
-                ArrayList<Database._Access> access = database.getAccess();
-                Logger.debug("Devices: %d", access.size());
+                List<com.wire.bots.hold.model.Access> accesses = accessDAO.listAll();
+                Logger.debug("Devices: %d", accesses.size());
 
-                for (Database._Access a : access) {
+                for (com.wire.bots.hold.model.Access a : accesses) {
                     try {
                         NotificationList notificationList = retrieveNotifications(a, 100);
                         if (notificationList.notifications.isEmpty())
@@ -77,11 +78,7 @@ public class NotificationProcessor implements Runnable {
     }
 
     private void removeAccess(UUID userId) {
-        try {
-            database.removeAccess(userId);
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        }
+        accessDAO.remove(userId);
     }
 
     private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
@@ -89,11 +86,11 @@ public class NotificationProcessor implements Runnable {
             for (Payload payload : notif.payload) {
                 if (!process(userId, clientId, payload)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
-                    return;
+                    //return;
                 }
             }
 
-            if (!database.updateLast(userId, notif.id))
+            if (0 == accessDAO.updateLast(userId, notif.id, (int) Instant.now().getEpochSecond()))
                 Logger.error("Failed to update Last. user: %s notif: %s", userId, notif.id);
         }
     }
@@ -129,7 +126,7 @@ public class NotificationProcessor implements Runnable {
         return response.getStatus() == 200;
     }
 
-    private NotificationList retrieveNotifications(Database._Access access, int size)
+    private NotificationList retrieveNotifications(com.wire.bots.hold.model.Access access, int size)
             throws AuthenticationException {
         WebTarget target = client.target(Util.getHost())
                 .path("notifications")
@@ -159,12 +156,12 @@ public class NotificationProcessor implements Runnable {
             API api = new API(client, null, token);
             Access newAccess = api.renewAccessToken(cookie);
             cookie = newAccess.cookie != null ? newAccess.cookie : cookie;
-            if (!database.updateAccess(userId, newAccess.token, cookie))
+            if (0 == accessDAO.update(userId, newAccess.token, cookie, (int) Instant.now().getEpochSecond()))
                 Logger.error("refreshToken failed to update");
         } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
             Logger.error("refreshToken: %s %s", userId, e);
             //removeAccess(userId);
-        } catch (HttpException | SQLException e) {
+        } catch (HttpException e) {
             e.printStackTrace();
         }
     }

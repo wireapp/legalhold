@@ -1,6 +1,6 @@
 package com.wire.bots.hold.resource;
 
-import com.wire.bots.hold.Database;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.ConfirmPayload;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
@@ -15,16 +15,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.Instant;
 
 @Api
 @Path("/confirm")
 @Produces(MediaType.APPLICATION_JSON)
 public class ConfirmResource {
-    private final Database database;
     private final AuthValidator validator;
+    private final AccessDAO accessDAO;
 
-    public ConfirmResource(Database database, AuthValidator validator) {
-        this.database = database;
+    public ConfirmResource(AccessDAO accessDAO, AuthValidator validator) {
+        this.accessDAO = accessDAO;
         this.validator = validator;
     }
 
@@ -32,6 +33,7 @@ public class ConfirmResource {
     @ApiOperation(value = "Confirm legal hold device")
     @ApiResponses(value = {
             @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
     public Response confirm(@ApiParam @Valid ConfirmPayload confirmPayload,
@@ -46,10 +48,24 @@ public class ConfirmResource {
                         .build();
             }
 
-            database.insertAccess(confirmPayload.userId,
+            int epochSecond = (int) Instant.now().getEpochSecond();
+            String cookie = String.format("zuid=%s", confirmPayload.refreshToken);
+            
+            int insert = accessDAO.insert(confirmPayload.userId,
                     confirmPayload.clientId,
                     confirmPayload.accessToken,
-                    confirmPayload.refreshToken);
+                    cookie,
+                    epochSecond);
+
+            if (0 == insert) {
+                Logger.error("ConfirmResource: Failed to insert Access %s:%s",
+                        confirmPayload.userId,
+                        confirmPayload.clientId);
+
+                return Response.
+                        serverError().
+                        build();
+            }
 
             Logger.info("ConfirmResource: %s:%s",
                     confirmPayload.userId,

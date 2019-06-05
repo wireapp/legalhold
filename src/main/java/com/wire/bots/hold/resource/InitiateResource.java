@@ -39,6 +39,7 @@ public class InitiateResource {
     @ApiOperation(value = "Initiate", response = InitResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 401, message = "Invalid Authorization"),
+            @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "CryptoBox initiated", response = InitResponse.class)})
     public Response initiate(@ApiParam @Valid InitPayload init,

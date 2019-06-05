@@ -11,11 +11,6 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
-    private final Database db;
-
-    MessageHandler(Database db) {
-        this.db = db;
-    }
 
     @Override
     public void onNewConversation(WireClient client) {

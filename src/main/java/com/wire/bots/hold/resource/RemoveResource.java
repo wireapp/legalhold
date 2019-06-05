@@ -2,11 +2,13 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.InitPayload;
+import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -34,16 +36,16 @@ public class RemoveResource {
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
     public Response remove(@ApiParam @Valid InitPayload init,
-                           @ApiParam @HeaderParam("Authorization") String auth) {
+                           @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
 
         try {
-//            if (!validator.validate(auth)) {
-//                Logger.warning("Invalid auth '%s'", auth);
-//                return Response
-//                        .status(401)
-//                        .entity(new ErrorMessage("Invalid Authorization: " + auth))
-//                        .build();
-//            }
+            if (!validator.validate(auth)) {
+                Logger.warning("Invalid auth '%s'", auth);
+                return Response
+                        .status(401)
+                        .entity(new ErrorMessage("Invalid Authorization: " + auth))
+                        .build();
+            }
 
             int removeAccess = accessDAO.remove(init.userId);
 

@@ -49,12 +49,11 @@ public class ConfirmResource {
             }
 
             int epochSecond = (int) Instant.now().getEpochSecond();
-            String cookie = String.format("zuid=%s", confirmPayload.refreshToken);
-            
+
             int insert = accessDAO.insert(confirmPayload.userId,
                     confirmPayload.clientId,
                     confirmPayload.accessToken,
-                    cookie,
+                    confirmPayload.refreshToken,
                     epochSecond);
 
             if (0 == insert) {

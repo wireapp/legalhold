@@ -48,7 +48,7 @@ public class ListingResource {
     public Response list() {
         try {
             ArrayList<Legal> legals = new ArrayList<>();
-            for (Access a : accessDAO.listAll()) {
+            for (Access a : accessDAO.list(30)) {
                 try (Crypto crypto = cryptoFactory.create(a.userId.toString())) {
                     byte[] fingerprint = crypto.getLocalFingerprint();
                     Legal legal = new Legal();

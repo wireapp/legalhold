@@ -9,13 +9,14 @@ import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Payload;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.tools.Util;
-import com.wire.bots.sdk.user.API;
+import com.wire.bots.sdk.user.LoginClient;
 import com.wire.bots.sdk.user.model.Access;
 import io.dropwizard.auth.AuthenticationException;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -54,7 +55,8 @@ public class NotificationProcessor implements Runnable {
 
                         process(a.userId, a.clientId, notificationList);
                     } catch (AuthenticationException e) {
-                        refreshToken(a.userId, a.token, a.cookie);
+                        String cookie = a.cookie.replace("zuid=", ""); //todo remove
+                        refreshToken(a.userId, new Cookie("zuid", cookie));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -150,16 +152,16 @@ public class NotificationProcessor implements Runnable {
         return response.readEntity(NotificationList.class);
     }
 
-    private void refreshToken(UUID userId, String token, String cookie) {
+    private void refreshToken(UUID userId, Cookie cookie) {
         try {
             Logger.debug("Refreshing token for: %s", userId);
-            API api = new API(client, null, token);
-            Access newAccess = api.renewAccessToken(cookie);
-            cookie = newAccess.cookie != null ? newAccess.cookie : cookie;
-            if (0 == accessDAO.update(userId, newAccess.token, cookie, (int) Instant.now().getEpochSecond()))
+            LoginClient loginClient = new LoginClient(client);
+            Access access = loginClient.renewAccessToken(cookie);
+            String refreshToken = access.cookie != null ? access.cookie : cookie.getValue();
+            if (0 == accessDAO.update(userId, access.token, refreshToken, (int) Instant.now().getEpochSecond()))
                 Logger.error("refreshToken failed to update");
         } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
-            Logger.error("refreshToken: %s %s", userId, e);
+            Logger.error("refreshToken: %s %s %s", userId, cookie, e);
             //removeAccess(userId);
         } catch (HttpException e) {
             e.printStackTrace();

@@ -35,4 +35,8 @@ public interface AccessDAO {
     @SqlQuery("SELECT * FROM Hold_Tokens")
     @RegisterMapper(AccessResultSetMapper.class)
     List<Access> listAll();
+
+    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY timestamp DESC limit :count")
+    @RegisterMapper(AccessResultSetMapper.class)
+    List<Access> list(@Bind int count);
 }

@@ -89,6 +89,13 @@ public class NotificationProcessor implements Runnable {
                 if (!process(userId, clientId, payload)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
                     //return;
+                } else {
+                    Logger.info("Processed: `%s` conv: %s, user: %s:%s, notifId: %s",
+                            payload.type,
+                            payload.convId,
+                            userId,
+                            clientId,
+                            notif.id);
                 }
             }
 
@@ -162,7 +169,7 @@ public class NotificationProcessor implements Runnable {
                 Logger.error("refreshToken failed to update");
         } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
             Logger.error("refreshToken: %s %s %s", userId, cookie, e);
-            //removeAccess(userId);
+            removeAccess(userId);
         } catch (HttpException e) {
             e.printStackTrace();
         }

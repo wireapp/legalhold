@@ -32,11 +32,11 @@ public interface AccessDAO {
                    @Bind("last") String last,
                    @Bind("timestamp") int timestamp);
 
-    @SqlQuery("SELECT * FROM Hold_Tokens")
+    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC")
     @RegisterMapper(AccessResultSetMapper.class)
     List<Access> listAll();
 
-    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY timestamp DESC limit :count")
+    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC LIMIT :count")
     @RegisterMapper(AccessResultSetMapper.class)
-    List<Access> list(@Bind int count);
+    List<Access> list(@Bind("count") int count);
 }

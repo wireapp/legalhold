@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- Wire, Copyright (C) 2017 Wire Swiss GmbH -->
+<html>
+
+<head>
+    <title>Wire Events</title>
+</head>
+
+<body>
+
+<table style="width:100%">
+    <tr>
+        <th>MessageId</th>
+        <th>Type</th>
+        <th>Time</th>
+        <th>Payload</th>
+    </tr>
+    {{#events}}
+    <tr>
+        <td>{{messageId}}</td>
+        <td>{{type}}</td>
+        <td>{{time}}</td>
+        <td>{{payload}}</td>
+    </tr>
+    {{/events}}
+</table>
+
+</body>
+
+</html>

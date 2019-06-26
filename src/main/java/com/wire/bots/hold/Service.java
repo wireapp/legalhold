@@ -19,6 +19,7 @@ package com.wire.bots.hold;
 
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.internal.HoldMessageResource;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
@@ -64,6 +65,7 @@ public class Service extends Server<Config> {
         final DBIFactory factory = new DBIFactory();
         final DBI jdbi = factory.build(environment, config.database, "postgresql");
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
+        final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
         RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cryptoFactory);
         addResource(registerDeviceResource, env);
@@ -72,11 +74,12 @@ public class Service extends Server<Config> {
 
         addResource(new InitiateResource(cryptoFactory, validator), env);
         addResource(new ConfirmResource(accessDAO, validator), env);
-        addResource(new ListingResource(accessDAO, cryptoFactory), env);
         addResource(new RemoveResource(accessDAO, validator), env);
+        addResource(new ListingResource(accessDAO, cryptoFactory), env);
+        addResource(new EventsResource(eventsDAO), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
-        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(), new HoldClientRepo(cryptoFactory)));
+        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cryptoFactory)));
 
         Thread thread = new Thread(new NotificationProcessor(client, accessDAO));
         thread.start();

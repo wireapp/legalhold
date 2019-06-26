@@ -8,6 +8,7 @@ import com.wire.bots.sdk.models.AttachmentMessage;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.Conversation;
+import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.tools.Logger;
 
 import java.util.ArrayList;
@@ -28,7 +29,8 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Logger.info("onNewConversation: user: %s, conv: %s", userId, conversationId);
 
-            Conversation conversation = client.getConversation();
+            Conversation conversation = new Conversation();
+            conversation.id = conversationId;
             String payload = mapper.writeValueAsString(conversation);
             eventsDAO.insert(UUID.randomUUID(), conversationId, "conversation.create", payload); //todo UUID.randomUUID()
         } catch (Exception e) {
@@ -41,6 +43,9 @@ public class MessageHandler extends MessageHandlerBase {
     public void onMemberJoin(WireClient client, ArrayList<String> userIds) {
         UUID conversationId = client.getConversationId();
         String userId = client.getId();
+        Conversation conversation = new Conversation();
+        conversation.id = conversationId;
+        conversation.members = new ArrayList<>();
 
         try {
             for (String memberId : userIds) {
@@ -48,9 +53,11 @@ public class MessageHandler extends MessageHandlerBase {
                         conversationId,
                         userId,
                         memberId);
+                Member member = new Member();
+                member.id = memberId;
+                conversation.members.add(member);
             }
 
-            Conversation conversation = client.getConversation();
             String payload = mapper.writeValueAsString(conversation);
             eventsDAO.insert(UUID.randomUUID(), conversationId, "conversation.member-join", payload); //todo UUID.randomUUID()
         } catch (Exception e) {
@@ -63,6 +70,9 @@ public class MessageHandler extends MessageHandlerBase {
     public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
         UUID conversationId = client.getConversationId();
         String userId = client.getId();
+        Conversation conversation = new Conversation();
+        conversation.id = conversationId;
+        conversation.members = new ArrayList<>();
 
         try {
             for (String memberId : userIds) {
@@ -70,9 +80,11 @@ public class MessageHandler extends MessageHandlerBase {
                         conversationId,
                         userId,
                         memberId);
+                Member member = new Member();
+                member.id = memberId;
+                conversation.members.add(member);
             }
 
-            Conversation conversation = client.getConversation();
             String payload = mapper.writeValueAsString(conversation);
             eventsDAO.insert(UUID.randomUUID(), conversationId, "conversation.member-leave", payload); //todo UUID.randomUUID()
         } catch (Exception e) {

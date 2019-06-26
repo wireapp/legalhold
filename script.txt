@@ -1,13 +1,3 @@
-CREATE TABLE Hold (
- messageId UUID PRIMARY KEY,
- conversationId UUID NOT NULL,
- senderId UUID NOT NULL,
- mimeType varchar NOT NULL,
- text varchar,
- uri varchar,
- timestamp INTEGER NOT NULL
-);
-
 CREATE TABLE Hold_Tokens (
  userId UUID PRIMARY KEY,
  clientId varchar NOT NULL,
@@ -17,11 +7,6 @@ CREATE TABLE Hold_Tokens (
  timestamp INTEGER NOT NULL,
  created INTEGER NOT NULL
 );
-
-ALTER TABLE Hold_Tokens ADD COLUMN created INTEGER;
-
-ALTER TABLE Hold_Tokens ALTER COLUMN token DROP NOT NULL;
-
 
 CREATE TABLE Hold_Events (
  messageId UUID PRIMARY KEY,

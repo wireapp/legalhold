@@ -43,7 +43,7 @@ public class NotificationProcessor implements Runnable {
 
                 for (com.wire.bots.hold.model.Access a : accesses) {
                     try {
-                        NotificationList notificationList = retrieveNotifications(a, 100);
+                        NotificationList notificationList = retrieveNotifications(a, 100); //todo 100
                         if (notificationList.notifications.isEmpty())
                             continue;
 
@@ -58,7 +58,8 @@ public class NotificationProcessor implements Runnable {
                         String cookie = a.cookie.replace("zuid=", ""); //todo remove
                         refreshToken(a.userId, new Cookie("zuid", cookie));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Logger.error("NotificationProcessor: user: %s, last: %s, error: %s",
+                                a.userId, a.last, e);
                     }
                 }
             } catch (Exception e) {
@@ -80,6 +81,7 @@ public class NotificationProcessor implements Runnable {
     }
 
     private void removeAccess(UUID userId) {
+        Logger.info("removeAccess: user: %s", userId);
         accessDAO.remove(userId);
     }
 
@@ -90,7 +92,7 @@ public class NotificationProcessor implements Runnable {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
                     //return;
                 } else {
-                    Logger.info("Processed: `%s` conv: %s, user: %s:%s, notifId: %s",
+                    Logger.debug("Processed: `%s` conv: %s, user: %s:%s, notifId: %s",
                             payload.type,
                             payload.convId,
                             userId,
@@ -136,7 +138,7 @@ public class NotificationProcessor implements Runnable {
     }
 
     private NotificationList retrieveNotifications(com.wire.bots.hold.model.Access access, int size)
-            throws AuthenticationException {
+            throws AuthenticationException, HttpException {
         WebTarget target = client.target(Util.getHost())
                 .path("notifications")
                 .queryParam("client", access.clientId)
@@ -147,14 +149,18 @@ public class NotificationProcessor implements Runnable {
                 .header(HttpHeaders.AUTHORIZATION, bearer(access.token))
                 .get();
 
+        int status = response.getStatus();
         Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
                 access.userId,
                 access.clientId,
                 access.last,
-                response.getStatus());
+                status);
 
-        if (response.getStatus() == 401)
+        if (status == 401)
             throw new AuthenticationException(response.readEntity(String.class));
+
+        if (status >= 400)
+            throw new HttpException(response.readEntity(String.class), status);
 
         return response.readEntity(NotificationList.class);
     }
@@ -168,10 +174,10 @@ public class NotificationProcessor implements Runnable {
             if (0 == accessDAO.update(userId, access.token, refreshToken, (int) Instant.now().getEpochSecond()))
                 Logger.error("refreshToken failed to update");
         } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
-            Logger.error("refreshToken: %s %s %s", userId, cookie, e);
+            Logger.warning("refreshToken: %s %s", userId, e);
             removeAccess(userId);
         } catch (HttpException e) {
-            e.printStackTrace();
+            Logger.error("refreshToken: %s %s", userId, e);
         }
     }
 }

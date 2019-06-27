@@ -109,18 +109,17 @@ public class MessageHandler extends MessageHandlerBase {
                 messageId,
                 time);
 
+        String type = "conversation.otr-message-add.new-text";
+
+        persist(msg, conversationId, userId, messageId, type);
+    }
+
+    private void persist(TextMessage msg, UUID conversationId, String userId, UUID messageId, String type) {
         try {
             String payload = mapper.writeValueAsString(msg);
-            int insert = eventsDAO.insert(messageId, conversationId, "conversation.otr-message-add.new-text", payload);
-            if (0 == insert) {
-                String error = String.format("Failed to persist txt msg: %s, userId: %s, senderId: %s",
-                        messageId,
-                        userId,
-                        senderId);
-                throw new RuntimeException(error);
-            }
+            int insert = eventsDAO.insert(messageId, conversationId, type, payload);
         } catch (Exception e) {
-            String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+            String error = String.format("%s: %s %s ex: %s", type, userId, messageId, e);
             throw new RuntimeException(error);
         }
     }
@@ -140,18 +139,13 @@ public class MessageHandler extends MessageHandlerBase {
                 msg.getMimeType(),
                 messageId,
                 time);
+        String type = "conversation.otr-message-add.new-image";
+
         try {
             String payload = mapper.writeValueAsString(msg);
-            int insert = eventsDAO.insert(messageId, conversationId, "conversation.otr-message-add.new-image", payload);
-            if (0 == insert) {
-                String error = String.format("Failed to persist image msg: %s, userId: %s, senderId: %s",
-                        messageId,
-                        userId,
-                        senderId);
-                throw new RuntimeException(error);
-            }
+            int insert = eventsDAO.insert(messageId, conversationId, type, payload);
         } catch (Exception e) {
-            String error = String.format("OnText: %s %s ex: %s", userId, messageId, e);
+            String error = String.format("%s: %s %s ex: %s", type, userId, messageId, e);
             throw new RuntimeException(error);
         }
     }
@@ -171,15 +165,15 @@ public class MessageHandler extends MessageHandlerBase {
                 msg.getMimeType(),
                 messageId,
                 time);
-//        try {
-//            db.insertAssetRecord(conversationId,
-//                    messageId,
-//                    senderId,
-//                    msg.getMimeType(),
-//                    uri);
-//        } catch (Exception e) {
-//            Logger.error("onAttachment: %s %s %s", conversationId, messageId, e);
-//        }
+        String type = "conversation.otr-message-add.new-image";
+
+        try {
+            String payload = mapper.writeValueAsString(msg);
+            int insert = eventsDAO.insert(messageId, conversationId, type, payload);
+        } catch (Exception e) {
+            String error = String.format("%s: %s %s ex: %s", type, userId, messageId, e);
+            throw new RuntimeException(error);
+        }
     }
 
     @Override

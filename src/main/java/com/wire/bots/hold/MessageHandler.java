@@ -27,7 +27,7 @@ public class MessageHandler extends MessageHandlerBase {
             Logger.info("onNewConversation: user: %s, conv: %s", userId, message.conversation.id);
 
             String payload = mapper.writeValueAsString(message);
-            eventsDAO.insert(message.id, message.conversation.id, "conversation.create", payload);
+            eventsDAO.insert(message.id, message.conversation.id, message.type, payload);
         } catch (Exception e) {
             String error = String.format("onNewConversation: %s ex: %s", userId, e);
             throw new RuntimeException(error);

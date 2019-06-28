@@ -128,10 +128,12 @@ public class NotificationProcessor implements Runnable {
                 .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
 
         if (response.getStatus() != 200) {
-            Logger.error("process: user: %s, error: %s, status: %d",
+            Logger.error("process: `%s` user: %s, from: %s:%s, error: %s",
+                    payload.type,
                     userId,
-                    response.readEntity(String.class),
-                    response.getStatus());
+                    payload.from,
+                    payload.data.sender,
+                    response.readEntity(String.class));
         }
 
         return response.getStatus() == 200;

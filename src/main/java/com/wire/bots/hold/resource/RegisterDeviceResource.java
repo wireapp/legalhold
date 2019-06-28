@@ -19,7 +19,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -78,7 +77,7 @@ public class RegisterDeviceResource {
             }
 
             accessDAO.remove(botId);
-            accessDAO.insert(botId, clientId, token, cookie, (int) Instant.now().getEpochSecond());
+            accessDAO.insert(botId, clientId, cookie);
 
             Logger.info("RegisterDeviceResource.register: %s:%s  email: %s",
                     botId,

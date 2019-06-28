@@ -20,7 +20,6 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -88,7 +87,7 @@ public class NotificationProcessor implements Runnable {
     private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
-                if (!process(userId, clientId, payload)) {
+                if (!process(userId, clientId, payload, notif.id)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
                     //return;
                 } else {
@@ -101,12 +100,12 @@ public class NotificationProcessor implements Runnable {
                 }
             }
 
-            if (0 == accessDAO.updateLast(userId, notif.id, (int) Instant.now().getEpochSecond()))
+            if (0 == accessDAO.updateLast(userId, notif.id))
                 Logger.error("Failed to update Last. user: %s notif: %s", userId, notif.id);
         }
     }
 
-    private boolean process(UUID userId, String clientId, Payload payload) throws JsonProcessingException {
+    private boolean process(UUID userId, String clientId, Payload payload, UUID id) throws JsonProcessingException {
         if (Logger.getLevel() == Level.FINE) {
             ObjectMapper objectMapper = new ObjectMapper();
             Logger.debug(objectMapper.writeValueAsString(payload));
@@ -124,6 +123,7 @@ public class NotificationProcessor implements Runnable {
         Response response = client.target("http://localhost:8081/admin")
                 .path(userId.toString())
                 .path("messages")
+                .queryParam("id", id)
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
 
@@ -171,7 +171,7 @@ public class NotificationProcessor implements Runnable {
             LoginClient loginClient = new LoginClient(client);
             Access access = loginClient.renewAccessToken(cookie);
             String refreshToken = access.cookie != null ? access.cookie : cookie.getValue();
-            if (0 == accessDAO.update(userId, access.token, refreshToken, (int) Instant.now().getEpochSecond()))
+            if (0 == accessDAO.update(userId, access.token, refreshToken))
                 Logger.error("refreshToken failed to update");
         } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
             Logger.warning("refreshToken: %s %s", userId, e);

@@ -15,7 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.time.Instant;
 
 @Api
 @Path("/confirm")
@@ -48,13 +47,9 @@ public class ConfirmResource {
                         .build();
             }
 
-            int epochSecond = (int) Instant.now().getEpochSecond();
-
             int insert = accessDAO.insert(confirmPayload.userId,
                     confirmPayload.clientId,
-                    confirmPayload.accessToken,
-                    confirmPayload.refreshToken,
-                    epochSecond);
+                    confirmPayload.refreshToken);
 
             if (0 == insert) {
                 Logger.error("ConfirmResource: Failed to insert Access %s:%s",

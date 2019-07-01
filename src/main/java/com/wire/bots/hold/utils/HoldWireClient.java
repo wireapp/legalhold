@@ -1,7 +1,7 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.sdk.WireClient;
+import com.wire.bots.sdk.WireClientBase;
 import com.wire.bots.sdk.assets.IAsset;
 import com.wire.bots.sdk.assets.IGeneric;
 import com.wire.bots.sdk.crypto.Crypto;
@@ -15,18 +15,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public class HoldWireClient implements WireClient {
+public class HoldWireClient extends WireClientBase implements WireClient {
 
     private final UUID userId;
     private final UUID convId;
     private final String deviceId;
-    private final Crypto crypto;
 
     HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto) {
+        super(null, crypto, null);
         this.userId = userId;
         this.convId = convId;
         this.deviceId = deviceId;
-        this.crypto = crypto;
     }
 
     @Override
@@ -42,21 +41,6 @@ public class HoldWireClient implements WireClient {
     @Override
     public UUID getConversationId() {
         return convId;
-    }
-
-    @Override
-    public String decrypt(String from, String sender, String cypher) throws CryptoException {
-        return crypto.decrypt(from, sender, cypher);
-    }
-
-    @Override
-    public PreKey newLastPreKey() throws CryptoException {
-        return crypto.newLastPreKey();
-    }
-
-    @Override
-    public ArrayList<PreKey> newPreKeys(int from, int count) throws CryptoException {
-        return crypto.newPreKeys(from, count);
     }
 
     @Override
@@ -191,11 +175,6 @@ public class HoldWireClient implements WireClient {
     }
 
     @Override
-    public boolean isClosed() {
-        return false;
-    }
-
-    @Override
     public byte[] downloadProfilePicture(String assetKey) {
         return new byte[0];
     }
@@ -207,11 +186,6 @@ public class HoldWireClient implements WireClient {
 
     @Override
     public void call(String content) {
-
-    }
-
-    @Override
-    public void close() {
 
     }
 }

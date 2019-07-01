@@ -55,6 +55,7 @@ public class HoldMessageResource extends MessageResourceBase {
                     build();
         } catch (Exception e) {
             Logger.error("newMessage: %s %s", userId, e);
+            e.printStackTrace();
             return Response.
                     status(400).
                     entity(new ErrorMessage(e.toString())).

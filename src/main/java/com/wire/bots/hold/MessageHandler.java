@@ -23,13 +23,15 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client, SystemMessage message) {
         String userId = client.getId();
+        UUID conversationId = client.getConversationId();
         try {
             Logger.info("onNewConversation: user: %s, conv: %s", userId, message.conversation.id);
 
             String payload = mapper.writeValueAsString(message);
-            eventsDAO.insert(message.id, message.conversation.id, message.type, payload);
+            eventsDAO.insert(message.id, conversationId, message.type, payload);
         } catch (Exception e) {
-            String error = String.format("onNewConversation: %s ex: %s", userId, e);
+            String error = String.format("onNewConversation: %s conv: %s ex: %s",
+                    client.getId(), conversationId, e);
             throw new RuntimeException(error);
         }
     }
@@ -37,20 +39,20 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onMemberJoin(WireClient client, SystemMessage message) {
         UUID conversationId = client.getConversationId();
-        String userId = client.getId();
         try {
             for (UUID memberId : message.users) {
                 Logger.info("onMemberJoin: %s, user: %s, member: %s",
                         conversationId,
-                        userId,
+                        client.getId(),
                         memberId);
             }
 
             String payload = mapper.writeValueAsString(message);
-
             eventsDAO.insert(message.id, conversationId, message.type, payload);
         } catch (Exception e) {
-            String error = String.format("onMemberJoin: %s ex: %s", userId, e);
+            e.printStackTrace();
+            String error = String.format("onMemberJoin: %s conv: %s ex: %s",
+                    client.getId(), conversationId, e);
             throw new RuntimeException(error);
         }
     }
@@ -67,24 +69,25 @@ public class MessageHandler extends MessageHandlerBase {
             }
 
             String payload = mapper.writeValueAsString(message);
-
             eventsDAO.insert(message.id, conversationId, message.type, payload);
         } catch (Exception e) {
-            String error = String.format("onMemberLeave: %s ex: %s", client.getId(), e);
+            e.printStackTrace();
+            String error = String.format("onMemberLeave: %s conv: %s ex: %s",
+                    client.getId(), conversationId, e);
             throw new RuntimeException(error);
         }
     }
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
-        UUID conversationId = client.getConversationId();
+        UUID convId = client.getConversationId();
         String userId = client.getId();
 
         UUID senderId = msg.getUserId();
         String time = msg.getTime();
 
         Logger.info("onText %s, %s -> %s msg:%s at %s",
-                conversationId,
+                convId,
                 senderId,
                 userId,
                 msg.getMessageId(),
@@ -92,15 +95,16 @@ public class MessageHandler extends MessageHandlerBase {
 
         String type = "conversation.otr-message-add.new-text";
 
-        persist(msg, conversationId, userId, msg.getMessageId(), type);
+        persist(msg, convId, userId, msg.getMessageId(), type);
     }
 
-    private void persist(TextMessage msg, UUID conversationId, String userId, UUID messageId, String type) {
+    private void persist(TextMessage msg, UUID convId, String userId, UUID messageId, String type) {
         try {
             String payload = mapper.writeValueAsString(msg);
-            int insert = eventsDAO.insert(messageId, conversationId, type, payload);
+            int insert = eventsDAO.insert(messageId, convId, type, payload);
         } catch (Exception e) {
-            String error = String.format("%s: %s %s ex: %s", type, userId, messageId, e);
+            String error = String.format("%s: conv: %s, user: %s, msg: %s, e: %s",
+                    type, convId, userId, messageId, e);
             throw new RuntimeException(error);
         }
     }

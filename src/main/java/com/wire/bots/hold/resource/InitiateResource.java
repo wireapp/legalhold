@@ -53,6 +53,15 @@ public class InitiateResource {
         }
 
         //todo remove old CB
+        try (Crypto crypto = cryptoFactory.create(init.userId.toString())) {
+            crypto.purge();
+        } catch (Exception e) {
+            Logger.error("InitiateResource: %s", e);
+            return Response
+                    .ok(e)
+                    .status(500)
+                    .build();
+        }
 
         try (Crypto crypto = cryptoFactory.create(init.userId.toString())) {
             ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);

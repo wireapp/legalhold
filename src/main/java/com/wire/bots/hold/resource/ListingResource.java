@@ -4,7 +4,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
-import com.wire.bots.hold.model.Access;
+import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.tools.Logger;
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.UUID;
 
 import static com.wire.bots.hold.utils.Tools.hexify;
@@ -48,7 +47,7 @@ public class ListingResource {
     public Response list() {
         try {
             ArrayList<Legal> legals = new ArrayList<>();
-            for (Access a : accessDAO.list(30)) {
+            for (LHAccess a : accessDAO.list(50)) {
                 try (Crypto crypto = cryptoFactory.create(a.userId.toString())) {
                     byte[] fingerprint = crypto.getLocalFingerprint();
                     Legal legal = new Legal();
@@ -56,8 +55,8 @@ public class ListingResource {
                     legal.clientId = a.clientId;
                     legal.fingerprint = hexify(fingerprint);
                     legal.last = a.last;
-                    legal.timestamp = new Date(a.timestamp * 1000L).toString();
-                    legal.created = new Date(a.created * 1000L).toString();
+                    legal.updated = a.updated;
+                    legal.created = a.created;
 
                     legals.add(legal);
                 }
@@ -93,12 +92,12 @@ public class ListingResource {
     }
 
     class Legal {
-        String created;
+        UUID last;
         UUID userId;
         String clientId;
         String fingerprint;
-        String last;
-        String timestamp;
+        String updated;
+        String created;
     }
 
     class Model {

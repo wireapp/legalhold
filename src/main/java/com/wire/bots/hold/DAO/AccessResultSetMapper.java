@@ -1,6 +1,6 @@
 package com.wire.bots.hold.DAO;
 
-import com.wire.bots.hold.model.Access;
+import com.wire.bots.hold.model.LHAccess;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
@@ -9,17 +9,17 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 
-public class AccessResultSetMapper implements ResultSetMapper<Access> {
+public class AccessResultSetMapper implements ResultSetMapper<LHAccess> {
     @Override
-    public Access map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
-        Access access = new Access();
-        access.userId = (UUID) rs.getObject("userId");
-        access.clientId = rs.getString("clientId");
-        access.token = rs.getString("token");
-        access.cookie = rs.getString("cookie");
-        access.last = rs.getString("last");
-        access.timestamp = rs.getInt("timestamp");
-        access.created = rs.getInt("created");
-        return access;
+    public LHAccess map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
+        LHAccess LHAccess = new LHAccess();
+        LHAccess.last = (UUID) rs.getObject("last");
+        LHAccess.userId = (UUID) rs.getObject("userId");
+        LHAccess.clientId = rs.getString("clientId");
+        LHAccess.token = rs.getString("token");
+        LHAccess.cookie = rs.getString("cookie");
+        LHAccess.updated = rs.getString("updated");
+        LHAccess.created = rs.getString("created");
+        return LHAccess;
     }
 }

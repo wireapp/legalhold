@@ -18,4 +18,8 @@ public class HoldClientRepo extends ClientRepo {
         Crypto crypto = cf.create(userId.toString());
         return new HoldWireClient(userId, deviceId, convId, crypto);
     }
+
+    @Override
+    public void purgeBot(UUID botId) {
+    }
 }

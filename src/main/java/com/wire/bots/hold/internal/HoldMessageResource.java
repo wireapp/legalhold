@@ -9,6 +9,7 @@ import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.server.model.Payload;
 import com.wire.bots.sdk.server.resources.MessageResourceBase;
 import com.wire.bots.sdk.tools.Logger;
+import io.swagger.annotations.ApiParam;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,17 +30,17 @@ public class HoldMessageResource extends MessageResourceBase {
     }
 
     @Override
-    protected WireClient getWireClient(String userId, Payload payload) throws CryptoException {
-        UUID uuid = UUID.fromString(userId);
-        return repo.getClient(uuid, payload.data.recipient, payload.convId);
+    protected WireClient getWireClient(UUID userId, Payload payload) throws CryptoException {
+        return repo.getClient(userId, payload.data.recipient, payload.convId);
     }
 
     @POST
     public Response newMessage(@PathParam("userId") UUID userId,
+                               @ApiParam("UUID Unique message id") @QueryParam("id") UUID id,
                                @Valid @NotNull Payload payload) {
 
-        try (WireClient client = getWireClient(userId.toString(), payload)) {
-            handleMessage(payload, client);
+        try (WireClient client = getWireClient(userId, payload)) {
+            handleMessage(id, payload, client);
         } catch (CryptoException e) {
             Logger.error("newMessage: %s %s", userId, e);
             return Response.
@@ -54,6 +55,7 @@ public class HoldMessageResource extends MessageResourceBase {
                     build();
         } catch (Exception e) {
             Logger.error("newMessage: %s %s", userId, e);
+            e.printStackTrace();
             return Response.
                     status(400).
                     entity(new ErrorMessage(e.toString())).

@@ -5,15 +5,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.sdk.server.model.Payload;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Notification {
     @JsonProperty
     @NotNull
-    public ArrayList<Payload> payload;
+    public List<Payload> payload;
 
     @JsonProperty
     @NotNull
-    public String id;
+    public UUID id;
 }

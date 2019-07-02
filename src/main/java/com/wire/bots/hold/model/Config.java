@@ -33,4 +33,6 @@ public class Config extends Configuration {
     @JsonProperty
     public DataSourceFactory database = new DataSourceFactory();
 
+    @JsonProperty
+    public int sleep = 30;
 }

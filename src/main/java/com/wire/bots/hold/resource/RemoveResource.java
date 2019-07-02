@@ -2,6 +2,8 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.InitPayload;
+import com.wire.bots.sdk.crypto.Crypto;
+import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.AuthValidator;
 import com.wire.bots.sdk.tools.Logger;
@@ -20,11 +22,13 @@ import javax.ws.rs.core.Response;
 @Path("/remove")
 @Produces(MediaType.APPLICATION_JSON)
 public class RemoveResource {
+    private final CryptoFactory cf;
     private final AuthValidator validator;
     private final AccessDAO accessDAO;
 
-    public RemoveResource(AccessDAO accessDAO, AuthValidator validator) {
+    public RemoveResource(AccessDAO accessDAO, CryptoFactory cf, AuthValidator validator) {
         this.accessDAO = accessDAO;
+        this.cf = cf;
         this.validator = validator;
     }
 
@@ -35,7 +39,7 @@ public class RemoveResource {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
-    public Response remove(@ApiParam @Valid InitPayload init,
+    public Response remove(@ApiParam @Valid InitPayload payload,
                            @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
 
         try {
@@ -47,10 +51,15 @@ public class RemoveResource {
                         .build();
             }
 
-            int removeAccess = accessDAO.remove(init.userId);
+            try (Crypto crypto = cf.create(payload.userId.toString())) {
+                crypto.purge();
+            }
 
-            Logger.info("RemoveResource: user: %s, removed: %s",
-                    init.userId,
+            int removeAccess = accessDAO.remove(payload.userId);
+
+            Logger.info("RemoveResource: team: %s, user: %s, removed: %s",
+                    payload.teamId,
+                    payload.userId,
                     removeAccess);
 
             return Response.

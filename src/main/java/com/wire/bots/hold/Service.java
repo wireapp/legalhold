@@ -60,26 +60,25 @@ public class Service extends Server<Config> {
 
     @Override
     protected void onRun(Config config, Environment env) {
-        final CryptoFactory cryptoFactory = getCryptoFactory();
+        final CryptoFactory cf = getCryptoFactory();
 
-        final DBIFactory factory = new DBIFactory();
-        final DBI jdbi = factory.build(environment, config.database, "postgresql");
+        final DBI jdbi = new DBIFactory().build(environment, config.database, "postgresql");
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
-        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cryptoFactory);
+        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cf);
         addResource(registerDeviceResource, env);
 
         AuthValidator validator = new AuthValidator(config.auth);
 
-        addResource(new InitiateResource(cryptoFactory, validator), env);
+        addResource(new InitiateResource(cf, validator), env);
         addResource(new ConfirmResource(accessDAO, validator), env);
-        addResource(new RemoveResource(accessDAO, validator), env);
-        addResource(new ListingResource(accessDAO, cryptoFactory), env);
+        addResource(new RemoveResource(accessDAO, cf, validator), env);
+        addResource(new ListingResource(accessDAO, cf), env);
         addResource(new EventsResource(eventsDAO), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
-        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cryptoFactory)));
+        admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));
 
         Thread thread = new Thread(new NotificationProcessor(client, accessDAO));
         thread.start();

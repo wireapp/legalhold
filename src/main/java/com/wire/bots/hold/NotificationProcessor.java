@@ -3,19 +3,20 @@ package com.wire.bots.hold;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.model.Config;
+import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
+import com.wire.bots.sdk.exceptions.AuthException;
 import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Payload;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.tools.Util;
 import com.wire.bots.sdk.user.LoginClient;
 import com.wire.bots.sdk.user.model.Access;
-import io.dropwizard.auth.AuthenticationException;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -27,61 +28,61 @@ import java.util.logging.Level;
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
+    private final Config config;
 
     NotificationProcessor(Client client, AccessDAO accessDAO) {
         this.client = client;
         this.accessDAO = accessDAO;
+        config = Service.instance.getConfig();
     }
 
     @Override
     public void run() {
         while (true) {
             try {
-                List<com.wire.bots.hold.model.Access> accesses = accessDAO.listAll();
-                Logger.debug("Devices: %d", accesses.size());
+                List<LHAccess> devices = accessDAO.listAll();
+                Logger.debug("Devices: %d", devices.size());
 
-                for (com.wire.bots.hold.model.Access a : accesses) {
-                    try {
-                        NotificationList notificationList = retrieveNotifications(a, 100); //todo 100
-                        if (notificationList.notifications.isEmpty())
-                            continue;
-
-                        Logger.debug("Processing %d msg. %s:%s, last: %s",
-                                notificationList.notifications.size(),
-                                a.userId,
-                                a.clientId,
-                                a.last);
-
-                        process(a.userId, a.clientId, notificationList);
-                    } catch (AuthenticationException e) {
-                        String cookie = a.cookie.replace("zuid=", ""); //todo remove
-                        refreshToken(a.userId, new Cookie("zuid", cookie));
-                    } catch (Exception e) {
-                        Logger.error("NotificationProcessor: user: %s, last: %s, error: %s",
-                                a.userId, a.last, e);
-                    }
+                for (LHAccess device : devices) {
+                    process(device);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-            try {
-                int seconds = 30;
-                Logger.debug("Sleeping %d seconds...\n", seconds);
-                Thread.sleep(seconds * 1000);
+                Thread.sleep(config.sleep * 1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Logger.error("NotificationProcessor: %s", e);
             }
+        }
+    }
+
+    private void process(LHAccess device) throws InterruptedException {
+        try {
+            NotificationList notificationList = retrieveNotifications(device, 100);
+            if (notificationList.notifications.isEmpty())
+                return;
+
+            Logger.debug("Processing %d msg. %s:%s, last: %s",
+                    notificationList.notifications.size(),
+                    device.userId,
+                    device.clientId,
+                    device.last);
+
+            process(device.userId, device.clientId, notificationList);
+
+            Thread.sleep(100);
+
+        } catch (AuthException e) {
+            refreshToken(device.userId, new Cookie("zuid", device.cookie));
+        } catch (HttpException e) {
+            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);
         }
     }
 
     private static String bearer(String token) {
         return token == null ? null : String.format("Bearer %s", token);
-    }
-
-    private void removeAccess(UUID userId) {
-        Logger.info("removeAccess: user: %s", userId);
-        accessDAO.remove(userId);
     }
 
     private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
@@ -100,8 +101,7 @@ public class NotificationProcessor implements Runnable {
                 }
             }
 
-            if (0 == accessDAO.updateLast(userId, notif.id))
-                Logger.error("Failed to update Last. user: %s notif: %s", userId, notif.id);
+            accessDAO.updateLast(userId, notif.id);
         }
     }
 
@@ -139,32 +139,35 @@ public class NotificationProcessor implements Runnable {
         return response.getStatus() == 200;
     }
 
-    private NotificationList retrieveNotifications(com.wire.bots.hold.model.Access access, int size)
-            throws AuthenticationException, HttpException {
-        WebTarget target = client.target(Util.getHost())
+    private NotificationList retrieveNotifications(LHAccess LHAccess, int size)
+            throws HttpException {
+        Response response = client.target(Util.getHost())
                 .path("notifications")
-                .queryParam("client", access.clientId)
-                .queryParam("since", access.last)
-                .queryParam("size", size);
-
-        Response response = target.request(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, bearer(access.token))
+                .queryParam("client", LHAccess.clientId)
+                .queryParam("since", LHAccess.last)
+                .queryParam("size", size)
+                .request(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, bearer(LHAccess.token))
                 .get();
 
         int status = response.getStatus();
         Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
-                access.userId,
-                access.clientId,
-                access.last,
+                LHAccess.userId,
+                LHAccess.clientId,
+                LHAccess.last,
                 status);
 
+        if (status == 200)
+            return response.readEntity(NotificationList.class);
+
+        if (status == 404)
+            return response.readEntity(NotificationList.class);
+
+        String message = response.readEntity(String.class);
         if (status == 401)
-            throw new AuthenticationException(response.readEntity(String.class));
+            throw new AuthException(message, status);
 
-        if (status >= 400)
-            throw new HttpException(response.readEntity(String.class), status);
-
-        return response.readEntity(NotificationList.class);
+        throw new HttpException(message, status);
     }
 
     private void refreshToken(UUID userId, Cookie cookie) {
@@ -172,12 +175,11 @@ public class NotificationProcessor implements Runnable {
             Logger.debug("Refreshing token for: %s", userId);
             LoginClient loginClient = new LoginClient(client);
             Access access = loginClient.renewAccessToken(cookie);
-            String refreshToken = access.cookie != null ? access.cookie : cookie.getValue();
-            if (0 == accessDAO.update(userId, access.token, refreshToken))
-                Logger.error("refreshToken failed to update");
-        } catch (com.wire.bots.sdk.exceptions.AuthenticationException e) {
-            Logger.warning("refreshToken: %s %s", userId, e);
-            removeAccess(userId);
+            String cookieValue = access.cookie != null ? access.cookie : cookie.getValue();
+            accessDAO.update(userId, access.token, cookieValue);
+        } catch (AuthException e) {
+            int remove = accessDAO.remove(userId);
+            Logger.warning("refreshToken: removed LH device: user: %s, removed: %d", userId, remove);
         } catch (HttpException e) {
             Logger.error("refreshToken: %s %s", userId, e);
         }

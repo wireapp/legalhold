@@ -35,7 +35,7 @@ public class ConfirmResource {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload or Authorization"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
-    public Response confirm(@ApiParam @Valid ConfirmPayload confirmPayload,
+    public Response confirm(@ApiParam @Valid ConfirmPayload payload,
                             @ApiParam @NotNull @HeaderParam("Authorization") String auth) {
 
         try {
@@ -47,29 +47,31 @@ public class ConfirmResource {
                         .build();
             }
 
-            int insert = accessDAO.insert(confirmPayload.userId,
-                    confirmPayload.clientId,
-                    confirmPayload.refreshToken);
+            int insert = accessDAO.insert(payload.userId,
+                    payload.clientId,
+                    payload.refreshToken);
 
             if (0 == insert) {
                 Logger.error("ConfirmResource: Failed to insert Access %s:%s",
-                        confirmPayload.userId,
-                        confirmPayload.clientId);
+                        payload.userId,
+                        payload.clientId);
 
                 return Response.
                         serverError().
                         build();
             }
 
-            Logger.info("ConfirmResource: %s:%s",
-                    confirmPayload.userId,
-                    confirmPayload.clientId);
+            Logger.info("ConfirmResource: team: %s, user:%s, client: %s",
+                    payload.teamId,
+                    payload.userId,
+                    payload.clientId);
 
             return Response.
                     ok().
                     build();
         } catch (Exception e) {
-            Logger.error("ConfirmResource.confirm: %s", e);
+            Logger.error("ConfirmResource.confirm: %s err: %s", payload.userId, e);
+            e.printStackTrace();
             return Response
                     .ok(e)
                     .status(500)

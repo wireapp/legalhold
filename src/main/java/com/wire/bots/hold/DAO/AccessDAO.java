@@ -1,6 +1,6 @@
 package com.wire.bots.hold.DAO;
 
-import com.wire.bots.hold.model.Access;
+import com.wire.bots.hold.model.LHAccess;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -32,9 +32,9 @@ public interface AccessDAO {
 
     @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC")
     @RegisterMapper(AccessResultSetMapper.class)
-    List<Access> listAll();
+    List<LHAccess> listAll();
 
     @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC LIMIT :count")
     @RegisterMapper(AccessResultSetMapper.class)
-    List<Access> list(@Bind("count") int count);
+    List<LHAccess> list(@Bind("count") int count);
 }

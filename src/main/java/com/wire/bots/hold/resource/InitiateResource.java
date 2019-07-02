@@ -26,12 +26,12 @@ import static com.wire.bots.hold.utils.Tools.hexify;
 @Path("/initiate")
 @Produces(MediaType.APPLICATION_JSON)
 public class InitiateResource {
-    private final CryptoFactory cryptoFactory;
+    private final CryptoFactory cf;
     private final AuthValidator validator;
 
-    public InitiateResource(CryptoFactory cryptoFactory, AuthValidator validator) {
+    public InitiateResource(CryptoFactory cf, AuthValidator validator) {
 
-        this.cryptoFactory = cryptoFactory;
+        this.cf = cf;
         this.validator = validator;
     }
 
@@ -52,18 +52,7 @@ public class InitiateResource {
                     .build();
         }
 
-        //todo remove old CB
-        try (Crypto crypto = cryptoFactory.create(init.userId.toString())) {
-            crypto.purge();
-        } catch (Exception e) {
-            Logger.error("InitiateResource: %s", e);
-            return Response
-                    .ok(e)
-                    .status(500)
-                    .build();
-        }
-
-        try (Crypto crypto = cryptoFactory.create(init.userId.toString())) {
+        try (Crypto crypto = cf.create(init.userId.toString())) {
             ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
             PreKey lastKey = crypto.newLastPreKey();
             byte[] fingerprint = crypto.getLocalFingerprint();

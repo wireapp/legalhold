@@ -5,7 +5,9 @@ COPY hold.yaml         /etc/hold/hold.yaml
 
 RUN mkdir /opt/hold/data
 RUN mkdir /opt/hold/data/assets
-
+RUN mkdir /opt/hold/images
+RUN mkdir /opt/hold/avatars
+             
 WORKDIR /opt/hold
      
 EXPOSE  8080 8081 8082

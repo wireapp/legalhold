@@ -41,7 +41,7 @@ public class NotificationProcessor implements Runnable {
         while (true) {
             try {
                 List<LHAccess> devices = accessDAO.listAll();
-                Logger.debug("Devices: %d", devices.size());
+                Logger.info("Devices: %d", devices.size());
 
                 for (LHAccess device : devices) {
                     process(device);
@@ -60,7 +60,7 @@ public class NotificationProcessor implements Runnable {
             if (notificationList.notifications.isEmpty())
                 return;
 
-            Logger.debug("Processing %d msg. %s:%s, last: %s",
+            Logger.debug("Processing %d notifications. %s:%s, last: %s",
                     notificationList.notifications.size(),
                     device.userId,
                     device.clientId,
@@ -68,13 +68,13 @@ public class NotificationProcessor implements Runnable {
 
             process(device.userId, device.clientId, notificationList);
 
-            Thread.sleep(100);
+            Thread.sleep(200);
 
         } catch (AuthException e) {
             refreshToken(device.userId, new Cookie("zuid", device.cookie));
         } catch (HttpException e) {
             Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);
-            Thread.sleep(1000);
+            Thread.sleep(config.sleep * 1000);
         } catch (Exception e) {
             e.printStackTrace();
             Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);

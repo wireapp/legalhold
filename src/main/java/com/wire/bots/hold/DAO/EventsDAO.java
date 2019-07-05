@@ -24,4 +24,8 @@ public interface EventsDAO {
     @SqlQuery("SELECT * FROM Hold_Events WHERE conversationId = :conversationId ORDER BY time ASC")
     @RegisterMapper(EventsResultSetMapper.class)
     List<Event> listAllAsc(@Bind("conversationId") UUID conversationId);
+
+    @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time FROM Hold_Events GROUP BY conversationId ORDER BY MAX(time) DESC, conversationId")
+    @RegisterMapper(EventsResultSetMapper.class)
+    List<Event> listConversations();
 }

@@ -10,13 +10,13 @@ import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-class Cache {
+public class Cache {
     private static final ConcurrentHashMap<String, File> pictures = new ConcurrentHashMap<>();//<assetKey, Picture>
     private static final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();//<userId, User>
     private static final ConcurrentHashMap<UUID, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
 
     @Nullable
-    static File getImage(API api, ImageMessage message) {
+    public static File getImage(API api, ImageMessage message) {
         return pictures.computeIfAbsent(message.getAssetKey(), k -> {
             try {
                 return Helper.downloadImage(api, message);
@@ -28,7 +28,7 @@ class Cache {
     }
 
     @Nullable
-    static File getProfileImage(API api, UUID userId) {
+    public static File getProfileImage(API api, UUID userId) {
         if (userId == null)
             return null;
 
@@ -43,7 +43,7 @@ class Cache {
     }
 
     @Nullable
-    static User getUser(API api, UUID userId) {
+    public static User getUser(API api, UUID userId) {
         if (userId == null)
             return null;
 

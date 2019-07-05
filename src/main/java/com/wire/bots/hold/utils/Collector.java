@@ -29,9 +29,9 @@ public class Collector {
         return message;
     }
 
-    private static Day newDay(String time, Sender sender) throws ParseException {
+    private static Day newDay(Sender sender, String dateTime) throws ParseException {
         Day day = new Day();
-        day.date = toDate(time);
+        day.date = toDate(dateTime);
         day.senders.add(sender);
         return day;
     }
@@ -91,20 +91,21 @@ public class Collector {
         }
     }
 
-    public void add(String text, String time) throws ParseException {
+    public void add(String text, String dateTime) throws ParseException {
         Message message = new Message();
         message.text = text;
-        message.time = toTime(time);
+        message.time = toTime(dateTime);
 
         String senderName = "System";
         int accent = 4;
 
-        append(message, null, senderName, accent, time);
+        append(message, null, senderName, accent, dateTime);
     }
 
-    private void append(Message message, @Nullable UUID senderId, String senderName, int accent, String dateTime) throws ParseException {
+    private void append(Message message, @Nullable UUID senderId, String senderName, int accent, String dateTime)
+            throws ParseException {
         Sender sender = newSender(senderId, senderName, accent, message);
-        Day day = newDay(dateTime, sender);
+        Day day = newDay(sender, dateTime);
 
         if (days.isEmpty()) {
             days.add(day);

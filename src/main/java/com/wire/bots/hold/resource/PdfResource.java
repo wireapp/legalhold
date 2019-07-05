@@ -7,10 +7,13 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.Service;
 import com.wire.bots.hold.model.Event;
+import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
+import com.wire.bots.sdk.server.model.Conversation;
+import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.API;
@@ -64,36 +67,30 @@ public class PdfResource {
             Collector collector = new Collector(api);
             for (Event event : events) {
                 switch (event.type) {
+                    case "conversation.create": {
+                        onConversationCreate(api, collector, event);
+                    }
+                    break;
                     case "conversation.otr-message-add.new-text": {
-                        TextMessage message = mapper.readValue(event.payload, TextMessage.class);
-                        collector.add(message);
+                        onText(collector, event);
                     }
                     break;
                     case "conversation.otr-message-add.new-image": {
-                        ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
-                        collector.add(message);
+                        onImage(collector, event);
                     }
                     break;
                     case "conversation.member-join": {
-
+                        onMember(api, collector, event, "**%s** joined the conversation");
                     }
                     break;
                     case "conversation.member-leave": {
-
-                    }
-                    break;
-                    case "conversation.create": {
-                        SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                        collector.setConvName(msg.conversation.name);
-                        String format = String.format("%s by %s", msg.type, msg.from);
-                        collector.add(format, msg.time);
+                        onMember(api, collector, event, "**%s** left the conversation");
                     }
                     break;
                 }
             }
 
             Collector.Conversation conversation = collector.getConversation();
-
             String html = execute(conversation);
             ByteArrayOutputStream outputStream = PdfGenerator.convert(html);
 
@@ -107,6 +104,62 @@ public class PdfResource {
                     .serverError()
                     .status(500)
                     .build();
+        }
+    }
+
+    private void onImage(Collector collector, Event event) {
+        try {
+            ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onText(Collector collector, Event event) {
+        try {
+            TextMessage message = mapper.readValue(event.payload, TextMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onMember(API api, Collector collector, Event event, String s) {
+        try {
+            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            for (UUID userId : msg.users) {
+                com.wire.bots.sdk.server.model.User user = Cache.getUser(api, userId);
+                if (user != null) {
+                    String format = String.format(s, user.name);
+                    collector.add(format, msg.time);
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("onMember: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onConversationCreate(API api, Collector collector, Event event) {
+        try {
+            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            Conversation conversation = msg.conversation;
+            collector.setConvName(conversation.name);
+            com.wire.bots.sdk.server.model.User user = Cache.getUser(api, conversation.creator);
+            if (user != null) {
+                String format = String.format("New conversation created by **%s**", user.name);
+                collector.add(format, msg.time);
+            }
+
+            for (Member member : conversation.members) {
+                user = Cache.getUser(api, member.id);
+                if (user != null) {
+                    String format = String.format("with **%s**", user.name);
+                    collector.add(format, msg.time);
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 

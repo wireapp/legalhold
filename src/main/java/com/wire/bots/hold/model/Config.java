@@ -35,9 +35,4 @@ public class Config extends Configuration {
 
     @JsonProperty
     public int sleep = 30;
-
-    @JsonProperty
-    public String email;
-    @JsonProperty
-    public String password;
 }

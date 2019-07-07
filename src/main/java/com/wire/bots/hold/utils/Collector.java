@@ -5,7 +5,6 @@ import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.user.API;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -74,9 +73,7 @@ public class Collector {
         String dateTime = event.getTime();
 
         User user = Cache.getUser(api, senderId);
-        if (user != null) {
-            append(message, senderId, user.name, user.accent, dateTime);
-        }
+        append(user, message, dateTime);
     }
 
     public void add(ImageMessage event) throws ParseException {
@@ -86,9 +83,7 @@ public class Collector {
         String dateTime = event.getTime();
 
         User user = Cache.getUser(api, senderId);
-        if (user != null) {
-            append(message, senderId, user.name, user.accent, dateTime);
-        }
+        append(user, message, dateTime);
     }
 
     public void add(String text, String dateTime) throws ParseException {
@@ -96,15 +91,17 @@ public class Collector {
         message.text = text;
         message.time = toTime(dateTime);
 
-        String senderName = "System";
-        int accent = 4;
+        User user = new User();
+        user.id = UUID.randomUUID();
+        user.name = "System";
+        user.accent = 4;
 
-        append(message, null, senderName, accent, dateTime);
+        append(user, message, dateTime);
     }
 
-    private void append(Message message, @Nullable UUID senderId, String senderName, int accent, String dateTime)
+    private void append(User user, Message message, String dateTime)
             throws ParseException {
-        Sender sender = newSender(senderId, senderName, accent, message);
+        Sender sender = newSender(user, message);
         Day day = newDay(sender, dateTime);
 
         if (days.isEmpty()) {
@@ -136,14 +133,14 @@ public class Collector {
         return message;
     }
 
-    private Sender newSender(UUID senderId, String senderName, int accent, Message message) {
+    private Sender newSender(User user, Message message) {
         Sender sender = new Sender();
-        sender.senderId = senderId;
-        sender.name = senderName;
-        sender.accent = toColor(accent);
+        sender.senderId = user.id;
+        sender.name = user.name;
+        sender.accent = toColor(user.accent);
         sender.messages.add(message);
 
-        File file = Cache.getProfileImage(api, sender.senderId);
+        File file = Cache.getProfileImage(api, user);
         if (file != null && file.exists())
             sender.avatar = String.format("file://%s", file.getAbsolutePath());
 
@@ -162,34 +159,33 @@ public class Collector {
     }
 
     public static class Conversation {
-        public LinkedList<Day> days = new LinkedList<>();
-        public String title;
+        LinkedList<Day> days = new LinkedList<>();
+        String title;
     }
 
-
     public static class Day {
-        public String date;
-        public LinkedList<Sender> senders = new LinkedList<>();
+        String date;
+        LinkedList<Sender> senders = new LinkedList<>();
 
-        public boolean equals(Day d) {
+        boolean equals(Day d) {
             return Objects.equals(date, d.date);
         }
     }
 
     public static class Message {
-        public String text;
-        public String image;
-        public String time;
+        String text;
+        String image;
+        String time;
     }
 
     public static class Sender {
-        public UUID senderId;
-        public String avatar;
-        public String name;
-        public String accent;
-        public ArrayList<Message> messages = new ArrayList<>();
+        UUID senderId;
+        String avatar;
+        String name;
+        String accent;
+        ArrayList<Message> messages = new ArrayList<>();
 
-        public boolean equals(Sender s) {
+        boolean equals(Sender s) {
             return Objects.equals(senderId, s.senderId);
         }
     }

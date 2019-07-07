@@ -76,7 +76,7 @@ public class Service extends Server<Config> {
         addResource(new RemoveResource(accessDAO, cf, validator), env);
         addResource(new ListingResource(accessDAO, cf), env);
         addResource(new EventsResource(eventsDAO), env);
-        addResource(new PdfResource(eventsDAO), env);
+        addResource(new PdfResource(eventsDAO, accessDAO), env);
         addResource(new ConversationsResource(eventsDAO), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());

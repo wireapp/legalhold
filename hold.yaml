@@ -30,8 +30,6 @@ jerseyClient:
 auth: ${HOLD_SERVICE_TOKEN}
 
 sleep: 60 #seconds
-email: smoketester+micha3@wire.com
-password: password
 
 db:
   driver: postgresql

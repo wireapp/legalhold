@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.Service;
 import com.wire.bots.hold.model.Event;
+import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
@@ -17,8 +19,6 @@ import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.API;
-import com.wire.bots.sdk.user.LoginClient;
-import com.wire.bots.sdk.user.model.User;
 import io.swagger.annotations.*;
 
 import javax.ws.rs.GET;
@@ -40,10 +40,14 @@ import java.util.UUID;
 public class PdfResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
+    private final AccessDAO accessDAO;
     private final ObjectMapper mapper = new ObjectMapper();
+    private API api;
 
-    public PdfResource(EventsDAO eventsDAO) {
+    public PdfResource(EventsDAO eventsDAO, AccessDAO accessDAO) {
         this.eventsDAO = eventsDAO;
+        this.accessDAO = accessDAO;
+        api = getLHApi();
     }
 
     @GET
@@ -55,14 +59,7 @@ public class PdfResource {
         try {
             List<Event> events = eventsDAO.listAllAsc(conversationId);
 
-            Client client = Service.instance.getClient();
-            String email = Service.instance.getConfig().email;
-            String password = Service.instance.getConfig().password;
-
-            LoginClient loginClient = new LoginClient(client);
-            User admin = loginClient.login(email, password);
-            String token = admin.getToken();
-            API api = new API(client, null, token);
+            testAPI();
 
             Collector collector = new Collector(api);
             for (Event event : events) {
@@ -107,6 +104,26 @@ public class PdfResource {
         }
     }
 
+    private void testAPI() {
+        try {
+            api.getSelf();
+        } catch (Exception e) {
+            Logger.info("reconnecting...");
+            api = getLHApi();
+        }
+    }
+
+    private API getLHApi() {
+        Client client = Service.instance.getClient();
+        try {
+            LHAccess single = accessDAO.getSingle();
+            return new API(client, null, single.token);
+        } catch (Exception e) {
+            Logger.warning("getLHApi: %s", e);
+            return new API(client, null, null);
+        }
+    }
+
     private void onImage(Collector collector, Event event) {
         try {
             ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
@@ -125,15 +142,13 @@ public class PdfResource {
         }
     }
 
-    private void onMember(API api, Collector collector, Event event, String s) {
+    private void onMember(API api, Collector collector, Event event, String label) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
             for (UUID userId : msg.users) {
                 com.wire.bots.sdk.server.model.User user = Cache.getUser(api, userId);
-                if (user != null) {
-                    String format = String.format(s, user.name);
-                    collector.add(format, msg.time);
-                }
+                String format = String.format(label, user.name);
+                collector.add(format, msg.time);
             }
         } catch (Exception e) {
             Logger.error("onMember: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
@@ -144,23 +159,25 @@ public class PdfResource {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
             Conversation conversation = msg.conversation;
-            collector.setConvName(conversation.name);
-            com.wire.bots.sdk.server.model.User user = Cache.getUser(api, conversation.creator);
-            if (user != null) {
-                String format = String.format("New conversation created by **%s**", user.name);
-                collector.add(format, msg.time);
-            }
+            String text = formatConversation(api, conversation);
 
-            for (Member member : conversation.members) {
-                user = Cache.getUser(api, member.id);
-                if (user != null) {
-                    String format = String.format("with **%s**", user.name);
-                    collector.add(format, msg.time);
-                }
-            }
+            collector.setConvName(conversation.name);
+            collector.add(text, msg.time);
         } catch (Exception e) {
+            e.printStackTrace();
             Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
+    }
+
+    private String formatConversation(API api, Conversation conversation) {
+        StringBuilder sb = new StringBuilder();
+        com.wire.bots.sdk.server.model.User user = Cache.getUser(api, conversation.creator);
+        sb.append(String.format("New conversation created by **%s**\n", user.name));
+        for (Member member : conversation.members) {
+            user = Cache.getUser(api, member.id);
+            sb.append(String.format("with **%s**\n", user.name));
+        }
+        return sb.toString();
     }
 
     private Mustache compileTemplate() {

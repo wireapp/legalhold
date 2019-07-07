@@ -16,43 +16,25 @@ public class Cache {
     private static final ConcurrentHashMap<UUID, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
 
     @Nullable
-    public static File getImage(API api, ImageMessage message) {
-        return pictures.computeIfAbsent(message.getAssetKey(), k -> {
-            try {
-                return Helper.downloadImage(api, message);
-            } catch (Exception e) {
-                Logger.warning("Cache.getImage: asset: %s, ex: %s", message.getAssetKey(), e);
-                return null;
-            }
-        });
+    static File getImage(API api, ImageMessage message) {
+        return pictures.computeIfAbsent(message.getAssetKey(), k -> Helper.downloadImage(api, message));
     }
 
     @Nullable
-    public static File getProfileImage(API api, UUID userId) {
-        if (userId == null)
-            return null;
-
-        return profiles.computeIfAbsent(userId, k -> {
-            try {
-                return Helper.getProfile(api, userId);
-            } catch (Exception e) {
-                Logger.warning("Cache.getProfileImage: user: %s, ex: %s", userId, e);
-                return null;
-            }
-        });
+    static File getProfileImage(API api, User user) {
+        return profiles.computeIfAbsent(user.id, k -> Helper.getProfile(api, user));
     }
 
-    @Nullable
     public static User getUser(API api, UUID userId) {
-        if (userId == null)
-            return null;
-
         return users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);
             } catch (Exception e) {
                 Logger.warning("Cache.getUser: userId: %s, ex: %s", userId, e);
-                return null;
+                User user = new User();
+                user.id = userId;
+                user.name = userId.toString();
+                return user;
             }
         });
     }

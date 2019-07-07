@@ -30,6 +30,10 @@ public interface AccessDAO {
     int updateLast(@Bind("userId") UUID userId,
                    @Bind("last") UUID last);
 
+    @SqlQuery("SELECT * FROM Hold_Tokens WHERE token IS NOT NULL ORDER BY created DESC LIMIT 1")
+    @RegisterMapper(AccessResultSetMapper.class)
+    LHAccess getSingle();
+
     @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC")
     @RegisterMapper(AccessResultSetMapper.class)
     List<LHAccess> listAll();

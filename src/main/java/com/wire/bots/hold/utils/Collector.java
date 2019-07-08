@@ -99,8 +99,7 @@ public class Collector {
         append(user, message, dateTime);
     }
 
-    private void append(User user, Message message, String dateTime)
-            throws ParseException {
+    private void append(User user, Message message, String dateTime) throws ParseException {
         Sender sender = newSender(user, message);
         Day day = newDay(sender, dateTime);
 

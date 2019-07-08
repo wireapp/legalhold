@@ -1,14 +1,14 @@
 FROM dejankovacevic/bots.runtime:2.10.3
 
-COPY target/hold.jar   /opt/hold/hold.jar
-COPY hold.yaml         /etc/hold/hold.yaml
+COPY target/hold.jar   /opt/legalhold/hold.jar
+COPY hold.yaml         /etc/legalhold/hold.yaml
 
-RUN mkdir /opt/hold/data
-RUN mkdir /opt/hold/data/assets
-RUN mkdir /opt/hold/images
-RUN mkdir /opt/hold/avatars
+RUN mkdir /opt/legalhold/data
+RUN mkdir /opt/legalhold/data/assets
+RUN mkdir /opt/legalhold/images
+RUN mkdir /opt/legalhold/avatars
              
-WORKDIR /opt/hold
+WORKDIR /opt/legalhold
      
 EXPOSE  8080 8081 8082
 

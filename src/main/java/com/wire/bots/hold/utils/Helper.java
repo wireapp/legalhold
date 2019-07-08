@@ -21,6 +21,8 @@ class Helper {
         String filename = avatarPath(user.id);
         File file = new File(filename);
         try {
+            if (user.assets == null)
+                return file;
             for (Asset asset : user.assets) {
                 if (asset.size.equals("preview")) {
                     byte[] profile = api.downloadAsset(asset.key, null);
@@ -29,7 +31,7 @@ class Helper {
                 }
             }
         } catch (Exception e) {
-            Logger.warning("getProfile: %s", e);
+            Logger.warning("Helper.getProfile: user: %s %s", user.id, e);
         }
         return file;
     }
@@ -46,7 +48,7 @@ class Helper {
             byte[] image = Util.decrypt(message.getOtrKey(), cipher);
             save(image, file);
         } catch (Exception e) {
-            Logger.warning("downloadImage: %s", e);
+            Logger.warning("Helper.downloadImage: %s", e);
         }
         return file;
     }
@@ -60,11 +62,11 @@ class Helper {
     private static File getFile(String assetKey, String mimeType) {
         String[] split = mimeType.split("/");
         String extension = split.length == 1 ? split[0] : split[1];
-        String filename = String.format("images/%s.%s", assetKey, extension);
+        String filename = String.format("legalhold/images/%s.%s", assetKey, extension);
         return new File(filename);
     }
 
     private static String avatarPath(UUID senderId) {
-        return String.format("avatars/%s.png", senderId);
+        return String.format("legalhold/avatars/%s.png", senderId);
     }
 }

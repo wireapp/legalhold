@@ -151,11 +151,11 @@ public class NotificationProcessor implements Runnable {
                 .get();
 
         int status = response.getStatus();
-        Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
-                LHAccess.userId,
-                LHAccess.clientId,
-                LHAccess.last,
-                status);
+//        Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
+//                LHAccess.userId,
+//                LHAccess.clientId,
+//                LHAccess.last,
+//                status);
 
         if (status == 200)
             return response.readEntity(NotificationList.class);

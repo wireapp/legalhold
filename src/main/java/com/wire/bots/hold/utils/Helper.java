@@ -6,6 +6,11 @@ import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.tools.Util;
 import com.wire.bots.sdk.user.API;
+import org.commonmark.Extension;
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -13,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 class Helper {
@@ -68,5 +75,22 @@ class Helper {
 
     private static String avatarPath(UUID senderId) {
         return String.format("legalhold/avatars/%s.png", senderId);
+    }
+
+    static String markdown2Html(String text, Boolean escape) {
+        List<Extension> extensions = Collections.singletonList(AutolinkExtension.create());
+
+        Parser parser = Parser
+                .builder()
+                .extensions(extensions)
+                .build();
+
+        Node document = parser.parse(text);
+        HtmlRenderer renderer = HtmlRenderer
+                .builder()
+                .escapeHtml(escape)
+                .extensions(extensions)
+                .build();
+        return renderer.render(document);
     }
 }

@@ -21,11 +21,42 @@ public class Collector {
         this.api = api;
     }
 
-    private static Message newMessage(TextMessage event) throws ParseException {
+    public void add(TextMessage event) throws ParseException {
         Message message = new Message();
-        message.text = event.getText();
+        message.text = Helper.markdown2Html(event.getText(), true);
         message.time = toTime(event.getTime());
-        return message;
+
+        UUID senderId = event.getUserId();
+        String dateTime = event.getTime();
+
+        User user = Cache.getUser(api, senderId);
+        append(user, message, dateTime);
+    }
+
+    public void add(ImageMessage event) throws ParseException {
+        Message message = new Message();
+        message.time = toTime(event.getTime());
+        File file = Cache.getImage(api, event);
+        if (file != null && file.exists())
+            message.image = String.format("file://%s", file.getAbsolutePath());
+
+        UUID senderId = event.getUserId();
+        String dateTime = event.getTime();
+
+        User user = Cache.getUser(api, senderId);
+        append(user, message, dateTime);
+    }
+
+    public void add(String text, String dateTime) throws ParseException {
+        Message message = new Message();
+        message.text = Helper.markdown2Html(text, true);
+        message.time = toTime(dateTime);
+        User user = new User();
+        user.id = UUID.randomUUID();
+        user.name = "System";
+        user.accent = 4;
+
+        append(user, message, dateTime);
     }
 
     private static Day newDay(Sender sender, String dateTime) throws ParseException {
@@ -66,39 +97,6 @@ public class Collector {
         return df.format(date);
     }
 
-    public void add(TextMessage event) throws ParseException {
-        Message message = newMessage(event);
-
-        UUID senderId = event.getUserId();
-        String dateTime = event.getTime();
-
-        User user = Cache.getUser(api, senderId);
-        append(user, message, dateTime);
-    }
-
-    public void add(ImageMessage event) throws ParseException {
-        Message message = newMessage(event);
-
-        UUID senderId = event.getUserId();
-        String dateTime = event.getTime();
-
-        User user = Cache.getUser(api, senderId);
-        append(user, message, dateTime);
-    }
-
-    public void add(String text, String dateTime) throws ParseException {
-        Message message = new Message();
-        message.text = text;
-        message.time = toTime(dateTime);
-
-        User user = new User();
-        user.id = UUID.randomUUID();
-        user.name = "System";
-        user.accent = 4;
-
-        append(user, message, dateTime);
-    }
-
     private void append(User user, Message message, String dateTime) throws ParseException {
         Sender sender = newSender(user, message);
         Day day = newDay(sender, dateTime);
@@ -120,16 +118,6 @@ public class Collector {
         } else {
             lastDay.senders.add(sender);
         }
-    }
-
-    private Message newMessage(ImageMessage event) throws ParseException {
-        Message message = new Message();
-        message.time = toTime(event.getTime());
-
-        File file = Cache.getImage(api, event);
-        if (file != null && file.exists())
-            message.image = String.format("file://%s", file.getAbsolutePath());
-        return message;
     }
 
     private Sender newSender(User user, Message message) {
@@ -174,6 +162,7 @@ public class Collector {
     public static class Message {
         String text;
         String image;
+        String system;
         String time;
     }
 

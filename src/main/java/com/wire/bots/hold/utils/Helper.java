@@ -69,12 +69,12 @@ class Helper {
     private static File getFile(String assetKey, String mimeType) {
         String[] split = mimeType.split("/");
         String extension = split.length == 1 ? split[0] : split[1];
-        String filename = String.format("legalhold/images/%s.%s", assetKey, extension);
+        String filename = String.format("images/%s.%s", assetKey, extension);
         return new File(filename);
     }
 
     private static String avatarPath(UUID senderId) {
-        return String.format("legalhold/avatars/%s.png", senderId);
+        return String.format("avatars/%s.png", senderId);
     }
 
     static String markdown2Html(String text, Boolean escape) {

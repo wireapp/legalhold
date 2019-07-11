@@ -13,12 +13,18 @@ import java.util.*;
 
 public class Collector {
     private final API api;
+    private final boolean pdf;
 
     private LinkedList<Day> days = new LinkedList<>();
     private String convName;
 
     public Collector(API api) {
+        this(api, true);
+    }
+
+    public Collector(API api, boolean pdf) {
         this.api = api;
+        this.pdf = pdf;
     }
 
     public void add(TextMessage event) throws ParseException {
@@ -37,14 +43,22 @@ public class Collector {
         Message message = new Message();
         message.time = toTime(event.getTime());
         File file = Cache.getImage(api, event);
-        if (file != null && file.exists())
-            message.image = String.format("file://%s", file.getAbsolutePath());
+        if (file != null && file.exists()) {
+            message.image = getFilename(file, "images");
+        }
 
         UUID senderId = event.getUserId();
         String dateTime = event.getTime();
 
         User user = Cache.getUser(api, senderId);
         append(user, message, dateTime);
+    }
+
+    private String getFilename(File file, String dir) {
+        if (pdf)
+            return String.format("file://%s", file.getAbsolutePath());
+
+        return String.format("/legalhold/%s/%s", dir, file.getName());
     }
 
     public void add(String text, String dateTime) throws ParseException {
@@ -128,9 +142,9 @@ public class Collector {
         sender.messages.add(message);
 
         File file = Cache.getProfileImage(api, user);
-        if (file != null && file.exists())
-            sender.avatar = String.format("file://%s", file.getAbsolutePath());
-
+        if (file != null && file.exists()) {
+            sender.avatar = getFilename(file, "avatars");
+        }
         return sender;
     }
 

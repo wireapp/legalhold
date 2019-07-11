@@ -28,7 +28,7 @@ public class PdfGenerator {
 
     public static ByteArrayOutputStream convert(String html) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        builder.withHtmlContent(html, "")
+        builder.withHtmlContent(html, "/legalhold")
                 .toStream(out)
                 .run();
         return out;
@@ -37,7 +37,7 @@ public class PdfGenerator {
     public static File save(String filename, String html) throws Exception {
         File file = new File(filename);
         try (OutputStream out = new FileOutputStream(filename)) {
-            builder.withHtmlContent(html, "")
+            builder.withHtmlContent(html, "legalhold")
                     .toStream(out)
                     .run();
         }

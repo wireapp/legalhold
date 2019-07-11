@@ -61,7 +61,7 @@ public class PdfResource {
 
             testAPI();
 
-            Collector collector = new Collector(api);
+            Collector collector = new Collector(api, !isHtml);
             for (Event event : events) {
                 switch (event.type) {
                     case "conversation.create": {

@@ -24,13 +24,13 @@ import com.wire.bots.hold.internal.HoldMessageResource;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
+import com.wire.bots.hold.utils.ImagesBundle;
 import com.wire.bots.sdk.ClientRepo;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.tools.AuthValidator;
 import io.dropwizard.Application;
-import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -50,7 +50,9 @@ public class Service extends Server<Config> {
     public void initialize(Bootstrap<Config> bootstrap) {
         super.initialize(bootstrap);
 
-        bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
+        //bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
+        bootstrap.addBundle(new ImagesBundle("/opt/legalhold/images", "/legalhold/images"));
+
         bootstrap.addBundle(admin);
         bootstrap.addBundle(new DBIExceptionsBundle());
 

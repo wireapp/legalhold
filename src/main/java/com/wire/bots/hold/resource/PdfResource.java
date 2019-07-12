@@ -26,7 +26,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -62,7 +61,7 @@ public class PdfResource {
             testAPI();
 
             Cache cache = new Cache(api);
-            Collector collector = new Collector(cache, !isHtml);
+            Collector collector = new Collector(cache);
             for (Event event : events) {
                 switch (event.type) {
                     case "conversation.create": {
@@ -96,10 +95,9 @@ public class PdfResource {
                         ok(html, MediaType.TEXT_HTML).
                         build();
 
-            ByteArrayOutputStream outputStream = PdfGenerator.convert(html);
-
+            byte[] out = PdfGenerator.convert(html, "file:/opt/hold");
             return Response.
-                    ok(outputStream.toByteArray(), "application/pdf").
+                    ok(out, "application/pdf").
                     build();
         } catch (Exception e) {
             e.printStackTrace();

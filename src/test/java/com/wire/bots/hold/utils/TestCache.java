@@ -15,12 +15,12 @@ public class TestCache extends Cache {
 
     @Override
     public File getImage(ImageMessage message) {
-        return new File(String.format("src/test/images/%s.png", message.getAssetKey()));
+        return new File(String.format("src/test/legalhold/images/%s.png", message.getAssetKey()));
     }
 
     @Override
     public File getProfileImage(User user) {
-        return new File(String.format("src/test/avatars/%s.png", user.id));
+        return new File(String.format("src/test/legalhold/avatars/%s.png", user.id));
     }
 
     @Override

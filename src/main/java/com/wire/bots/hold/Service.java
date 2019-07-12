@@ -51,7 +51,7 @@ public class Service extends Server<Config> {
         super.initialize(bootstrap);
 
         //bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
-        bootstrap.addBundle(new ImagesBundle("/opt/legalhold/images", "/legalhold/images"));
+        bootstrap.addBundle(new ImagesBundle("/opt/hold/legalhold/images", "/legalhold/images"));
 
         bootstrap.addBundle(admin);
         bootstrap.addBundle(new DBIExceptionsBundle());

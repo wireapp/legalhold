@@ -11,19 +11,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Collector {
-    private final boolean pdf;
     private final Cache cache;
 
     private LinkedList<Day> days = new LinkedList<>();
     private String convName;
 
-    public Collector(Cache cache) {
-        this(cache, true);
-    }
 
-    public Collector(Cache cache, boolean pdf) {
+    public Collector(Cache cache) {
         this.cache = cache;
-        this.pdf = pdf;
     }
 
     public void add(TextMessage event) throws ParseException {
@@ -53,16 +48,9 @@ public class Collector {
         append(user, message, dateTime);
     }
 
-    private String getFilename(File file, String dir) {
-        if (pdf)
-            return String.format("file://%s", file.getAbsolutePath());
-
-        return String.format("/legalhold/%s/%s", dir, file.getName());
-    }
-
     public void add(String text, String dateTime) throws ParseException {
         Message message = new Message();
-        message.text = Helper.markdown2Html(text, true);
+        message.system = Helper.markdown2Html(text, true);
         message.time = toTime(dateTime);
         User user = new User();
         user.id = UUID.randomUUID();
@@ -70,6 +58,20 @@ public class Collector {
         user.accent = 4;
 
         append(user, message, dateTime);
+    }
+
+    private Sender newSender(User user, Message message) {
+        Sender sender = new Sender();
+        sender.senderId = user.id;
+        sender.name = user.name;
+        sender.accent = toColor(user.accent);
+        sender.messages.add(message);
+
+        File file = cache.getProfileImage(user);
+        if (file != null && file.exists()) {
+            sender.avatar = getFilename(file, "avatars");
+        }
+        return sender;
     }
 
     private static Day newDay(Sender sender, String dateTime) throws ParseException {
@@ -133,18 +135,8 @@ public class Collector {
         }
     }
 
-    private Sender newSender(User user, Message message) {
-        Sender sender = new Sender();
-        sender.senderId = user.id;
-        sender.name = user.name;
-        sender.accent = toColor(user.accent);
-        sender.messages.add(message);
-
-        File file = cache.getProfileImage(user);
-        if (file != null && file.exists()) {
-            sender.avatar = getFilename(file, "avatars");
-        }
-        return sender;
+    private String getFilename(File file, String dir) {
+        return String.format("/legalhold/%s/%s", dir, file.getName());
     }
 
     public Conversation getConversation() {
@@ -161,10 +153,6 @@ public class Collector {
     public static class Conversation {
         LinkedList<Day> days = new LinkedList<>();
         String title;
-
-        public LinkedList<Day> getDays() {
-            return days;
-        }
 
         public String getTitle() {
             return title;

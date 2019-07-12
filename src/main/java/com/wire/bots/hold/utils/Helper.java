@@ -25,7 +25,7 @@ import java.util.UUID;
 class Helper {
 
     static File getProfile(API api, User user) {
-        String filename = avatarPath(user.id);
+        String filename = avatarFile(user.id);
         File file = new File(filename);
         try {
             if (user.assets == null)
@@ -44,7 +44,7 @@ class Helper {
     }
 
     static File downloadImage(API api, ImageMessage message) {
-        File file = getFile(message.getAssetKey(), message.getMimeType());
+        File file = imageFile(message.getAssetKey(), message.getMimeType());
         try {
             byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
 
@@ -66,15 +66,15 @@ class Helper {
         }
     }
 
-    private static File getFile(String assetKey, String mimeType) {
+    private static File imageFile(String assetKey, String mimeType) {
         String[] split = mimeType.split("/");
         String extension = split.length == 1 ? split[0] : split[1];
-        String filename = String.format("images/%s.%s", assetKey, extension);
+        String filename = String.format("legalhold/images/%s.%s", assetKey, extension);
         return new File(filename);
     }
 
-    private static String avatarPath(UUID senderId) {
-        return String.format("avatars/%s.png", senderId);
+    private static String avatarFile(UUID senderId) {
+        return String.format("legalhold/avatars/%s.png", senderId);
     }
 
     static String markdown2Html(String text, Boolean escape) {

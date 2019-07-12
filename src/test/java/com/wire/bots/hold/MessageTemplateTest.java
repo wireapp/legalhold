@@ -49,7 +49,7 @@ public class MessageTemplateTest {
 
         Mustache mustache = compileTemplate("conversation.html");
 
-        Collector.Conversation conversation = getConversation(true);
+        Collector.Conversation conversation = getConversation();
         String html = execute(mustache, conversation);
         assert html != null;
         File file = new File(String.format("src/test/output/%s.html", conversation.getTitle()));
@@ -57,10 +57,10 @@ public class MessageTemplateTest {
             os.write(html.getBytes());
         }
 
-        conversation = getConversation(false);
+        conversation = getConversation();
         html = execute(mustache, conversation);
         String pdfFilename = String.format("src/test/output/%s.pdf", conversation.getTitle());
-        PdfGenerator.save(pdfFilename, html);
+        PdfGenerator.save(pdfFilename, html, "file:src/test");
     }
 
     private Mustache compileTemplate(String template) {
@@ -81,18 +81,18 @@ public class MessageTemplateTest {
         }
     }
 
-    private Collector.Conversation getConversation(boolean html) throws ParseException {
+    private Collector.Conversation getConversation() throws ParseException {
         final String thursday = "2019-07-08T08:35:21.348Z";
         final String friday = "2019-07-09T18:21:17.548Z";
         final String saturday = "2019-07-10T21:11:47.149Z";
 
-        Collector collector = new Collector(new TestCache(), !html);
+        Collector collector = new Collector(new TestCache());
         collector.setConvName("Message Template Test");
+        collector.add(img(dejan, thursday, "ognjiste"));
         collector.add("New conversations created by **Dejan** with: \n- **Lipis**", thursday);
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(txt(dejan, thursday, "😃🐠😴🤧✍️👉👨‍🚒👨‍🏫👩‍👦👨‍👧‍👦🐥🐧🐾🐁🐕🎋🐲🐉"));
-        collector.add(img(dejan, thursday, "ognjiste"));
         collector.add(txt(dejan, thursday, "4"));
         collector.add(txt(lipis, thursday, "5 👍"));
         collector.add(txt(lipis, thursday, "😃Lorem ipsum **dolor** sit amet, consectetur adipiscing elit, sed " +
@@ -135,6 +135,7 @@ public class MessageTemplateTest {
         collector.add(txt(dejan, saturday, "These two urls https://google.com https://wire.com"));
         collector.add("**Lipis** left the conversation", saturday);
         collector.add("**Tiago** joined the conversation", saturday);
+        collector.add(img(dejan, saturday, "ognjiste2"));
 
         return collector.getConversation();
     }

@@ -1,13 +1,16 @@
 FROM dejankovacevic/bots.runtime:2.10.3
 
-COPY target/hold.jar   /opt/legalhold/hold.jar
-COPY hold.yaml         /etc/legalhold/hold.yaml
+RUN mkdir /opt/hold
 
-RUN mkdir /opt/legalhold/images
-RUN mkdir /opt/legalhold/avatars
+COPY target/hold.jar   /opt/hold/hold.jar
+COPY hold.yaml         /etc/hold/hold.yaml
+
+RUN mkdir /opt/hold/legalhold
+RUN mkdir /opt/hold/legalhold/images
+RUN mkdir /opt/hold/legalhold/avatars
              
-WORKDIR /opt/legalhold
+WORKDIR /opt/hold
      
 EXPOSE  8080 8081 8082
 
-CMD ["sh", "-c","/usr/bin/java -Djava.library.path=/opt/wire/lib -jar hold.jar server /etc/legalhold/hold.yaml"]
+CMD ["sh", "-c","/usr/bin/java -Djava.library.path=/opt/wire/lib -jar hold.jar server /etc/hold/hold.yaml"]

@@ -3,7 +3,6 @@ package com.wire.bots.hold.utils;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.user.API;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -12,18 +11,18 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Collector {
-    private final API api;
     private final boolean pdf;
+    private final Cache cache;
 
     private LinkedList<Day> days = new LinkedList<>();
     private String convName;
 
-    public Collector(API api) {
-        this(api, true);
+    public Collector(Cache cache) {
+        this(cache, true);
     }
 
-    public Collector(API api, boolean pdf) {
-        this.api = api;
+    public Collector(Cache cache, boolean pdf) {
+        this.cache = cache;
         this.pdf = pdf;
     }
 
@@ -35,14 +34,14 @@ public class Collector {
         UUID senderId = event.getUserId();
         String dateTime = event.getTime();
 
-        User user = Cache.getUser(api, senderId);
+        User user = cache.getUser(senderId);
         append(user, message, dateTime);
     }
 
     public void add(ImageMessage event) throws ParseException {
         Message message = new Message();
         message.time = toTime(event.getTime());
-        File file = Cache.getImage(api, event);
+        File file = cache.getImage(event);
         if (file != null && file.exists()) {
             message.image = getFilename(file, "images");
         }
@@ -50,7 +49,7 @@ public class Collector {
         UUID senderId = event.getUserId();
         String dateTime = event.getTime();
 
-        User user = Cache.getUser(api, senderId);
+        User user = cache.getUser(senderId);
         append(user, message, dateTime);
     }
 
@@ -141,7 +140,7 @@ public class Collector {
         sender.accent = toColor(user.accent);
         sender.messages.add(message);
 
-        File file = Cache.getProfileImage(api, user);
+        File file = cache.getProfileImage(user);
         if (file != null && file.exists()) {
             sender.avatar = getFilename(file, "avatars");
         }
@@ -162,6 +161,14 @@ public class Collector {
     public static class Conversation {
         LinkedList<Day> days = new LinkedList<>();
         String title;
+
+        public LinkedList<Day> getDays() {
+            return days;
+        }
+
+        public String getTitle() {
+            return title;
+        }
     }
 
     public static class Day {

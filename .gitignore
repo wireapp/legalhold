@@ -1,8 +1,7 @@
 target/
 data/
-images/
+src/test/output/
 .idea/
 *.iml
 *.log
 *.lck
-*.pdf

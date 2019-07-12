@@ -21,14 +21,13 @@ public class ImagesBundle extends AssetsBundle {
     }
 
     class _AssetServlet extends AssetServlet {
-
         _AssetServlet(String resourcePath, String uriPath, @Nullable String indexFile, @Nullable Charset defaultCharset) {
             super(resourcePath, uriPath, indexFile, defaultCharset);
         }
 
         @Override
         protected URL getResourceUrl(String path) {
-            Logger.info("ImagesBundle: loading: %s", path);
+            Logger.debug("ImagesBundle: loading: %s", path);
             try {
                 return new URL(String.format("file:/%s", path));
             } catch (MalformedURLException e) {

@@ -61,7 +61,8 @@ public class PdfResource {
 
             testAPI();
 
-            Collector collector = new Collector(api, !isHtml);
+            Cache cache = new Cache(api);
+            Collector collector = new Collector(cache, !isHtml);
             for (Event event : events) {
                 switch (event.type) {
                     case "conversation.create": {
@@ -189,7 +190,8 @@ public class PdfResource {
 
     @Nullable
     private String getUserName(UUID userId) {
-        com.wire.bots.sdk.server.model.User user = Cache.getUser(api, userId);
+        Cache cache = new Cache(api);
+        com.wire.bots.sdk.server.model.User user = cache.getUser(userId);
         return user == null ? userId.toString() : user.name;
     }
 

@@ -14,18 +14,23 @@ public class Cache {
     private static final ConcurrentHashMap<String, File> pictures = new ConcurrentHashMap<>();//<assetKey, Picture>
     private static final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();//<userId, User>
     private static final ConcurrentHashMap<UUID, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
+    private final API api;
+
+    public Cache(API api) {
+        this.api = api;
+    }
 
     @Nullable
-    static File getImage(API api, ImageMessage message) {
+    public File getImage(ImageMessage message) {
         return pictures.computeIfAbsent(message.getAssetKey(), k -> Helper.downloadImage(api, message));
     }
 
     @Nullable
-    static File getProfileImage(API api, User user) {
+    public File getProfileImage(User user) {
         return profiles.computeIfAbsent(user.id, k -> Helper.getProfile(api, user));
     }
 
-    public static User getUser(API api, UUID userId) {
+    public User getUser(UUID userId) {
         return users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);

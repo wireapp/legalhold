@@ -17,6 +17,10 @@ public interface EventsDAO {
                @Bind("type") String type,
                @Bind("payload") String payload);
 
+    @SqlQuery("SELECT * FROM Hold_Events WHERE messageId = :messageId")
+    @RegisterMapper(EventsResultSetMapper.class)
+    Event get(@Bind("messageId") UUID messageId);
+
     @SqlQuery("SELECT * FROM Hold_Events WHERE conversationId = :conversationId ORDER BY time DESC")
     @RegisterMapper(EventsResultSetMapper.class)
     List<Event> listAll(@Bind("conversationId") UUID conversationId);

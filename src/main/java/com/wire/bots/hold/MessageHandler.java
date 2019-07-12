@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.models.AttachmentMessage;
-import com.wire.bots.sdk.models.ImageMessage;
-import com.wire.bots.sdk.models.TextMessage;
+import com.wire.bots.sdk.models.*;
 import com.wire.bots.sdk.server.model.SystemMessage;
 import com.wire.bots.sdk.tools.Logger;
 
@@ -73,12 +71,60 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
+    public void onAudio(WireClient client, AudioMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID messageId = msg.getMessageId();
+        UUID senderId = msg.getUserId();
+        String type = "conversation.otr-message-add.new-audio";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
+    @Override
+    public void onVideo(WireClient client, VideoMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID messageId = msg.getMessageId();
+        UUID senderId = msg.getUserId();
+        String type = "conversation.otr-message-add.new-video";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
+    @Override
     public void onAttachment(WireClient client, AttachmentMessage msg) {
         UUID messageId = msg.getMessageId();
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();
         UUID userId = UUID.fromString(client.getId());
         String type = "conversation.otr-message-add.new-attachment";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
+    @Override
+    public void onEditText(WireClient client, EditedTextMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID senderId = msg.getUserId();
+        UUID messageId = msg.getMessageId();
+        String type = "conversation.otr-message-add.edit-text";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
+    public void onConversationRename(WireClient client) {
+
+    }
+
+    @Override
+    public void onDelete(WireClient client, DeletedTextMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID senderId = msg.getUserId();
+        UUID messageId = msg.getMessageId();
+        String type = "conversation.otr-message-add.delete-text";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }

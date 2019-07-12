@@ -12,6 +12,8 @@ import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
+import com.wire.bots.sdk.models.DeletedTextMessage;
+import com.wire.bots.sdk.models.EditedTextMessage;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.Conversation;
@@ -70,6 +72,14 @@ public class PdfResource {
                     break;
                     case "conversation.otr-message-add.new-text": {
                         onText(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.edit-text": {
+                        onTextEdit(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.delete-text": {
+                        onTextDelete(collector, event);
                     }
                     break;
                     case "conversation.otr-message-add.new-image": {
@@ -144,6 +154,29 @@ public class PdfResource {
             collector.add(message);
         } catch (Exception e) {
             Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onTextEdit(Collector collector, Event event) {
+        try {
+            EditedTextMessage message = mapper.readValue(event.payload, EditedTextMessage.class);
+            message.setText("_edit:_ " + message.getText());
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.error("onTextEdit: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onTextDelete(Collector collector, Event event) {
+        try {
+            DeletedTextMessage message = mapper.readValue(event.payload, DeletedTextMessage.class);
+            Event orgEvent = eventsDAO.get(message.getDeletedMessageId());
+            TextMessage orgMessage = mapper.readValue(orgEvent.payload, TextMessage.class);
+            String text = String.format("**deleted:** '%s'", orgMessage.getText());
+            orgMessage.setText(text);
+            collector.add(orgMessage);
+        } catch (Exception e) {
+            Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 

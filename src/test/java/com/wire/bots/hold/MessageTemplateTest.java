@@ -88,6 +88,7 @@ public class MessageTemplateTest {
 
         Collector collector = new Collector(new TestCache(), !html);
         collector.setConvName("Message Template Test");
+        collector.add("New conversations created by **Dejan** with: \n- **Lipis**", thursday);
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(txt(dejan, thursday, "😃🐠😴🤧✍️👉👨‍🚒👨‍🏫👩‍👦👨‍👧‍👦🐥🐧🐾🐁🐕🎋🐲🐉"));
@@ -132,6 +133,8 @@ public class MessageTemplateTest {
         collector.add(txt(dejan, saturday, "https://google.com"));
         collector.add(txt(lipis, saturday, "This is some url https://google.com and some text"));
         collector.add(txt(dejan, saturday, "These two urls https://google.com https://wire.com"));
+        collector.add("**Lipis** left the conversation", saturday);
+        collector.add("**Tiago** joined the conversation", saturday);
 
         return collector.getConversation();
     }

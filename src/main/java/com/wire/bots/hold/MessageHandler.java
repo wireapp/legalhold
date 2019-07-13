@@ -114,6 +114,7 @@ public class MessageHandler extends MessageHandlerBase {
         persist(convId, senderId, userId, messageId, type, msg);
     }
 
+    @Override
     public void onConversationRename(WireClient client) {
 
     }
@@ -130,11 +131,14 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onCalling(WireClient client, UUID userId, String clientId, String content) {
-        Logger.info("onCalling: %s, %s -> %s",
-                client.getConversationId(),
-                userId,
-                client.getId());
+    public void onCalling(WireClient client, CallingMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID senderId = msg.getUserId();
+        UUID messageId = msg.getMessageId();
+        String type = "conversation.otr-message-add.call";
+
+        persist(convId, senderId, userId, messageId, type, msg);
     }
 
     @Override

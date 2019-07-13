@@ -12,10 +12,7 @@ import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
-import com.wire.bots.sdk.models.DeletedTextMessage;
-import com.wire.bots.sdk.models.EditedTextMessage;
-import com.wire.bots.sdk.models.ImageMessage;
-import com.wire.bots.sdk.models.TextMessage;
+import com.wire.bots.sdk.models.*;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.SystemMessage;
@@ -86,6 +83,22 @@ public class PdfResource {
                         onImage(collector, event);
                     }
                     break;
+                    case "conversation.otr-message-add.new-attachment": {
+                        onAttachment(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.new-audio": {
+                        onAudio(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.new-video": {
+                        onVideo(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.call": {
+                        onCall(collector, event);
+                    }
+                    break;
                     case "conversation.member-join": {
                         onMember(collector, event, "**%s** joined the conversation");
                     }
@@ -144,7 +157,19 @@ public class PdfResource {
             ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.error("onImage: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onAttachment(Collector collector, Event event) {
+        try {
+            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
+            String format = String.format("**%s** sent an attachment: %s",
+                    getUserName(message.getUserId()),
+                    message.getName());
+            collector.add(format, message.getTime());
+        } catch (Exception e) {
+            Logger.error("onAttachment: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
@@ -172,11 +197,46 @@ public class PdfResource {
             DeletedTextMessage message = mapper.readValue(event.payload, DeletedTextMessage.class);
             Event orgEvent = eventsDAO.get(message.getDeletedMessageId());
             TextMessage orgMessage = mapper.readValue(orgEvent.payload, TextMessage.class);
-            String text = String.format("**deleted:** '%s'", orgMessage.getText());
-            orgMessage.setText(text);
-            collector.add(orgMessage);
+            String text = String.format("**%s** deleted text: '%s'",
+                    getUserName(message.getUserId()),
+                    orgMessage.getText());
+            collector.add(text, message.getTime());
         } catch (Exception e) {
             Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onCall(Collector collector, Event event) {
+        try {
+            CallingMessage message = mapper.readValue(event.payload, CallingMessage.class);
+            String format = String.format("**%s** called", getUserName(message.getUserId()));
+            collector.add(format, message.getTime());
+        } catch (Exception e) {
+            Logger.error("onCall: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onAudio(Collector collector, Event event) {
+        try {
+            AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
+            String format = String.format("**%s** sent an audio message: %s",
+                    getUserName(message.getUserId()),
+                    message.getName());
+            collector.add(format, message.getTime());
+        } catch (Exception e) {
+            Logger.error("onAudio: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onVideo(Collector collector, Event event) {
+        try {
+            VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
+            String format = String.format("**%s** sent a video message: %s",
+                    getUserName(message.getUserId()),
+                    message.getName());
+            collector.add(format, message.getTime());
+        } catch (Exception e) {
+            Logger.error("onVideo: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
@@ -190,7 +250,7 @@ public class PdfResource {
                 }
             }
         } catch (Exception e) {
-            Logger.error("onMember: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.error("onMember: %s conv: %s, msg: %s error: %s", event.type, event.conversationId, event.messageId, e);
         }
     }
 

@@ -1,5 +1,7 @@
 package com.wire.bots.hold.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
@@ -195,22 +197,33 @@ public class PdfResource {
     private void onTextDelete(Collector collector, Event event) {
         try {
             DeletedTextMessage message = mapper.readValue(event.payload, DeletedTextMessage.class);
-            Event orgEvent = eventsDAO.get(message.getDeletedMessageId());
-            TextMessage orgMessage = mapper.readValue(orgEvent.payload, TextMessage.class);
+            UUID deletedMessageId = message.getDeletedMessageId();
+            String orgText = getText(deletedMessageId);
             String text = String.format("**%s** deleted text: '%s'",
                     getUserName(message.getUserId()),
-                    orgMessage.getText());
+                    orgText);
             collector.add(text, message.getTime());
         } catch (Exception e) {
             Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
+    @Nullable
+    private String getText(UUID msgId) throws IOException {
+        Event event = eventsDAO.get(msgId);
+        if (event == null)
+            return null;
+        TextMessage orgMessage = mapper.readValue(event.payload, TextMessage.class);
+        return orgMessage.getText();
+    }
+
     private void onCall(Collector collector, Event event) {
         try {
             CallingMessage message = mapper.readValue(event.payload, CallingMessage.class);
-            String format = String.format("**%s** called", getUserName(message.getUserId()));
-            collector.add(format, message.getTime());
+            String json = message.getContent().replace("\\", "");
+            _CallingContent content = mapper.readValue(json, _CallingContent.class);
+            String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
+            collector.add(text, message.getTime());
         } catch (Exception e) {
             Logger.error("onCall: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -259,13 +272,12 @@ public class PdfResource {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
             if (msg != null) {
                 Conversation conv = msg.conversation;
-                String text = formatConversation(conv);
-
                 collector.setConvName(conv.name);
+
+                String text = formatConversation(conv);
                 collector.add(text, msg.time);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
@@ -297,5 +309,17 @@ public class PdfResource {
             mustache.execute(new PrintWriter(sw), model).flush();
             return sw.toString();
         }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class _CallingContent {
+        @JsonProperty
+        boolean resp;
+        @JsonProperty
+        String sessid;
+        @JsonProperty
+        String type;
+        @JsonProperty
+        String version;
     }
 }

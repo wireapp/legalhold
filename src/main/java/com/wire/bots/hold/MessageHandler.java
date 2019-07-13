@@ -141,6 +141,16 @@ public class MessageHandler extends MessageHandlerBase {
         persist(convId, senderId, userId, messageId, type, msg);
     }
 
+    public void onReaction(WireClient client, ReactionMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID senderId = msg.getUserId();
+        UUID messageId = msg.getMessageId();
+        String type = "conversation.otr-message-add.reaction";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
     @Override
     public boolean onConnectRequest(WireClient client, UUID from, UUID to, String status) {
         return false;

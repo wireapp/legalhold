@@ -138,7 +138,7 @@ public class PdfResource {
         try {
             api.getSelf();
         } catch (Exception e) {
-            Logger.info("reconnecting...");
+            Logger.info("reconnecting... %s", e);
             api = getLHApi();
         }
     }
@@ -294,8 +294,7 @@ public class PdfResource {
     @Nullable
     private String getUserName(UUID userId) {
         Cache cache = new Cache(api);
-        com.wire.bots.sdk.server.model.User user = cache.getUser(userId);
-        return user == null ? userId.toString() : user.name;
+        return cache.getUser(userId).name;
     }
 
     private Mustache compileTemplate() {

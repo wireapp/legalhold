@@ -1,9 +1,9 @@
 package com.wire.bots.hold.utils;
 
+import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.models.ImageMessage;
 import com.wire.bots.sdk.server.model.Asset;
 import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.tools.Util;
 import com.wire.bots.sdk.user.API;
 import org.commonmark.Extension;
@@ -24,56 +24,49 @@ import java.util.UUID;
 
 class Helper {
 
-    static File getProfile(API api, User user) {
+    static File getProfile(API api, User user) throws IOException, HttpException {
         String filename = avatarFile(user.id);
         File file = new File(filename);
-        try {
-            if (user.assets == null)
-                return file;
-            for (Asset asset : user.assets) {
-                if (asset.size.equals("preview")) {
-                    byte[] profile = api.downloadAsset(asset.key, null);
-                    save(profile, file);
-                    break;
-                }
+        if (user.assets == null)
+            return file;
+
+        for (Asset asset : user.assets) {
+            if (asset.size.equals("preview")) {
+                byte[] profile = api.downloadAsset(asset.key, null);
+                save(profile, file);
+                break;
             }
-        } catch (Exception e) {
-            Logger.warning("Helper.getProfile: user: %s %s", user.id, e);
         }
         return file;
     }
 
-    static File downloadImage(API api, ImageMessage message) {
+    static File downloadImage(API api, ImageMessage message) throws Exception {
         File file = imageFile(message.getAssetKey(), message.getMimeType());
-        try {
-            byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
+        byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
 
-            byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
-            if (!Arrays.equals(sha256, message.getSha256()))
-                throw new Exception("Failed sha256 check");
+        byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
+        if (!Arrays.equals(sha256, message.getSha256()))
+            throw new Exception("Failed sha256 check");
 
-            byte[] image = Util.decrypt(message.getOtrKey(), cipher);
-            save(image, file);
-        } catch (Exception e) {
-            Logger.warning("Helper.downloadImage: %s", e);
-        }
-        return file;
+        byte[] image = Util.decrypt(message.getOtrKey(), cipher);
+        return save(image, file);
     }
 
-    private static void save(byte[] image, File file) throws IOException {
+    private static File save(byte[] image, File file) throws IOException {
         try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
             os.write(image);
         }
+        return file;
     }
 
-    private static File imageFile(String assetKey, String mimeType) {
+    static File imageFile(String assetKey, String mimeType) {
         String[] split = mimeType.split("/");
         String extension = split.length == 1 ? split[0] : split[1];
         String filename = String.format("legalhold/images/%s.%s", assetKey, extension);
         return new File(filename);
     }
 
-    private static String avatarFile(UUID senderId) {
+    static String avatarFile(UUID senderId) {
         return String.format("legalhold/avatars/%s.png", senderId);
     }
 

@@ -5,7 +5,6 @@ import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.API;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,27 +19,57 @@ public class Cache {
         this.api = api;
     }
 
-    @Nullable
-    public File getImage(ImageMessage message) {
-        return pictures.computeIfAbsent(message.getAssetKey(), k -> Helper.downloadImage(api, message));
+    public static void clear() {
+        pictures.clear();
+        users.clear();
+        profiles.clear();
     }
 
-    @Nullable
+    public File getImage(ImageMessage message) {
+        File file = pictures.computeIfAbsent(message.getAssetKey(), k -> {
+            try {
+                return Helper.downloadImage(api, message);
+            } catch (Exception e) {
+                Logger.warning("Cache.getImage: %s", e);
+                return null;
+            }
+        });
+
+        if (file == null)
+            file = Helper.imageFile(message.getAssetKey(), message.getMimeType());
+        return file;
+    }
+
     public File getProfileImage(User user) {
-        return profiles.computeIfAbsent(user.id, k -> Helper.getProfile(api, user));
+        File file = profiles.computeIfAbsent(user.id, k -> {
+            try {
+                return Helper.getProfile(api, user);
+            } catch (Exception e) {
+                Logger.warning("Cache.getProfileImage: userId: %s, ex: %s", user.id, e);
+                return null;
+            }
+        });
+
+        if (file == null)
+            file = new File(Helper.avatarFile(user.id));
+        return file;
     }
 
     public User getUser(UUID userId) {
-        return users.computeIfAbsent(userId, k -> {
+        User user = users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);
             } catch (Exception e) {
                 Logger.warning("Cache.getUser: userId: %s, ex: %s", userId, e);
-                User user = new User();
-                user.id = userId;
-                user.name = userId.toString();
-                return user;
+                return null;
             }
         });
+
+        if (user == null) {
+            user = new User();
+            user.id = userId;
+            user.name = userId.toString();
+        }
+        return user;
     }
 }

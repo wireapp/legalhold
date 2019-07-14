@@ -37,7 +37,7 @@ public class Collector {
         Message message = new Message();
         message.time = toTime(event.getTime());
         File file = cache.getImage(event);
-        if (file != null && file.exists()) {
+        if (file.exists()) {
             message.image = getFilename(file, "images");
         }
 
@@ -68,7 +68,7 @@ public class Collector {
         sender.messages.add(message);
 
         File file = cache.getProfileImage(user);
-        if (file != null && file.exists()) {
+        if (file.exists()) {
             sender.avatar = getFilename(file, "avatars");
         }
         return sender;

@@ -1,6 +1,6 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.ImageMessage;
+import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
 
@@ -33,19 +33,29 @@ public class Collector {
         append(user, message, dateTime);
     }
 
-    public void add(ImageMessage event) throws ParseException {
-        Message message = new Message();
-        message.time = toTime(event.getTime());
-        File file = cache.getImage(event);
+    public void add(MessageAssetBase event) throws ParseException {
+        File file = cache.getAssetFile(event);
         if (file.exists()) {
-            message.image = getFilename(file, "images");
+            Message message = new Message();
+            message.time = toTime(event.getTime());
+
+            String assetFilename = getFilename(file, "images");
+
+            String mimeType = event.getMimeType();
+            if (mimeType.startsWith("image")) {
+                message.image = assetFilename;
+            } else {
+                String url = String.format("<a href=\"%s\">%s</a>",
+                        assetFilename,
+                        event.getName());
+                message.text = Helper.markdown2Html(url, false);
+            }
+
+            UUID senderId = event.getUserId();
+            User user = cache.getUser(senderId);
+
+            append(user, message, event.getTime());
         }
-
-        UUID senderId = event.getUserId();
-        String dateTime = event.getTime();
-
-        User user = cache.getUser(senderId);
-        append(user, message, dateTime);
     }
 
     public void add(String text, String dateTime) throws ParseException {

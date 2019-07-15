@@ -134,44 +134,12 @@ public class PdfResource {
         }
     }
 
-    private void testAPI() {
-        try {
-            api.getSelf();
-        } catch (Exception e) {
-            Logger.info("reconnecting... %s", e);
-            api = getLHApi();
-        }
-    }
-
-    private API getLHApi() {
-        Client client = Service.instance.getClient();
-        try {
-            LHAccess single = accessDAO.getSingle();
-            return new API(client, null, single.token);
-        } catch (Exception e) {
-            Logger.warning("getLHApi: %s", e);
-            return new API(client, null, null);
-        }
-    }
-
     private void onImage(Collector collector, Event event) {
         try {
             ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.error("onImage: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
-        }
-    }
-
-    private void onAttachment(Collector collector, Event event) {
-        try {
-            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
-            String format = String.format("**%s** sent an attachment: %s",
-                    getUserName(message.getUserId()),
-                    message.getName());
-            collector.add(format, message.getTime());
-        } catch (Exception e) {
-            Logger.error("onAttachment: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
@@ -208,15 +176,6 @@ public class PdfResource {
         }
     }
 
-    @Nullable
-    private String getText(UUID msgId) throws IOException {
-        Event event = eventsDAO.get(msgId);
-        if (event == null)
-            return null;
-        TextMessage orgMessage = mapper.readValue(event.payload, TextMessage.class);
-        return orgMessage.getText();
-    }
-
     private void onCall(Collector collector, Event event) {
         try {
             CallingMessage message = mapper.readValue(event.payload, CallingMessage.class);
@@ -229,13 +188,19 @@ public class PdfResource {
         }
     }
 
+    private void onAttachment(Collector collector, Event event) {
+        try {
+            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.error("onAttachment: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
     private void onAudio(Collector collector, Event event) {
         try {
             AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
-            String format = String.format("**%s** sent an audio message: %s",
-                    getUserName(message.getUserId()),
-                    message.getName());
-            collector.add(format, message.getTime());
+            collector.add(message);
         } catch (Exception e) {
             Logger.error("onAudio: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -244,10 +209,7 @@ public class PdfResource {
     private void onVideo(Collector collector, Event event) {
         try {
             VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
-            String format = String.format("**%s** sent a video message: %s",
-                    getUserName(message.getUserId()),
-                    message.getName());
-            collector.add(format, message.getTime());
+            collector.add(message);
         } catch (Exception e) {
             Logger.error("onVideo: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -282,6 +244,26 @@ public class PdfResource {
         }
     }
 
+    private void testAPI() {
+        try {
+            api.getSelf();
+        } catch (Exception e) {
+            Logger.info("reconnecting... %s", e);
+            api = getLHApi();
+        }
+    }
+
+    private API getLHApi() {
+        Client client = Service.instance.getClient();
+        try {
+            LHAccess single = accessDAO.getSingle();
+            return new API(client, null, single.token);
+        } catch (Exception e) {
+            Logger.warning("getLHApi: %s", e);
+            return new API(client, null, null);
+        }
+    }
+
     private String formatConversation(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("New conversation created by **%s** with: \n", getUserName(conversation.creator)));
@@ -289,6 +271,15 @@ public class PdfResource {
             sb.append(String.format("- **%s** \n", getUserName(member.id)));
         }
         return sb.toString();
+    }
+
+    @Nullable
+    private String getText(UUID msgId) throws IOException {
+        Event event = eventsDAO.get(msgId);
+        if (event == null)
+            return null;
+        TextMessage orgMessage = mapper.readValue(event.payload, TextMessage.class);
+        return orgMessage.getText();
     }
 
     @Nullable

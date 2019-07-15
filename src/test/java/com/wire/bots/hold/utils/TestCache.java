@@ -1,6 +1,6 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.ImageMessage;
+import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.server.model.User;
 
 import java.io.File;
@@ -14,8 +14,9 @@ public class TestCache extends Cache {
     }
 
     @Override
-    public File getImage(ImageMessage message) {
-        return new File(String.format("src/test/legalhold/images/%s.png", message.getAssetKey()));
+    public File getAssetFile(MessageAssetBase message) {
+        String extension = Helper.getExtension(message.getMimeType());
+        return new File(String.format("src/test/legalhold/images/%s.%s", message.getAssetKey(), extension));
     }
 
     @Override

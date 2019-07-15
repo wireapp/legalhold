@@ -1,7 +1,7 @@
 package com.wire.bots.hold.utils;
 
 import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.ImageMessage;
+import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.server.model.Asset;
 import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Util;
@@ -40,8 +40,8 @@ class Helper {
         return file;
     }
 
-    static File downloadImage(API api, ImageMessage message) throws Exception {
-        File file = imageFile(message.getAssetKey(), message.getMimeType());
+    static File downloadAsset(API api, MessageAssetBase message) throws Exception {
+        File file = assetFile(message.getAssetKey(), message.getMimeType());
         byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
 
         byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
@@ -59,11 +59,15 @@ class Helper {
         return file;
     }
 
-    static File imageFile(String assetKey, String mimeType) {
-        String[] split = mimeType.split("/");
-        String extension = split.length == 1 ? split[0] : split[1];
+    static File assetFile(String assetKey, String mimeType) {
+        String extension = getExtension(mimeType);
         String filename = String.format("legalhold/images/%s.%s", assetKey, extension);
         return new File(filename);
+    }
+
+    static String getExtension(String mimeType) {
+        String[] split = mimeType.split("/");
+        return split.length == 1 ? split[0] : split[1];
     }
 
     static String avatarFile(UUID senderId) {

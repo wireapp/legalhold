@@ -1,6 +1,6 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.ImageMessage;
+import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.API;
@@ -25,18 +25,18 @@ public class Cache {
         profiles.clear();
     }
 
-    public File getImage(ImageMessage message) {
+    public File getAssetFile(MessageAssetBase message) {
         File file = pictures.computeIfAbsent(message.getAssetKey(), k -> {
             try {
-                return Helper.downloadImage(api, message);
+                return Helper.downloadAsset(api, message);
             } catch (Exception e) {
-                Logger.warning("Cache.getImage: %s", e);
+                Logger.warning("Cache.getAssetFile: %s", e);
                 return null;
             }
         });
 
         if (file == null)
-            file = Helper.imageFile(message.getAssetKey(), message.getMimeType());
+            file = Helper.assetFile(message.getAssetKey(), message.getMimeType());
         return file;
     }
 

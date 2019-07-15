@@ -6,9 +6,10 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.bots.hold.utils.TestCache;
-import com.wire.bots.sdk.models.ImageMessage;
+import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.models.TextMessage;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
@@ -26,27 +27,30 @@ public class MessageTemplateTest {
         return msg;
     }
 
-    private static ImageMessage img(UUID userId, String time, String assetId) {
-        ImageMessage msg = new ImageMessage(UUID.randomUUID(),
+    private static MessageAssetBase asset(UUID userId, String time, String assetId, String mime) {
+        MessageAssetBase msg = new MessageAssetBase(UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID().toString(),
                 userId,
                 assetId,
                 null,
                 null,
-                null,
+                mime,
                 0L,
                 null,
-                null);
+                assetId);
         msg.setTime(time);
         return msg;
     }
 
-    @Test
-    public void templateTest() throws Exception {
+    @Before
+    public void makeDirs() {
         File f = new File("src/test/output");
-        f.mkdir();
+        boolean mkdir = f.mkdir();
+    }
 
+    @Test
+    public void templateHtmlTest() throws Exception {
         Mustache mustache = compileTemplate("conversation.html");
 
         Collector.Conversation conversation = getConversation();
@@ -56,9 +60,15 @@ public class MessageTemplateTest {
         try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
             os.write(html.getBytes());
         }
+    }
 
-        conversation = getConversation();
-        html = execute(mustache, conversation);
+    @Test
+    public void templatePdfTest() throws Exception {
+        Mustache mustache = compileTemplate("conversation.html");
+
+        Collector.Conversation conversation = getConversation();
+        String html = execute(mustache, conversation);
+        assert html != null;
         String pdfFilename = String.format("src/test/output/%s.pdf", conversation.getTitle());
         PdfGenerator.save(pdfFilename, html, "file:src/test");
     }
@@ -88,10 +98,10 @@ public class MessageTemplateTest {
 
         Collector collector = new Collector(new TestCache());
         collector.setConvName("Message Template Test");
-        collector.add(img(dejan, thursday, "ognjiste"));
         collector.add("New conversations created by **Dejan** with: \n- **Lipis**", thursday);
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
+        collector.add(asset(lipis, thursday, "i_know", "video/mp4"));
         collector.add(txt(dejan, thursday, "😃🐠😴🤧✍️👉👨‍🚒👨‍🏫👩‍👦👨‍👧‍👦🐥🐧🐾🐁🐕🎋🐲🐉"));
         collector.add(txt(dejan, thursday, "4"));
         collector.add(txt(lipis, thursday, "5 👍"));
@@ -101,8 +111,8 @@ public class MessageTemplateTest {
                 "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum"));
         collector.add(txt(dejan, friday, "7"));
         collector.add(txt(lipis, saturday, "8"));
-        collector.add(img(lipis, saturday, "ognjiste2"));
-        collector.add(img(lipis, saturday, "small"));
+        collector.add(asset(lipis, saturday, "ognjiste2", "image/png"));
+        collector.add(asset(lipis, saturday, "small", "image/png"));
         collector.add(txt(dejan, saturday, "9"));
         collector.add(txt(dejan, saturday, "10"));
         collector.add(txt(lipis, saturday, "```collector.add(img(dejan, friday," +
@@ -114,7 +124,7 @@ public class MessageTemplateTest {
                 "```"));
         collector.add(txt(dejan, saturday, "12"));
         collector.add(txt(lipis, saturday, "13"));
-        collector.add(img(dejan, saturday, "ognjiste"));
+        collector.add(asset(dejan, saturday, "ognjiste", "image/png"));
         collector.add(txt(lipis, saturday, "14"));
         collector.add(txt(lipis, saturday, "15"));
         collector.add(txt(dejan, saturday, "Lorem ipsum **dolor** sit amet, consectetur adipiscing elit, sed " +
@@ -135,7 +145,7 @@ public class MessageTemplateTest {
         collector.add(txt(dejan, saturday, "These two urls https://google.com https://wire.com"));
         collector.add("**Lipis** left the conversation", saturday);
         collector.add("**Tiago** joined the conversation", saturday);
-        collector.add(img(dejan, saturday, "ognjiste2"));
+        collector.add(asset(dejan, saturday, "ognjiste2", "image/png"));
 
         return collector.getConversation();
     }

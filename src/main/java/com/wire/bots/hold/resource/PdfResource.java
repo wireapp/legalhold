@@ -69,6 +69,10 @@ public class PdfResource {
                         onConversationCreate(collector, event);
                     }
                     break;
+                    case "conversation.rename": {
+                        onConversationRename(collector, event);
+                    }
+                    break;
                     case "conversation.otr-message-add.new-text": {
                         onText(collector, event);
                     }
@@ -102,11 +106,11 @@ public class PdfResource {
                     }
                     break;
                     case "conversation.member-join": {
-                        onMember(collector, event, "**%s** joined the conversation");
+                        onMember(collector, event, "added");
                     }
                     break;
                     case "conversation.member-leave": {
-                        onMember(collector, event, "**%s** left the conversation");
+                        onMember(collector, event, "removed");
                     }
                     break;
                 }
@@ -220,7 +224,10 @@ public class PdfResource {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
             if (msg != null) {
                 for (UUID userId : msg.users) {
-                    String format = String.format(label, getUserName(userId));
+                    String format = String.format("**%s** %s **%s**",
+                            getUserName(msg.from),
+                            label,
+                            getUserName(userId));
                     collector.add(format, msg.time);
                 }
             }
@@ -241,6 +248,17 @@ public class PdfResource {
             }
         } catch (Exception e) {
             Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+        }
+    }
+
+    private void onConversationRename(Collector collector, Event event) {
+        try {
+            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            String userName = getUserName(msg.from);
+            String text = String.format("**%s** renamed the conversation to **%s**", userName, msg.conversation.name);
+            collector.add(text, msg.time);
+        } catch (Exception e) {
+            Logger.error("onConversationRename: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
@@ -266,7 +284,9 @@ public class PdfResource {
 
     private String formatConversation(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("New conversation created by **%s** with: \n", getUserName(conversation.creator)));
+        sb.append(String.format("**%s** created conversation **%s** with: \n",
+                getUserName(conversation.creator),
+                conversation.name));
         for (Member member : conversation.members) {
             sb.append(String.format("- **%s** \n", getUserName(member.id)));
         }

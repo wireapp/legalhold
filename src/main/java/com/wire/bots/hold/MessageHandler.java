@@ -115,8 +115,13 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onConversationRename(WireClient client) {
+    public void onConversationRename(WireClient client, SystemMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = UUID.fromString(client.getId());
+        UUID messageId = msg.id;
+        String type = "conversation.rename";
 
+        persist(convId, null, userId, messageId, type, msg);
     }
 
     @Override

@@ -222,14 +222,12 @@ public class PdfResource {
     private void onMember(Collector collector, Event event, String label) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-            if (msg != null) {
-                for (UUID userId : msg.users) {
-                    String format = String.format("**%s** %s **%s**",
-                            getUserName(msg.from),
-                            label,
-                            getUserName(userId));
-                    collector.add(format, msg.time);
-                }
+            for (UUID userId : msg.users) {
+                String format = String.format("**%s** %s **%s**",
+                        getUserName(msg.from),
+                        label,
+                        getUserName(userId));
+                collector.add(format, msg.time);
             }
         } catch (Exception e) {
             Logger.error("onMember: %s conv: %s, msg: %s error: %s", event.type, event.conversationId, event.messageId, e);
@@ -239,13 +237,10 @@ public class PdfResource {
     private void onConversationCreate(Collector collector, Event event) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-            if (msg != null) {
-                Conversation conv = msg.conversation;
-                collector.setConvName(conv.name);
+            collector.setConvName(msg.conversation.name);
 
-                String text = formatConversation(conv);
-                collector.add(text, msg.time);
-            }
+            String text = formatConversation(msg.conversation);
+            collector.add(text, msg.time);
         } catch (Exception e) {
             Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -254,6 +249,8 @@ public class PdfResource {
     private void onConversationRename(Collector collector, Event event) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            collector.setConvName(msg.conversation.name);
+
             String userName = getUserName(msg.from);
             String text = String.format("**%s** renamed the conversation to **%s**", userName, msg.conversation.name);
             collector.add(text, msg.time);

@@ -29,28 +29,18 @@
         color: #2391d3;
       }
       .avatar {
-        width: 48px;
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background: white;
+        border-color: transparent;
+        border-radius: 50%;
+        border-style: solid;
+        border-width: 2px;
+        display: inline-block;
         height: 48px;
-        border-radius: 50%;
-        background: white;
         text-align: center;
-        background-position: 50%;
-        background-size: cover;
-        border-style: solid;
-        border-width: 2px;
-        border-color: transparent;
-      }
-      .avatar system {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: white;
-        text-align: center;
-        background-position: 50%;
-        background-size: cover;
-        border-style: solid;
-        border-width: 2px;
-        border-color: transparent;
+        width: 48px;
       }
       .name {
         font-weight: 600;
@@ -98,14 +88,15 @@
         color: #555;
       }
 
-      .system .avatar
-      {
+      .system .avatar {
         width: 22px;
-        height: 22px
+        height: 22px;
       }
 
-      .system .avatar image {width: 100%}
-
+      .system .avatar-td {
+        text-align: center;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
@@ -117,7 +108,7 @@
         <td class="date-td" colspan="3">{{ date }}</td>
       </tr>
       {{#senders}}
-      <tr class="sender-row {{system}}">
+      <tr class="sender-row {{ system }}">
         <td class="avatar-td">
           <div
             class="avatar"

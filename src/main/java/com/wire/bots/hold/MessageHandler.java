@@ -54,7 +54,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
-        String type = "conversation.otr-message-addSystem.new-text";
+        String type = "conversation.otr-message-add.new-text";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -65,7 +65,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-addSystem.new-image";
+        String type = "conversation.otr-message-add.new-image";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -76,7 +76,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-addSystem.new-audio";
+        String type = "conversation.otr-message-add.new-audio";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -87,7 +87,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-addSystem.new-video";
+        String type = "conversation.otr-message-add.new-video";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -98,7 +98,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();
         UUID userId = UUID.fromString(client.getId());
-        String type = "conversation.otr-message-addSystem.new-attachment";
+        String type = "conversation.otr-message-add.new-attachment";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -109,7 +109,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
-        String type = "conversation.otr-message-addSystem.edit-text";
+        String type = "conversation.otr-message-add.edit-text";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -130,7 +130,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
-        String type = "conversation.otr-message-addSystem.delete-text";
+        String type = "conversation.otr-message-add.delete-text";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -141,7 +141,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
-        String type = "conversation.otr-message-addSystem.call";
+        String type = "conversation.otr-message-add.call";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }
@@ -151,7 +151,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID userId = UUID.fromString(client.getId());
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
-        String type = "conversation.otr-message-addSystem.reaction";
+        String type = "conversation.otr-message-add.reaction";
 
         persist(convId, senderId, userId, messageId, type, msg);
     }

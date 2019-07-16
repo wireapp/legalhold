@@ -213,7 +213,6 @@ public class Collector {
     public static class Message {
         String text;
         String image;
-        String system;
         String time;
     }
 

@@ -174,7 +174,7 @@ public class ConversationResource {
             String text = String.format("**%s** deleted text: '%s'",
                     getUserName(message.getUserId()),
                     orgText);
-            collector.addSystem(text, message.getTime());
+            collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
             Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -186,7 +186,7 @@ public class ConversationResource {
             String json = message.getContent().replace("\\", "");
             _CallingContent content = mapper.readValue(json, _CallingContent.class);
             String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
-            collector.addSystem(text, message.getTime());
+            collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
             Logger.error("onCall: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -227,7 +227,7 @@ public class ConversationResource {
                         getUserName(msg.from),
                         label,
                         getUserName(userId));
-                collector.addSystem(format, msg.time);
+                collector.addSystem(format, msg.time, event.type);
             }
         } catch (Exception e) {
             Logger.error("onMember: %s conv: %s, msg: %s error: %s", event.type, event.conversationId, event.messageId, e);
@@ -240,7 +240,7 @@ public class ConversationResource {
             collector.setConvName(msg.conversation.name);
 
             String text = formatConversation(msg.conversation);
-            collector.addSystem(text, msg.time);
+            collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
             Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
@@ -253,7 +253,7 @@ public class ConversationResource {
 
             String userName = getUserName(msg.from);
             String text = String.format("**%s** renamed the conversation to **%s**", userName, msg.conversation.name);
-            collector.addSystem(text, msg.time);
+            collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
             Logger.error("onConversationRename: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }

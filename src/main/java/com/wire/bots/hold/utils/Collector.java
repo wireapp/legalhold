@@ -4,6 +4,7 @@ import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -30,7 +31,7 @@ public class Collector {
         String dateTime = event.getTime();
 
         User user = cache.getUser(senderId);
-        Sender sender = newSender(user, message);
+        Sender sender = sender(user, message);
         append(sender, message, dateTime);
     }
 
@@ -55,21 +56,21 @@ public class Collector {
             UUID senderId = event.getUserId();
             User user = cache.getUser(senderId);
 
-            Sender sender = newSender(user, message);
+            Sender sender = sender(user, message);
             append(sender, message, event.getTime());
         }
     }
 
-    public void addSystem(String text, String dateTime) throws ParseException {
+    public void addSystem(String text, String dateTime, String type) throws ParseException {
         Message message = new Message();
         message.text = Helper.markdown2Html(text, true);
         message.time = toTime(dateTime);
 
-        Sender sender = system(message);
+        Sender sender = system(message, type);
         append(sender, message, dateTime);
     }
 
-    private Sender newSender(User user, Message message) {
+    private Sender sender(User user, Message message) {
         Sender sender = new Sender();
         sender.senderId = user.id;
         sender.name = user.name;
@@ -79,13 +80,35 @@ public class Collector {
         return sender;
     }
 
-    private Sender system(Message message) {
+    private Sender system(Message message, String type) {
         Sender sender = new Sender();
         sender.system = "system";
         sender.senderId = UUID.randomUUID();
-        sender.avatar = "/legalhold/assets/system.png";
+        sender.avatar = systemIcon(type);
         sender.messages.add(message);
         return sender;
+    }
+
+    @Nullable
+    private String systemIcon(String type) {
+        final String base = "/legalhold/assets/";
+        switch (type) {
+            case "conversation.create":
+            case "conversation.member-join":
+                return base + "icons8-plus-24.png";
+            case "conversation.member-leave":
+                return base + "icons8-minus-24.png";
+            case "conversation.rename":
+            case "conversation.otr-message-add.edit-text":
+                return base + "icons8-edit-30.png";
+            case "conversation.otr-message-add.call":
+                return base + "icons8-end-call-30.png";
+            case "conversation.otr-message-add.delete-text":
+                return base + "icons8-delete-message-24.png";
+
+            default:
+                return null;
+        }
     }
 
     private static Day newDay(Sender sender, String dateTime) throws ParseException {

@@ -99,7 +99,7 @@ public class MessageTemplateTest {
         Collector collector = new Collector(new TestCache());
         String name = "Message Template Test";
         collector.setConvName(name);
-        collector.addSystem(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday);
+        collector.addSystem(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday, "conversation.create");
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(asset(lipis, thursday, "i_know", "video/mp4"));
@@ -144,8 +144,11 @@ public class MessageTemplateTest {
         collector.add(txt(dejan, saturday, "https://google.com"));
         collector.add(txt(lipis, saturday, "This is some url https://google.com and some text"));
         collector.add(txt(dejan, saturday, "These two urls https://google.com https://wire.com"));
-        collector.addSystem("**Lipis** left the conversation", saturday);
-        collector.addSystem("**Tiago** joined the conversation", saturday);
+        collector.addSystem("**Lipis** left the conversation", saturday, "conversation.member-leave");
+        collector.addSystem("**Tiago** joined the conversation", saturday, "conversation.member-join");
+        collector.addSystem("**Tiago** deleted text: 'some text'", saturday, "conversation.otr-message-add.delete-text");
+        collector.addSystem("**Tiago** called", saturday, "conversation.otr-message-add.call");
+
         collector.add(asset(dejan, saturday, "ognjiste2", "image/png"));
 
         return collector.getConversation();

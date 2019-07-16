@@ -5,7 +5,7 @@ RUN mkdir /opt/hold/legalhold
 
 COPY target/hold.jar   /opt/hold/hold.jar
 COPY hold.yaml         /etc/hold/hold.yaml
-COPY src/main/resources/legalhold/assets/system.png         /opt/hold/legalhold/assets/system.png
+COPY src/main/resources/legalhold/assets/*         /opt/hold/legalhold/assets/
 
 RUN mkdir /opt/hold/legalhold/images
 RUN mkdir /opt/hold/legalhold/avatars

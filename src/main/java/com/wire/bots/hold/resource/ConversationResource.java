@@ -159,8 +159,9 @@ public class ConversationResource {
     private void onTextEdit(Collector collector, Event event) {
         try {
             EditedTextMessage message = mapper.readValue(event.payload, EditedTextMessage.class);
-            message.setText("_edit:_ " + message.getText());
-            collector.add(message);
+            String text = String.format("**%s** edited: %s",
+                    getUserName(message.getUserId()), message.getText());
+            collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
             Logger.error("onTextEdit: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }

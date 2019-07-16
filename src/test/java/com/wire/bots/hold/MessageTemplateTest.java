@@ -99,7 +99,7 @@ public class MessageTemplateTest {
         Collector collector = new Collector(new TestCache());
         String name = "Message Template Test";
         collector.setConvName(name);
-        collector.add(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday);
+        collector.addSystem(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday);
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(asset(lipis, thursday, "i_know", "video/mp4"));
@@ -116,12 +116,12 @@ public class MessageTemplateTest {
         collector.add(asset(lipis, saturday, "small", "image/png"));
         collector.add(txt(dejan, saturday, "9"));
         collector.add(txt(dejan, saturday, "10"));
-        collector.add(txt(lipis, saturday, "```collector.add(img(dejan, friday," +
+        collector.add(txt(lipis, saturday, "```collector.addSystem(img(dejan, friday," +
                 " \"SP\", \"image/jpeg\"));\n" +
-                "        collector.add(txt(dejan, friday, \"7\"));\n" +
-                "        collector.add(txt(lipis, saturday, \"8\"));\n" +
-                "        collector.add(img(lipis, saturday, \"ognjiste2\", \"image/png\"));\n" +
-                "        collector.add(img(lipis, saturday, \"small\", \"image/png\"));\n" +
+                "        collector.addSystem(txt(dejan, friday, \"7\"));\n" +
+                "        collector.addSystem(txt(lipis, saturday, \"8\"));\n" +
+                "        collector.addSystem(img(lipis, saturday, \"ognjiste2\", \"image/png\"));\n" +
+                "        collector.addSystem(img(lipis, saturday, \"small\", \"image/png\"));\n" +
                 "```"));
         collector.add(txt(dejan, saturday, "12"));
         collector.add(txt(lipis, saturday, "13"));
@@ -144,8 +144,8 @@ public class MessageTemplateTest {
         collector.add(txt(dejan, saturday, "https://google.com"));
         collector.add(txt(lipis, saturday, "This is some url https://google.com and some text"));
         collector.add(txt(dejan, saturday, "These two urls https://google.com https://wire.com"));
-        collector.add("**Lipis** left the conversation", saturday);
-        collector.add("**Tiago** joined the conversation", saturday);
+        collector.addSystem("**Lipis** left the conversation", saturday);
+        collector.addSystem("**Tiago** joined the conversation", saturday);
         collector.add(asset(dejan, saturday, "ognjiste2", "image/png"));
 
         return collector.getConversation();

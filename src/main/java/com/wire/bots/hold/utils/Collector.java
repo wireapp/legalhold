@@ -4,7 +4,6 @@ import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -31,7 +30,8 @@ public class Collector {
         String dateTime = event.getTime();
 
         User user = cache.getUser(senderId);
-        append(user, message, dateTime);
+        Sender sender = newSender(user, message);
+        append(sender, message, dateTime);
     }
 
     public void add(MessageAssetBase event) throws ParseException {
@@ -55,30 +55,35 @@ public class Collector {
             UUID senderId = event.getUserId();
             User user = cache.getUser(senderId);
 
-            append(user, message, event.getTime());
+            Sender sender = newSender(user, message);
+            append(sender, message, event.getTime());
         }
     }
 
-    public void add(String text, String dateTime) throws ParseException {
+    public void addSystem(String text, String dateTime) throws ParseException {
         Message message = new Message();
-        message.system = Helper.markdown2Html(text, true);
+        message.text = Helper.markdown2Html(text, true);
         message.time = toTime(dateTime);
 
-        append(null, message, dateTime);
+        Sender sender = system(message);
+        append(sender, message, dateTime);
     }
 
-    private Sender newSender(@Nullable User user, Message message) {
+    private Sender newSender(User user, Message message) {
         Sender sender = new Sender();
-        if (user == null) {
-            sender.system = "system";
-            sender.senderId = UUID.randomUUID();
-            sender.avatar = "/legalhold/assets/system.png";
-        } else {
-            sender.senderId = user.id;
-            sender.name = user.name;
-            sender.accent = toColor(user.accent);
-            sender.avatar = getAvatar(user);
-        }
+        sender.senderId = user.id;
+        sender.name = user.name;
+        sender.accent = toColor(user.accent);
+        sender.avatar = getAvatar(user);
+        sender.messages.add(message);
+        return sender;
+    }
+
+    private Sender system(Message message) {
+        Sender sender = new Sender();
+        sender.system = "system";
+        sender.senderId = UUID.randomUUID();
+        sender.avatar = "/legalhold/assets/system.png";
         sender.messages.add(message);
         return sender;
     }
@@ -121,8 +126,7 @@ public class Collector {
         return df.format(date);
     }
 
-    private void append(User user, Message message, String dateTime) throws ParseException {
-        Sender sender = newSender(user, message);
+    private void append(Sender sender, Message message, String dateTime) throws ParseException {
         Day day = newDay(sender, dateTime);
 
         if (days.isEmpty()) {

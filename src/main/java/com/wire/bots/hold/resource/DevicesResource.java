@@ -27,14 +27,14 @@ import java.util.UUID;
 import static com.wire.bots.hold.utils.Tools.hexify;
 
 @Api
-@Path("/list")
+@Path("/devices.html")
 @Produces(MediaType.TEXT_HTML)
-public class ListingResource {
+public class DevicesResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final CryptoFactory cryptoFactory;
     private final AccessDAO accessDAO;
 
-    public ListingResource(AccessDAO accessDAO, CryptoFactory cryptoFactory) {
+    public DevicesResource(AccessDAO accessDAO, CryptoFactory cryptoFactory) {
         this.cryptoFactory = cryptoFactory;
         this.accessDAO = accessDAO;
     }
@@ -70,7 +70,7 @@ public class ListingResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("ListingResource.list: %s", e);
+            Logger.error("DevicesResource.list: %s", e);
             return Response
                     .ok(e.getMessage())
                     .status(500)

@@ -76,10 +76,10 @@ public class Service extends Server<Config> {
         addResource(new InitiateResource(cf, validator), env);
         addResource(new ConfirmResource(accessDAO, validator), env);
         addResource(new RemoveResource(accessDAO, cf, validator), env);
-        addResource(new ListingResource(accessDAO, cf), env);
+        addResource(new DevicesResource(accessDAO, cf), env);
         addResource(new EventsResource(eventsDAO), env);
-        addResource(new PdfResource(eventsDAO, accessDAO), env);
-        addResource(new ConversationsResource(eventsDAO), env);
+        addResource(new ConversationResource(eventsDAO, accessDAO), env);
+        addResource(new IndexResource(eventsDAO), env);
 
         admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));

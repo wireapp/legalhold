@@ -34,16 +34,16 @@ import java.util.List;
 import java.util.UUID;
 
 @Api
-@Path("/pdf/{conversationId}")
+@Path("/conv/{conversationId}")
 @Produces("application/pdf")
-public class PdfResource {
+public class ConversationResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
     private final ObjectMapper mapper = new ObjectMapper();
     private API api;
 
-    public PdfResource(EventsDAO eventsDAO, AccessDAO accessDAO) {
+    public ConversationResource(EventsDAO eventsDAO, AccessDAO accessDAO) {
         this.eventsDAO = eventsDAO;
         this.accessDAO = accessDAO;
         api = getLHApi();
@@ -130,7 +130,7 @@ public class PdfResource {
                     build();
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.error("PdfResource.list: %s", e);
+            Logger.error("ConversationResource.list: %s", e);
             return Response
                     .serverError()
                     .status(500)

@@ -24,11 +24,11 @@ import java.util.List;
 @Api
 @Path("/index.html")
 @Produces(MediaType.TEXT_HTML)
-public class ConversationsResource {
+public class IndexResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
 
-    public ConversationsResource(EventsDAO eventsDAO) {
+    public IndexResource(EventsDAO eventsDAO) {
         this.eventsDAO = eventsDAO;
     }
 
@@ -47,7 +47,7 @@ public class ConversationsResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("ConversationsResource.list: %s", e);
+            Logger.error("IndexResource.list: %s", e);
             return Response
                     .ok(e.getMessage())
                     .status(500)

@@ -104,7 +104,7 @@ public class Collector {
             case "conversation.otr-message-add.call":
                 return base + "icons8-end-call-30.png";
             case "conversation.otr-message-add.delete-text":
-                return base + "icons8-delete-message-24.png";
+                return base + "icons8-delete.png";
 
             default:
                 return null;

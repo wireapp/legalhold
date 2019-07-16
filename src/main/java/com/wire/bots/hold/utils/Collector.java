@@ -190,6 +190,7 @@ public class Collector {
         String avatar;
         String name;
         String accent;
+        String system = "system";
         ArrayList<Message> messages = new ArrayList<>();
 
         boolean equals(Sender s) {

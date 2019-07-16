@@ -97,8 +97,9 @@ public class MessageTemplateTest {
         final String saturday = "2019-07-10T21:11:47.149Z";
 
         Collector collector = new Collector(new TestCache());
-        collector.setConvName("Message Template Test");
-        collector.add("New conversations created by **Dejan** with: \n- **Lipis**", thursday);
+        String name = "Message Template Test";
+        collector.setConvName(name);
+        collector.add(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday);
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(asset(lipis, thursday, "i_know", "video/mp4"));

@@ -4,6 +4,7 @@ import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.models.TextMessage;
 import com.wire.bots.sdk.server.model.User;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -62,25 +63,23 @@ public class Collector {
         Message message = new Message();
         message.system = Helper.markdown2Html(text, true);
         message.time = toTime(dateTime);
-        User user = new User();
-        user.id = UUID.randomUUID();
-        user.name = "System";
-        user.accent = 4;
 
-        append(user, message, dateTime);
+        append(null, message, dateTime);
     }
 
-    private Sender newSender(User user, Message message) {
+    private Sender newSender(@Nullable User user, Message message) {
         Sender sender = new Sender();
-        sender.senderId = user.id;
-        sender.name = user.name;
-        sender.accent = toColor(user.accent);
-        sender.messages.add(message);
-
-        File file = cache.getProfileImage(user);
-        if (file.exists()) {
-            sender.avatar = getFilename(file, "avatars");
+        if (user == null) {
+            sender.system = "system";
+            sender.senderId = UUID.randomUUID();
+            sender.avatar = "/legalhold/assets/system.png";
+        } else {
+            sender.senderId = user.id;
+            sender.name = user.name;
+            sender.accent = toColor(user.accent);
+            sender.avatar = getAvatar(user);
         }
+        sender.messages.add(message);
         return sender;
     }
 
@@ -149,6 +148,12 @@ public class Collector {
         return String.format("/legalhold/%s/%s", dir, file.getName());
     }
 
+    private String getAvatar(User user) {
+        File file = cache.getProfileImage(user);
+        String ret = String.format("/legalhold/%s/%s", "avatars", file.getName());
+        return file.exists() ? ret : null;
+    }
+
     public Conversation getConversation() {
         Conversation ret = new Conversation();
         ret.days = days;
@@ -190,7 +195,7 @@ public class Collector {
         String avatar;
         String name;
         String accent;
-        String system = "system";
+        String system;
         ArrayList<Message> messages = new ArrayList<>();
 
         boolean equals(Sender s) {

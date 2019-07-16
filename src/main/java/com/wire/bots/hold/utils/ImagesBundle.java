@@ -11,8 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class ImagesBundle extends AssetsBundle {
-    public ImagesBundle(String resourcePath, String uriPath) {
-        super(resourcePath, uriPath);
+    public ImagesBundle(String resourcePath, String uriPath, String name) {
+        super(resourcePath, uriPath, "index.htm", name);
     }
 
     @Override

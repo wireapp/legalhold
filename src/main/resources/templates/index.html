@@ -1,28 +1,42 @@
 <!DOCTYPE html>
 <!-- Wire, Copyright (C) 2017 Wire Swiss GmbH -->
 <html>
-
-<head>
+  <head>
     <title>Wire Conversations</title>
-</head>
+    <style>
+      table {
+        width: 100%;
+        border-spacing: 0;
+        border-collapse: separate;
+        border-right
+      }
 
-<body>
+      td, th {
+        text-align: center;
+        border: 1px solid #555;
+        padding: 8px;
+      }
+    </style>
+  </head>
 
-<table style="width:100%">
-    <tr>
+  <body>
+    <table>
+      <tr>
         <th>Conversation</th>
-        <th>Pdf</th>
-        <th>Html</th>
+        <th>PDF</th>
+        <th>HTML</th>
         <th>Time</th>
-    </tr>
-    {{#events}}
-    <tr>
-        <td><a href="/legalhold/events/{{conversationId}}">{{conversationId}}</a></td>
-        <td><a href="/legalhold/conv/{{conversationId}}">pdf</a></td>
-        <td><a href="/legalhold/conv/{{conversationId}}?html=true">html</a></td>
-        <td>{{time}}</td>
-    </tr>
-    {{/events}}
-</table>
-</body>
+      </tr>
+      {{#events}}
+      <tr>
+        <td>
+          <a href="/legalhold/events/{{ conversationId }}">{{ conversationId }}</a>
+        </td>
+        <td><a href="/legalhold/conv/{{ conversationId }}">PDF</a></td>
+        <td><a href="/legalhold/conv/{{ conversationId }}?html=true">HTML</a></td>
+        <td>{{ time }}</td>
+      </tr>
+      {{/events}}
+    </table>
+  </body>
 </html>

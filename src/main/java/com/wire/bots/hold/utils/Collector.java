@@ -13,10 +13,8 @@ import java.util.*;
 
 public class Collector {
     private final Cache cache;
-
     private LinkedList<Day> days = new LinkedList<>();
     private String convName;
-
 
     public Collector(Cache cache) {
         this.cache = cache;

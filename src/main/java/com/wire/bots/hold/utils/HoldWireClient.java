@@ -29,8 +29,8 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public String getId() {
-        return userId.toString();
+    public UUID getId() {
+        return userId;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public UUID sendDirectText(String txt, String userId) {
+    public UUID sendDirectText(String txt, UUID userId) {
         return null;
     }
 
@@ -65,12 +65,17 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
+    public UUID sendText(String txt, UUID mention) {
+        return null;
+    }
+
+    @Override
     public UUID sendLinkPreview(String url, String title, IGeneric image) {
         return null;
     }
 
     @Override
-    public UUID sendDirectLinkPreview(String url, String title, IGeneric image, String userId) {
+    public UUID sendDirectLinkPreview(String url, String title, IGeneric image, UUID userId) {
         return null;
     }
 
@@ -80,7 +85,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public UUID sendDirectPicture(byte[] bytes, String mimeType, String userId) {
+    public UUID sendDirectPicture(byte[] bytes, String mimeType, UUID userId) {
         return null;
     }
 
@@ -90,7 +95,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public UUID sendDirectPicture(IGeneric image, String userId) {
+    public UUID sendDirectPicture(IGeneric image, UUID userId) {
         return null;
     }
 
@@ -110,12 +115,12 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public UUID sendDirectFile(File file, String mime, String userId) {
+    public UUID sendDirectFile(File file, String mime, UUID userId) {
         return null;
     }
 
     @Override
-    public UUID sendDirectFile(IGeneric preview, IGeneric asset, String userId) {
+    public UUID sendDirectFile(IGeneric preview, IGeneric asset, UUID userId) {
         return null;
     }
 
@@ -150,12 +155,12 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public Collection<User> getUsers(Collection<String> userIds) {
+    public Collection<User> getUsers(Collection<UUID> userIds) {
         return null;
     }
 
     @Override
-    public User getUser(String userId) {
+    public User getUser(UUID userId) {
         return null;
     }
 

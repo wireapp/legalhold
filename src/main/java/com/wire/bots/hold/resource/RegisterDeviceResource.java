@@ -7,7 +7,7 @@ import com.wire.bots.sdk.models.otr.PreKey;
 import com.wire.bots.sdk.server.model.ErrorMessage;
 import com.wire.bots.sdk.tools.Logger;
 import com.wire.bots.sdk.user.LoginClient;
-import com.wire.bots.sdk.user.model.User;
+import com.wire.bots.sdk.user.model.Access;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -58,15 +58,15 @@ public class RegisterDeviceResource {
                              @ApiParam @FormParam("password") String password) {
         try {
             LoginClient loginClient = new LoginClient(client);
-            User login = loginClient.login(email, password, false);
-            UUID botId = login.getUserId();
-            String token = login.getToken();
-            String cookie = login.getCookie();
+            Access access = loginClient.login(email, password, false);
+            UUID botId = access.getUserId();
+            String token = access.getToken();
+            String cookie = access.getCookie().getValue();
             String clientId;
             byte[] fingerprint;
 
             // register new device
-            try (Crypto crypto = cryptoFactory.create(botId.toString())) {
+            try (Crypto crypto = cryptoFactory.create(botId)) {
                 ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
                 PreKey lastKey = crypto.newLastPreKey();
                 final String clazz = LEGALHOLD;

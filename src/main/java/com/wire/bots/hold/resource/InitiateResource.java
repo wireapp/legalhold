@@ -52,7 +52,7 @@ public class InitiateResource {
                     .build();
         }
 
-        try (Crypto crypto = cf.create(init.userId.toString())) {
+        try (Crypto crypto = cf.create(init.userId)) {
             ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
             PreKey lastKey = crypto.newLastPreKey();
             byte[] fingerprint = crypto.getLocalFingerprint();

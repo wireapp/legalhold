@@ -4,8 +4,8 @@ CREATE TABLE Hold_Tokens (
  token varchar,
  cookie varchar NOT NULL,
  last UUID NOT NULL,
- timestamp INTEGER NOT NULL,
- created INTEGER NOT NULL
+ updated TIMESTAMP NOT NULL,
+ created TIMESTAMP NOT NULL
 );
 
 ALTER TABLE Hold_Tokens

@@ -21,7 +21,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.id;
         String type = msg.type;
 
@@ -31,7 +31,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onMemberJoin(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.id;
         String type = msg.type;
 
@@ -41,7 +41,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onMemberLeave(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.id;
         String type = msg.type;
 
@@ -51,7 +51,18 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onText(WireClient client, TextMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
+        UUID senderId = msg.getUserId();
+        UUID messageId = msg.getMessageId();
+        String type = "conversation.otr-message-add.new-text";
+
+        persist(convId, senderId, userId, messageId, type, msg);
+    }
+
+    @Override
+    public void onText(WireClient client, EphemeralTextMessage msg) {
+        UUID convId = client.getConversationId();
+        UUID userId = client.getId();
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
         String type = "conversation.otr-message-add.new-text";
@@ -62,7 +73,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onImage(WireClient client, ImageMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
         String type = "conversation.otr-message-add.new-image";
@@ -73,7 +84,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onAudio(WireClient client, AudioMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
         String type = "conversation.otr-message-add.new-audio";
@@ -84,7 +95,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onVideo(WireClient client, VideoMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.getMessageId();
         UUID senderId = msg.getUserId();
         String type = "conversation.otr-message-add.new-video";
@@ -97,7 +108,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID messageId = msg.getMessageId();
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         String type = "conversation.otr-message-add.new-attachment";
 
         persist(convId, senderId, userId, messageId, type, msg);
@@ -106,7 +117,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onEditText(WireClient client, EditedTextMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
         String type = "conversation.otr-message-add.edit-text";
@@ -117,7 +128,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onConversationRename(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID messageId = msg.id;
         String type = "conversation.rename";
 
@@ -127,7 +138,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onDelete(WireClient client, DeletedTextMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
         String type = "conversation.otr-message-add.delete-text";
@@ -138,7 +149,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onCalling(WireClient client, CallingMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
         String type = "conversation.otr-message-add.call";
@@ -148,7 +159,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     public void onReaction(WireClient client, ReactionMessage msg) {
         UUID convId = client.getConversationId();
-        UUID userId = UUID.fromString(client.getId());
+        UUID userId = client.getId();
         UUID senderId = msg.getUserId();
         UUID messageId = msg.getMessageId();
         String type = "conversation.otr-message-add.reaction";

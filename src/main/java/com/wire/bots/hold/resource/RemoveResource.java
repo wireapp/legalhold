@@ -51,7 +51,7 @@ public class RemoveResource {
                         .build();
             }
 
-            try (Crypto crypto = cf.create(payload.userId.toString())) {
+            try (Crypto crypto = cf.create(payload.userId)) {
                 crypto.purge();
             }
 

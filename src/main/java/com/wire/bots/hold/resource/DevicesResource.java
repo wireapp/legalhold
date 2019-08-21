@@ -48,7 +48,7 @@ public class DevicesResource {
         try {
             ArrayList<Legal> legals = new ArrayList<>();
             for (LHAccess a : accessDAO.list(50)) {
-                try (Crypto crypto = cryptoFactory.create(a.userId.toString())) {
+                try (Crypto crypto = cryptoFactory.create(a.userId)) {
                     byte[] fingerprint = crypto.getLocalFingerprint();
                     Legal legal = new Legal();
                     legal.userId = a.userId;

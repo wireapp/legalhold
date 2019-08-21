@@ -15,7 +15,7 @@ public class HoldClientRepo extends ClientRepo {
     }
 
     public WireClient getClient(UUID userId, String deviceId, UUID convId) throws CryptoException {
-        Crypto crypto = cf.create(userId.toString());
+        Crypto crypto = cf.create(userId);
         return new HoldWireClient(userId, deviceId, convId, crypto);
     }
 

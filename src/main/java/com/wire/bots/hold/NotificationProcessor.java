@@ -175,7 +175,7 @@ public class NotificationProcessor implements Runnable {
             Logger.debug("Refreshing token for: %s", userId);
             LoginClient loginClient = new LoginClient(client);
             Access access = loginClient.renewAccessToken(cookie);
-            String cookieValue = access.cookie != null ? access.cookie : cookie.getValue();
+            String cookieValue = access.getCookie() != null ? access.getCookie().getValue() : cookie.getValue();
             accessDAO.update(userId, access.token, cookieValue);
         } catch (AuthException e) {
             int remove = accessDAO.remove(userId);

@@ -3,7 +3,6 @@ package com.wire.bots.hold;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
-import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
@@ -22,62 +21,52 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
-    private final Config config;
 
     NotificationProcessor(Client client, AccessDAO accessDAO) {
         this.client = client;
         this.accessDAO = accessDAO;
-        config = Service.instance.getConfig();
     }
 
     @Override
     public void run() {
-        while (true) {
-            try {
-                List<LHAccess> devices = accessDAO.listAll();
-                Logger.info("Devices: %d", devices.size());
+        try {
+            List<LHAccess> devices = accessDAO.listAll();
+            Logger.info("Devices: %d", devices.size());
 
-                for (LHAccess device : devices) {
-                    process(device);
-                }
-
-                Thread.sleep(config.sleep * 1000);
-            } catch (InterruptedException e) {
-                Logger.error("NotificationProcessor: %s", e);
+            for (LHAccess device : devices) {
+                process(device);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.error("NotificationProcessor: %s", e);
         }
     }
 
-    private void process(LHAccess device) throws InterruptedException {
+    private void process(LHAccess device) {
         try {
-            NotificationList notificationList = retrieveNotifications(device, 100);
-            if (notificationList.notifications.isEmpty())
-                return;
-
-            Logger.debug("Processing %d notifications. %s:%s, last: %s",
-                    notificationList.notifications.size(),
+            Logger.debug("`GET /notifications`: user: %s, last: %s",
                     device.userId,
-                    device.clientId,
                     device.last);
+
+            NotificationList notificationList = retrieveNotifications(device, 100);
 
             process(device.userId, device.clientId, notificationList);
 
-            Thread.sleep(200);
-
         } catch (AuthException e) {
+            Logger.debug("`GET /notifications`: user: %s, %s", device.userId, e);
             refreshToken(device.userId, new Cookie("zuid", device.cookie));
         } catch (HttpException e) {
-            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);
-            Thread.sleep(config.sleep * 1000);
+            Logger.error("`GET /notifications`: user: %s, last: %s, error: %s", device.userId, device.last, e);
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e);
+            Logger.error("`GET /notifications`: user: %s, last: %s, error: %s", device.userId, device.last, e);
         }
     }
 
@@ -147,41 +136,48 @@ public class NotificationProcessor implements Runnable {
                 .queryParam("since", LHAccess.last)
                 .queryParam("size", size)
                 .request(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, bearer(LHAccess.token))
                 .get();
 
         int status = response.getStatus();
-//        Logger.debug("retrieveNotifications: %s:%s, last: %s, status: %s",
-//                LHAccess.userId,
-//                LHAccess.clientId,
-//                LHAccess.last,
-//                status);
 
-        if (status == 200)
+        if (status == 200) {
             return response.readEntity(NotificationList.class);
+        }
 
-        if (status == 404)
+        if (status == 404) {  //todo what???
             return response.readEntity(NotificationList.class);
+        }
 
-        String message = response.readEntity(String.class);
-        if (status == 401)
-            throw new AuthException(message, status);
+        if (status == 401) {   //todo nginx returns text/html for 401. Cannot deserialize as json
+            throw new AuthException(status);
+        }
 
-        throw new HttpException(message, status);
+        if (status == 403) {
+            throw response.readEntity(AuthException.class);
+        }
+
+        throw response.readEntity(HttpException.class);
     }
 
     private void refreshToken(UUID userId, Cookie cookie) {
         try {
-            Logger.debug("Refreshing token for: %s", userId);
             LoginClient loginClient = new LoginClient(client);
             Access access = loginClient.renewAccessToken(cookie);
             String cookieValue = access.getCookie() != null ? access.getCookie().getValue() : cookie.getValue();
             accessDAO.update(userId, access.token, cookieValue);
         } catch (AuthException e) {
-            int remove = accessDAO.remove(userId);
-            Logger.warning("refreshToken: removed LH device: user: %s, removed: %d", userId, remove);
+            int removed = 0;
+            if (!Objects.equals(e.getLabel(), "invalid-credentials")) {
+                removed = accessDAO.remove(userId);
+            }
+            Logger.warning("`POST /access`: %s user: %s, %s",
+                    removed > 0 ? "Removed LH device," : "",
+                    userId,
+                    e);
         } catch (HttpException e) {
-            Logger.error("refreshToken: %s %s", userId, e);
+            Logger.error("`POST /access`: %s %s", userId, e);
         }
     }
 }

@@ -38,6 +38,8 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.skife.jdbi.v2.DBI;
 
+import java.util.concurrent.TimeUnit;
+
 public class Service extends Server<Config> {
     public static Service instance;
     private final AdminResourceBundle admin = new AdminResourceBundle();
@@ -66,7 +68,7 @@ public class Service extends Server<Config> {
     protected void onRun(Config config, Environment env) {
         final CryptoFactory cf = getCryptoFactory();
 
-        final DBI jdbi = new DBIFactory().build(environment, config.database, "postgresql");
+        final DBI jdbi = new DBIFactory().build(environment, config.database, "hold");
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
@@ -86,8 +88,10 @@ public class Service extends Server<Config> {
         admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));
 
-        Thread thread = new Thread(new NotificationProcessor(client, accessDAO));
-        thread.start();
+        env.lifecycle()
+                .scheduledExecutorService("notifications")
+                .build()
+                .scheduleWithFixedDelay(new NotificationProcessor(client, accessDAO), 10, config.sleep, TimeUnit.SECONDS);
     }
 
     @Override

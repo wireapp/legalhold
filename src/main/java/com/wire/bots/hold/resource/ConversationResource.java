@@ -14,6 +14,7 @@ import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
+import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.models.*;
 import com.wire.bots.sdk.server.model.Conversation;
 import com.wire.bots.sdk.server.model.Member;
@@ -263,8 +264,8 @@ public class ConversationResource {
     private void testAPI() {
         try {
             api.getSelf();
-        } catch (Exception e) {
-            Logger.info("reconnecting... %s", e);
+        } catch (HttpException e) {
+            Logger.debug("reconnecting... code: %d", e.getCode());
             api = getLHApi();
         }
     }

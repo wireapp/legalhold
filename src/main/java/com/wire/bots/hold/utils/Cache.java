@@ -1,5 +1,6 @@
 package com.wire.bots.hold.utils;
 
+import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.models.MessageAssetBase;
 import com.wire.bots.sdk.server.model.User;
 import com.wire.bots.sdk.tools.Logger;
@@ -59,7 +60,7 @@ public class Cache {
         User user = users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);
-            } catch (Exception e) {
+            } catch (HttpException e) {
                 Logger.warning("Cache.getUser: userId: %s, ex: %s", userId, e);
                 return null;
             }

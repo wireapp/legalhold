@@ -1,32 +1,18 @@
-CREATE TABLE Hold_Tokens (
+CREATE TABLE Access (
  userId UUID PRIMARY KEY,
  clientId varchar NOT NULL,
  token varchar,
  cookie varchar NOT NULL,
- last UUID NOT NULL,
+ last UUID,
  updated TIMESTAMP NOT NULL,
  created TIMESTAMP NOT NULL
 );
 
-ALTER TABLE Hold_Tokens
-ALTER COLUMN timestamp TYPE varchar;
-
-ALTER TABLE Hold_Tokens
-RENAME timestamp TO updated;
-
-
-ALTER TABLE Hold_Tokens
-ALTER created type TIMESTAMP WITHOUT TIME ZONE
-USING to_timestamp(created);
-
-ALTER TABLE Hold_Tokens
-ALTER timestamp type TIMESTAMP WITHOUT TIME ZONE
-USING to_timestamp(timestamp);
-
-CREATE TABLE Hold_Events (
+CREATE TABLE Events (
  messageId UUID PRIMARY KEY,
  conversationId UUID NOT NULL,
  type VARCHAR NOT NULL,
  payload VARCHAR NOT NULL,
  time TIMESTAMP NOT NULL
 );
+

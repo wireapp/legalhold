@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AccessDAO {
-    @SqlUpdate("INSERT INTO Hold_Tokens (userId, clientId, cookie, updated, created) " +
+    @SqlUpdate("INSERT INTO Access (userId, clientId, cookie, updated, created) " +
             "VALUES (:userId, :clientId, :cookie, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) " +
             "ON CONFLICT (userId) DO UPDATE SET cookie = EXCLUDED.cookie, clientId = EXCLUDED.clientId, " +
             "updated = EXCLUDED.updated")
@@ -18,27 +18,27 @@ public interface AccessDAO {
                @Bind("clientId") String clientId,
                @Bind("cookie") String cookie);
 
-    @SqlUpdate("DELETE FROM Hold_Tokens WHERE userId = :userId")
+    @SqlUpdate("DELETE FROM Access WHERE userId = :userId")
     int remove(@Bind("userId") UUID userId);
 
-    @SqlUpdate("UPDATE Hold_Tokens SET token = :token, cookie = :cookie, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
+    @SqlUpdate("UPDATE Access SET token = :token, cookie = :cookie, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
     int update(@Bind("userId") UUID userId,
                @Bind("token") String token,
                @Bind("cookie") String cookie);
 
-    @SqlUpdate("UPDATE Hold_Tokens SET last = :last, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
+    @SqlUpdate("UPDATE Access SET last = :last, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
     int updateLast(@Bind("userId") UUID userId,
                    @Bind("last") UUID last);
 
-    @SqlQuery("SELECT * FROM Hold_Tokens WHERE token IS NOT NULL ORDER BY created DESC LIMIT 1")
+    @SqlQuery("SELECT * FROM Access WHERE token IS NOT NULL ORDER BY created DESC LIMIT 1")
     @RegisterMapper(AccessResultSetMapper.class)
     LHAccess getSingle();
 
-    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC")
+    @SqlQuery("SELECT * FROM Access ORDER BY created DESC")
     @RegisterMapper(AccessResultSetMapper.class)
     List<LHAccess> listAll();
 
-    @SqlQuery("SELECT * FROM Hold_Tokens ORDER BY created DESC LIMIT :count")
+    @SqlQuery("SELECT * FROM Access ORDER BY created DESC LIMIT :count")
     @RegisterMapper(AccessResultSetMapper.class)
     List<LHAccess> list(@Bind("count") int count);
 }

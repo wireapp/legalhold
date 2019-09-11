@@ -44,7 +44,7 @@ public class NotificationProcessor implements Runnable {
                 process(device);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             Logger.error("NotificationProcessor: %s", e);
         }
     }
@@ -62,10 +62,7 @@ public class NotificationProcessor implements Runnable {
         } catch (AuthException e) {
             Logger.debug("`GET /notifications`: user: %s, %s", device.userId, e);
             refreshToken(device.userId, new Cookie("zuid", device.cookie));
-        } catch (HttpException e) {
-            Logger.error("`GET /notifications`: user: %s, last: %s, error: %s", device.userId, device.last, e);
         } catch (Exception e) {
-            e.printStackTrace();
             Logger.error("`GET /notifications`: user: %s, last: %s, error: %s", device.userId, device.last, e);
         }
     }
@@ -151,6 +148,7 @@ public class NotificationProcessor implements Runnable {
         }
 
         if (status == 401) {   //todo nginx returns text/html for 401. Cannot deserialize as json
+            response.readEntity(String.class);
             throw new AuthException(status);
         }
 

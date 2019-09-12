@@ -21,7 +21,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -37,7 +36,7 @@ public class NotificationProcessor implements Runnable {
     @Override
     public void run() {
         try {
-            List<LHAccess> devices = accessDAO.listAll();
+            List<LHAccess> devices = accessDAO.listEnabled();
             Logger.info("Devices: %d", devices.size());
 
             for (LHAccess device : devices) {
@@ -49,21 +48,42 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
+    private Access getAccess(Cookie cookie) throws HttpException {
+        LoginClient loginClient = new LoginClient(client);
+        return loginClient.renewAccessToken(cookie);
+    }
+
     private void process(LHAccess device) {
+        UUID userId = device.userId;
         try {
             Logger.debug("`GET /notifications`: user: %s, last: %s",
-                    device.userId,
+                    userId,
                     device.last);
+
+            String cookieValue = device.cookie;
+
+            Cookie cookie = new Cookie("zuid", device.cookie);
+
+            Access access = getAccess(cookie);
+
+            if (access.getCookie() != null) {
+                Logger.info("Set-Cookie: user: %s", userId);
+                cookieValue = access.getCookie().getValue();
+            }
+
+            accessDAO.update(userId, access.token, cookieValue);
+
+            device.token = access.getToken();
 
             NotificationList notificationList = retrieveNotifications(device, 100);
 
-            process(device.userId, device.clientId, notificationList);
+            process(userId, device.clientId, notificationList);
 
         } catch (AuthException e) {
-            Logger.debug("`GET /notifications`: user: %s, %s", device.userId, e);
-            refreshToken(device.userId, new Cookie("zuid", device.cookie));
+            accessDAO.disable(userId);
+            Logger.warning("Disabled LH device for user: %s, error: ", userId, e);
         } catch (Exception e) {
-            Logger.error("`GET /notifications`: user: %s, last: %s, error: %s", device.userId, device.last, e);
+            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e);
         }
     }
 
@@ -72,6 +92,7 @@ public class NotificationProcessor implements Runnable {
     }
 
     private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
+
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
                 if (!process(userId, clientId, payload, notif.id)) {
@@ -157,25 +178,5 @@ public class NotificationProcessor implements Runnable {
         }
 
         throw response.readEntity(HttpException.class);
-    }
-
-    private void refreshToken(UUID userId, Cookie cookie) {
-        try {
-            LoginClient loginClient = new LoginClient(client);
-            Access access = loginClient.renewAccessToken(cookie);
-            String cookieValue = access.getCookie() != null ? access.getCookie().getValue() : cookie.getValue();
-            accessDAO.update(userId, access.token, cookieValue);
-        } catch (AuthException e) {
-            int removed = 0;
-            if (!Objects.equals(e.getLabel(), "invalid-credentials")) {
-                removed = accessDAO.remove(userId);
-            }
-            Logger.warning("`POST /access`: %s user: %s, %s",
-                    removed > 0 ? "Removed LH device," : "",
-                    userId,
-                    e);
-        } catch (HttpException e) {
-            Logger.error("`POST /access`: %s %s", userId, e);
-        }
     }
 }

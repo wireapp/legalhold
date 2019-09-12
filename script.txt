@@ -5,7 +5,8 @@ CREATE TABLE Access (
  cookie varchar NOT NULL,
  last UUID,
  updated TIMESTAMP NOT NULL,
- created TIMESTAMP NOT NULL
+ created TIMESTAMP NOT NULL,
+ enabled INTEGER DEFAULT 1
 );
 
 CREATE TABLE Events (

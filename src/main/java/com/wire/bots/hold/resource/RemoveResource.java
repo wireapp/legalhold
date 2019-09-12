@@ -55,7 +55,7 @@ public class RemoveResource {
                 crypto.purge();
             }
 
-            int removeAccess = accessDAO.remove(payload.userId);
+            int removeAccess = accessDAO.disable(payload.userId);
 
             Logger.info("RemoveResource: team: %s, user: %s, removed: %s",
                     payload.teamId,

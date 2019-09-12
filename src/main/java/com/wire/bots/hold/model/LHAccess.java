@@ -10,4 +10,5 @@ public class LHAccess {
     public String cookie;
     public String updated;
     public String created;
+    public boolean enabled;
 }

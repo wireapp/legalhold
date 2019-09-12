@@ -76,7 +76,7 @@ public class RegisterDeviceResource {
                 fingerprint = crypto.getLocalFingerprint();
             }
 
-            accessDAO.remove(botId);
+            accessDAO.disable(botId);
             accessDAO.insert(botId, clientId, cookie);
 
             Logger.info("RegisterDeviceResource.register: %s:%s  email: %s",

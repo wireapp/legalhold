@@ -20,6 +20,7 @@ package com.wire.bots.hold;
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.internal.HoldMessageResource;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
@@ -87,6 +88,8 @@ public class Service extends Server<Config> {
 
         admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));
+
+        env.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, getClient()));
 
         env.lifecycle()
                 .scheduledExecutorService("notifications")

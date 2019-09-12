@@ -20,6 +20,7 @@ public class AccessResultSetMapper implements ResultSetMapper<LHAccess> {
         LHAccess.cookie = rs.getString("cookie");
         LHAccess.updated = rs.getString("updated");
         LHAccess.created = rs.getString("created");
+        LHAccess.enabled = rs.getInt("enabled") == 1;
         return LHAccess;
     }
 }

@@ -26,6 +26,8 @@ public class SanityCheck extends HealthCheck {
             API api = new API(client, null, single.token);
 
             List<LHAccess> accessList = accessDAO.listAll();
+
+            Logger.info("SanityCheck: checking %d devices", accessList.size());
             for (LHAccess access : accessList) {
                 boolean hasDevice = api.hasDevice(access.userId, access.clientId);
 

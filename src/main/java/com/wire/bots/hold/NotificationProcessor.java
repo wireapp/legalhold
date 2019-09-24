@@ -81,7 +81,7 @@ public class NotificationProcessor implements Runnable {
 
         } catch (AuthException e) {
             accessDAO.disable(userId);
-            Logger.warning("Disabled LH device for user: %s, error: ", userId, e);
+            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e);
         } catch (Exception e) {
             Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e);
         }
@@ -112,11 +112,8 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private boolean process(UUID userId, String clientId, Payload payload, UUID id) throws JsonProcessingException {
-        if (Logger.getLevel() == Level.FINE) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Logger.debug(objectMapper.writeValueAsString(payload));
-        }
+    private boolean process(UUID userId, String clientId, Payload payload, UUID id) {
+        trace(payload);
 
         Logger.debug("Payload: %s %s:%s, from: %s",
                 payload.type,
@@ -144,6 +141,17 @@ public class NotificationProcessor implements Runnable {
         }
 
         return response.getStatus() == 200;
+    }
+
+    private void trace(Payload payload) {
+        if (Logger.getLevel() == Level.FINE) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                Logger.debug(objectMapper.writeValueAsString(payload));
+            } catch (JsonProcessingException e) {
+                Logger.warning("%s", e);
+            }
+        }
     }
 
     private NotificationList retrieveNotifications(LHAccess LHAccess, int size)

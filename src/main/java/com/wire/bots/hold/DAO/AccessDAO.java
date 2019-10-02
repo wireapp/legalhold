@@ -45,4 +45,9 @@ public interface AccessDAO {
     @SqlQuery("SELECT * FROM Access ORDER BY created DESC LIMIT :count")
     @RegisterMapper(AccessResultSetMapper.class)
     List<LHAccess> list(@Bind("count") int count);
+
+    @SqlQuery("SELECT * FROM Access WHERE created < :created :: TIMESTAMP ORDER BY created DESC LIMIT :count")
+    @RegisterMapper(AccessResultSetMapper.class)
+    List<LHAccess> list(@Bind("count") int count,
+                        @Bind("created") String created);
 }

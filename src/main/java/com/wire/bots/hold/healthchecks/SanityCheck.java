@@ -25,17 +25,24 @@ public class SanityCheck extends HealthCheck {
             LHAccess single = accessDAO.getSingle();
             API api = new API(client, null, single.token);
 
-            List<LHAccess> accessList = accessDAO.listAll();
+            String created = single.created;
+            List<LHAccess> accessList = accessDAO.list(100, created);
 
-            Logger.info("SanityCheck: checking %d devices", accessList.size());
-            for (LHAccess access : accessList) {
-                boolean hasDevice = api.hasDevice(access.userId, access.clientId);
+            while (!accessList.isEmpty()) {
+                Logger.info("SanityCheck: checking %d devices, created: %s", accessList.size(), created);
+                for (LHAccess access : accessList) {
+                    boolean hasDevice = api.hasDevice(access.userId, access.clientId);
 
-                if (!access.enabled && hasDevice)
-                    return Result.unhealthy("User %s is NOT tracked in LH", access.userId);
+                    if (!access.enabled && hasDevice)
+                        return Result.unhealthy("User %s is NOT tracked in LH", access.userId);
 
-                if (access.enabled && !hasDevice)
-                    return Result.unhealthy("User %s IS tracked in LH", access.userId);
+                    if (access.enabled && !hasDevice)
+                        return Result.unhealthy("User %s IS tracked in LH", access.userId);
+
+                    created = access.created;
+                }
+
+                accessList = accessDAO.list(100, created);
             }
 
             return Result.healthy();

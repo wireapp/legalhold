@@ -3,6 +3,7 @@ package com.wire.bots.hold;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
@@ -10,12 +11,12 @@ import com.wire.bots.sdk.exceptions.AuthException;
 import com.wire.bots.sdk.exceptions.HttpException;
 import com.wire.bots.sdk.server.model.Payload;
 import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.tools.Util;
 import com.wire.bots.sdk.user.LoginClient;
 import com.wire.bots.sdk.user.model.Access;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -27,10 +28,16 @@ import java.util.logging.Level;
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
+    private final WebTarget api;
+    private final WebTarget admin;
 
     NotificationProcessor(Client client, AccessDAO accessDAO) {
         this.client = client;
         this.accessDAO = accessDAO;
+
+        final Config config = Service.instance.getConfig();
+        api = client.target(config.apiHost);
+        admin = client.target("http://localhost:8081/admin");  //todo read admin port from the config
     }
 
     @Override
@@ -91,7 +98,7 @@ public class NotificationProcessor implements Runnable {
         return token == null ? null : String.format("Bearer %s", token);
     }
 
-    private void process(UUID userId, String clientId, NotificationList notificationList) throws Exception {
+    private void process(UUID userId, String clientId, NotificationList notificationList) {
 
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
@@ -124,7 +131,7 @@ public class NotificationProcessor implements Runnable {
         if (payload.from == null || payload.data == null)
             return true;
 
-        Response response = client.target("http://localhost:8081/admin")
+        Response response = admin
                 .path(userId.toString())
                 .path("messages")
                 .queryParam("id", id)
@@ -156,7 +163,7 @@ public class NotificationProcessor implements Runnable {
 
     private NotificationList retrieveNotifications(LHAccess LHAccess, int size)
             throws HttpException {
-        Response response = client.target(Util.getHost())
+        Response response = api
                 .path("notifications")
                 .queryParam("client", LHAccess.clientId)
                 .queryParam("since", LHAccess.last)

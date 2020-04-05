@@ -26,18 +26,15 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
-import com.wire.bots.sdk.ClientRepo;
+import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.factories.CryptoFactory;
-import com.wire.bots.sdk.tools.AuthValidator;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.jdbi.bundles.DBIExceptionsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.skife.jdbi.v2.DBI;
 
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +45,11 @@ public class Service extends Server<Config> {
     public static void main(String[] args) throws Exception {
         instance = new Service();
         instance.run(args);
+    }
+
+    @Override
+    protected void migrateDBifNeeded(Configuration.Database database) {
+        //todo add support for Flyway
     }
 
     @Override
@@ -69,22 +71,19 @@ public class Service extends Server<Config> {
     protected void onRun(Config config, Environment env) {
         final CryptoFactory cf = getCryptoFactory();
 
-        final DBI jdbi = new DBIFactory().build(environment, config.database, "hold");
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
         RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cf);
-        addResource(registerDeviceResource, env);
+        addResource(registerDeviceResource);
 
-        AuthValidator validator = new AuthValidator(config.auth);
-
-        addResource(new InitiateResource(cf, validator), env);
-        addResource(new ConfirmResource(accessDAO, validator), env);
-        addResource(new RemoveResource(accessDAO, cf, validator), env);
-        addResource(new DevicesResource(accessDAO, cf), env);
-        addResource(new EventsResource(eventsDAO), env);
-        addResource(new ConversationResource(eventsDAO, accessDAO), env);
-        addResource(new IndexResource(eventsDAO), env);
+        addResource(new InitiateResource(cf));
+        addResource(new ConfirmResource(accessDAO));
+        addResource(new RemoveResource(accessDAO, cf));
+        addResource(new DevicesResource(accessDAO, cf));
+        addResource(new EventsResource(eventsDAO));
+        addResource(new ConversationResource(eventsDAO, accessDAO));
+        addResource(new IndexResource(eventsDAO));
 
         admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));
@@ -99,14 +98,15 @@ public class Service extends Server<Config> {
 
     @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
+
         return null;
     }
 
     @Override
-    protected void messageResource(Config config, Environment env, MessageHandlerBase handler, ClientRepo repo) {
+    protected void messageResource() {
     }
 
     @Override
-    protected void botResource(Config config, Environment env, MessageHandlerBase handler) {
+    protected void botResource() {
     }
 }

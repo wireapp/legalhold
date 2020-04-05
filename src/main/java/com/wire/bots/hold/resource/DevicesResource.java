@@ -91,7 +91,7 @@ public class DevicesResource {
         }
     }
 
-    class Legal {
+    static class Legal {
         UUID last;
         UUID userId;
         String clientId;
@@ -100,7 +100,7 @@ public class DevicesResource {
         String created;
     }
 
-    class Model {
+    static class Model {
         ArrayList<Legal> legals;
     }
 }

@@ -25,7 +25,7 @@ public class HoldMessageResource extends MessageResourceBase {
     private final HoldClientRepo repo;
 
     public HoldMessageResource(MessageHandlerBase handler, HoldClientRepo repo) {
-        super(handler, null, repo);
+        super(handler, repo);
         this.repo = repo;
     }
 
@@ -66,10 +66,5 @@ public class HoldMessageResource extends MessageResourceBase {
                 ok().
                 status(200).
                 build();
-    }
-
-    @Override
-    protected boolean isValid(String auth) {
-        return true;
     }
 }

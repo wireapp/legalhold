@@ -89,7 +89,7 @@ public class Collector {
 
     @Nullable
     private String systemIcon(String type) {
-        final String base = "/legalhold/assets/";
+        final String base = "/assets/";
         switch (type) {
             case "conversation.create":
             case "conversation.member-join":
@@ -170,12 +170,12 @@ public class Collector {
     }
 
     private String getFilename(File file, String dir) {
-        return String.format("/legalhold/%s/%s", dir, file.getName());
+        return String.format("/%s/%s", dir, file.getName());
     }
 
     private String getAvatar(User user) {
         File file = cache.getProfileImage(user);
-        String ret = String.format("/legalhold/%s/%s", "avatars", file.getName());
+        String ret = String.format("/%s/%s", "avatars", file.getName());
         return file.exists() ? ret : null;
     }
 

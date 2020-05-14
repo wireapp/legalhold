@@ -16,12 +16,12 @@ public class TestCache extends Cache {
     @Override
     public File getAssetFile(MessageAssetBase message) {
         String extension = Helper.getExtension(message.getMimeType());
-        return new File(String.format("src/test/legalhold/images/%s.%s", message.getAssetKey(), extension));
+        return new File(String.format("src/test/images/%s.%s", message.getAssetKey(), extension));
     }
 
     @Override
     public File getProfileImage(User user) {
-        return new File(String.format("src/test/legalhold/avatars/%s.png", user.id));
+        return new File(String.format("src/test/avatars/%s.png", user.id));
     }
 
     @Override

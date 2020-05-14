@@ -68,7 +68,7 @@ public class IndexResource {
         }
     }
 
-    class Model {
+    static class Model {
         List<Event> events;
     }
 }

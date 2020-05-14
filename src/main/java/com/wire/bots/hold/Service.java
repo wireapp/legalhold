@@ -26,7 +26,6 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
-import com.wire.bots.sdk.Configuration;
 import com.wire.bots.sdk.MessageHandlerBase;
 import com.wire.bots.sdk.Server;
 import com.wire.bots.sdk.factories.CryptoFactory;
@@ -48,17 +47,12 @@ public class Service extends Server<Config> {
     }
 
     @Override
-    protected void migrateDBifNeeded(Configuration.Database database) {
-        //todo add support for Flyway
-    }
-
-    @Override
     public void initialize(Bootstrap<Config> bootstrap) {
         super.initialize(bootstrap);
 
-        bootstrap.addBundle(new AssetsBundle("/legalhold/assets/"));
-        bootstrap.addBundle(new ImagesBundle("/opt/hold/legalhold/images", "/legalhold/images", "images"));
-        bootstrap.addBundle(new ImagesBundle("/opt/hold/legalhold/avatars", "/legalhold/avatars", "avatars"));
+        bootstrap.addBundle(new AssetsBundle("/assets/"));
+        bootstrap.addBundle(new ImagesBundle("/opt/hold/images", "/images", "images"));
+        bootstrap.addBundle(new ImagesBundle("/opt/hold/avatars", "/avatars", "avatars"));
 
         bootstrap.addBundle(admin);
         bootstrap.addBundle(new DBIExceptionsBundle());
@@ -98,7 +92,6 @@ public class Service extends Server<Config> {
 
     @Override
     protected MessageHandlerBase createHandler(Config config, Environment env) {
-
         return null;
     }
 

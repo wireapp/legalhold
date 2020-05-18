@@ -99,7 +99,8 @@ public class MessageTemplateTest {
         Collector collector = new Collector(new TestCache());
         String name = "Message Template Test";
         collector.setConvName(name);
-        collector.addSystem(String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name), thursday, "conversation.create");
+        final String format = String.format("**Dejan** created conversation **%s** with: \n- **Lipis**", name);
+        collector.addSystem(format, thursday, "conversation.create");
         collector.add(txt(dejan, thursday, "Privet! Kak dela?"));
         collector.add(txt(lipis, thursday, "Ladna"));
         collector.add(asset(lipis, thursday, "i_know", "video/mp4"));

@@ -51,6 +51,7 @@ public class ConversationResource {
     }
 
     @GET
+    @Authorization("Bearer")
     @ApiOperation(value = "Render Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),

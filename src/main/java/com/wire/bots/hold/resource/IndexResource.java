@@ -6,10 +6,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.sdk.tools.Logger;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -33,6 +30,7 @@ public class IndexResource {
     }
 
     @GET
+    @Authorization("Bearer")
     @ApiOperation(value = "List all Wire conversations")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),
@@ -68,7 +66,7 @@ public class IndexResource {
         }
     }
 
-    class Model {
+    static class Model {
         List<Event> events;
     }
 }

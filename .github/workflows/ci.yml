@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - staging
+
+  pull_request:
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build docker image
+        uses: docker/build-push-action@v1
+        with:
+          # login to repo
+          repository: wire/ci-test-image
+          # do not push image
+          push: false
+
+      # Send webhook to Wire using Slack Bot
+      - name: Webhook to Wire
+        uses: 8398a7/action-slack@v2
+        with:
+          status: ${{ job.status }}
+          author_name: Docker CI pipeline
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.WEBHOOK_CI }}
+        # Send message only if previous step failed
+        if: failure()

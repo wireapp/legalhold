@@ -20,12 +20,13 @@ package com.wire.bots.hold.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.sdk.Configuration;
+import io.dropwizard.util.Duration;
 
 import javax.validation.constraints.NotNull;
 
 public class Config extends Configuration {
     @JsonProperty
-    public int sleep = 30;
+    public Duration sleep = Duration.seconds(30);
 
     @JsonProperty
     @NotNull

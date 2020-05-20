@@ -35,7 +35,7 @@ jerseyClient:
       - TLSv1.1
       - TLSv1.2
 
-sleep: ${DELAY:-60} #seconds
+sleep: ${DELAY:-60s}
 auth: ${SERVICE_TOKEN:-}
 apiHost: ${WIRE_API_HOST:-https://prod-nginz-https.wire.com}
 

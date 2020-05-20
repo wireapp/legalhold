@@ -87,7 +87,7 @@ public class Service extends Server<Config> {
         env.lifecycle()
                 .scheduledExecutorService("notifications")
                 .build()
-                .scheduleWithFixedDelay(new NotificationProcessor(client, accessDAO), 10, config.sleep, TimeUnit.SECONDS);
+                .scheduleWithFixedDelay(new NotificationProcessor(client, accessDAO), 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
     }
 
     @Override

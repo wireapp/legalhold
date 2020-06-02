@@ -1,4 +1,6 @@
-FROM docker.io/maven AS build-env
+FROM maven:3.6.3-jdk-8-slim AS build
+LABEL description="Wire Legal Hold"
+LABEL project="wire-bots:legal-hold"
 
 WORKDIR /app
 
@@ -26,12 +28,14 @@ COPY src/main/resources/assets/*         /opt/hold/assets/
 COPY hold.yaml /opt/hold/
 
 # Copy built target
-COPY --from=build-env /app/target/hold.jar /opt/hold/
+COPY --from=build /app/target/hold.jar /opt/hold/
 
 # create version file
 ARG release_version=development
 ENV RELEASE_FILE_PATH=/opt/hold/release.txt
 RUN echo $release_version > $RELEASE_FILE_PATH
+# TODO - uncomment this when migration to JSON logging is finalized
+#ENV APPENDER_TYPE=json-console
 
 EXPOSE  8080 8081 8082
 ENTRYPOINT ["java", "-javaagent:/opt/wire/lib/jmx_prometheus_javaagent.jar=8082:/opt/wire/lib/metrics.yaml", "-jar", "hold.jar", "server", "/opt/hold/hold.yaml"]

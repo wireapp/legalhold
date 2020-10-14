@@ -46,4 +46,3 @@ database:
   url: ${DB_URL:-jdbc:postgresql://localhost/legalhold}
   user: ${DB_USER:-}
   password: ${DB_PASSWORD:-}
-  baseline: true

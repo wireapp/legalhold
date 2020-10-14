@@ -82,7 +82,7 @@ public class NotificationProcessor implements Runnable {
 
             device.token = access.getToken();
 
-            NotificationList notificationList = retrieveNotifications(device, 100);
+            NotificationList notificationList = retrieveNotifications(device);
 
             process(userId, device.clientId, notificationList);
 
@@ -161,13 +161,13 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private NotificationList retrieveNotifications(LHAccess LHAccess, int size)
+    private NotificationList retrieveNotifications(LHAccess LHAccess)
             throws HttpException {
         Response response = api
                 .path("notifications")
                 .queryParam("client", LHAccess.clientId)
                 .queryParam("since", LHAccess.last)
-                .queryParam("size", size)
+                .queryParam("size", 100)
                 .request(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, bearer(LHAccess.token))

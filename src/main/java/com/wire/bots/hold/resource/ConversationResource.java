@@ -241,6 +241,11 @@ public class ConversationResource {
     private void onConversationCreate(Collector collector, Event event) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            if (msg.conversation == null) {
+                Logger.warning("onConversationCreate: conv is null. Payload: %s", event.payload);
+                return;
+            }
+
             collector.setConvName(msg.conversation.name);
 
             String text = formatConversation(msg.conversation);

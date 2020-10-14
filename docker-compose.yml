@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - release_version=docker-compose
+    image: eu.gcr.io/wire-bot/hold
+    ports:
+      - 8080:8080
+      - 8081:8081
+      - 8082:8082
+    environment:
+      # put here the token used for testing
+      - SERVICE_TOKEN=some-service-token-from-BE
+      - WIRE_API_HOST=https://staging-nginz-https.zinfra.io
+      # local database
+      - DB_URL=jdbc:postgresql://db:5432/hold
+      - DB_USER=hold
+      - DB_PASSWORD=hold
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    # just for local development
+    environment:
+      - POSTGRES_USER=hold
+      - POSTGRES_PASSWORD=hold
+      - POSTGRES_DB=hold
+    ports:
+      - 5432:5432
+    volumes:
+      - hold-db:/var/lib/postgresql/data/
+
+volumes:
+  hold-db:

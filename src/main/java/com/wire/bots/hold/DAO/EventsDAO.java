@@ -1,11 +1,15 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.Event;
+import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +33,24 @@ public interface EventsDAO {
     @RegisterMapper(EventsResultSetMapper.class)
     List<Event> listAllAsc(@Bind("conversationId") UUID conversationId);
 
-    @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time FROM Events GROUP BY conversationId ORDER BY MAX(time) DESC, conversationId")
-    @RegisterMapper(EventsResultSetMapper.class)
+    @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time " +
+            "FROM Events " +
+            "GROUP BY conversationId " +
+            "ORDER BY MAX(time) DESC, conversationId " +
+            "LIMIT 400")
+    @RegisterMapper(_EventsResultSetMapper.class)
     List<Event> listConversations();
+
+    class _EventsResultSetMapper implements ResultSetMapper<Event> {
+        @Override
+        public Event map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
+            Event event = new Event();
+            Object conversationId = rs.getObject("conversationId");
+            if (conversationId != null)
+                event.conversationId = (UUID) conversationId;
+            event.time = rs.getString("time");
+
+            return event;
+        }
+    }
 }

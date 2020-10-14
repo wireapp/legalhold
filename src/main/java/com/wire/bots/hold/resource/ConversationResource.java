@@ -9,6 +9,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.Service;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
@@ -51,7 +52,7 @@ public class ConversationResource {
     }
 
     @GET
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "Render Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),

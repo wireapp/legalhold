@@ -4,11 +4,15 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.sdk.crypto.Crypto;
 import com.wire.bots.sdk.factories.CryptoFactory;
 import com.wire.bots.sdk.tools.Logger;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,7 +41,7 @@ public class DevicesResource {
     }
 
     @GET
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "List all legal hold devices")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),

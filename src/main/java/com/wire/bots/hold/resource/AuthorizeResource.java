@@ -10,6 +10,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
@@ -25,7 +26,7 @@ public class AuthorizeResource {
                 return Response.
                         status(Response.Status.SEE_OTHER).
                         header(HttpHeaders.LOCATION, "/index.html").
-                        header(HttpHeaders.AUTHORIZATION, "Bearer " + token).
+                        cookie(new NewCookie("W-Legal-Hold", "Bearer " + token)).
                         build();
             } else {
                 return Response.

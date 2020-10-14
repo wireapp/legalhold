@@ -4,6 +4,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.sdk.tools.Logger;
 import io.swagger.annotations.*;
@@ -32,7 +33,7 @@ public class EventsResource {
     }
 
     @GET
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "List all Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),

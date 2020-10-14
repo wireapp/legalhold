@@ -20,6 +20,7 @@ package com.wire.bots.hold;
 import com.github.mtakaki.dropwizard.admin.AdminResourceBundle;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.internal.HoldMessageResource;
 import com.wire.bots.hold.model.Config;
@@ -88,6 +89,12 @@ public class Service extends Server<Config> {
                 .scheduledExecutorService("notifications")
                 .build()
                 .scheduleWithFixedDelay(new NotificationProcessor(client, accessDAO), 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
+    }
+
+    @Override
+    protected void registerFeatures() {
+        super.registerFeatures();
+        environment.jersey().register(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);
     }
 
     @Override

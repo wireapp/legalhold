@@ -68,12 +68,13 @@ public class Service extends Server<Config> {
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
-        RegisterDeviceResource registerDeviceResource = new RegisterDeviceResource(client, accessDAO, cf);
-        addResource(registerDeviceResource);
-
+        // Used by Wire Server
         addResource(new InitiateResource(cf));
         addResource(new ConfirmResource(accessDAO));
         addResource(new RemoveResource(accessDAO, cf));
+
+        // Used by Audit
+        addResource(new AuthorizeResource());
         addResource(new DevicesResource(accessDAO, cf));
         addResource(new EventsResource(eventsDAO));
         addResource(new ConversationResource(eventsDAO, accessDAO));

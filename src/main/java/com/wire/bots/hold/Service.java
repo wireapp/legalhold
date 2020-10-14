@@ -80,7 +80,6 @@ public class Service extends Server<Config> {
         addResource(new ConversationResource(eventsDAO, accessDAO));
         addResource(new IndexResource(eventsDAO));
 
-        admin.getJerseyEnvironment().register(new SettingsResource());
         admin.getJerseyEnvironment().register(new HoldMessageResource(new MessageHandler(eventsDAO), new HoldClientRepo(cf)));
 
         env.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, getClient()));

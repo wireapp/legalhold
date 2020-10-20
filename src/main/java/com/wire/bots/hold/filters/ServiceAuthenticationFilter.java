@@ -29,7 +29,7 @@ public class ServiceAuthenticationFilter implements ContainerRequestFilter {
         if (authHeader == null)
             authHeader = authCookie.getValue();
 
-        final String token = String.format("Bearer %s", Service.instance.getConfig().auth);
+        final String token = String.format("Bearer %s", Service.instance.getConfig().token);
 
         if (!Objects.equals(token, authHeader)) {
             Exception cause = new IllegalArgumentException("Wrong service token");

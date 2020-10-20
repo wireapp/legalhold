@@ -22,13 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wire.bots.sdk.Configuration;
 import io.dropwizard.util.Duration;
 
-import javax.validation.constraints.NotNull;
-
 public class Config extends Configuration {
     @JsonProperty
     public Duration sleep = Duration.seconds(30);
-
-    @JsonProperty
-    @NotNull
-    public String auth;
 }

@@ -21,7 +21,7 @@ public class AuthorizeResource {
     @ApiOperation(value = "Authorize")
     public Response authenticate(@ApiParam @FormParam("token") String token) {
         try {
-            final String auth = Service.instance.getConfig().auth;
+            final String auth = Service.instance.getConfig().token;
             if (Objects.equals(auth, token)) {
                 return Response.
                         status(Response.Status.SEE_OTHER).

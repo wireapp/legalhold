@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         - release_version=docker-compose
-    image: eu.gcr.io/wire-bot/hold
+    image: eu.gcr.io/wire-bot/legal-hold
     ports:
       - 8080:8080
       - 8081:8081

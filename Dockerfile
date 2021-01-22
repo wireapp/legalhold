@@ -13,7 +13,7 @@ COPY . ./
 RUN mvn -Dmaven.test.skip=true package
 
 # runtime stage
-FROM dejankovacevic/bots.runtime:2.10.3
+FROM wirebot/runtime
 
 RUN mkdir /opt/hold
 RUN mkdir /opt/hold/images
@@ -38,4 +38,4 @@ RUN echo $release_version > $RELEASE_FILE_PATH
 #ENV APPENDER_TYPE=json-console
 
 EXPOSE  8080 8081 8082
-ENTRYPOINT ["java", "-javaagent:/opt/wire/lib/jmx_prometheus_javaagent.jar=8082:/opt/wire/lib/metrics.yaml", "-jar", "hold.jar", "server", "/opt/hold/hold.yaml"]
+ENTRYPOINT ["java", "-javaagent:/opt/wire/lib/prometheus-agent.jar=8082:/opt/wire/lib/metrics.yaml", "-jar", "hold.jar", "server", "/opt/hold/hold.yaml"]

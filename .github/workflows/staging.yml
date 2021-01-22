@@ -7,7 +7,7 @@ on:
 
 env:
   # set docker image for the service - i.e. "wire-bot/poll"
-  DOCKER_IMAGE: legal-hold
+  DOCKER_IMAGE: wire-bot/legal-hold
   # name of the service in the Dagobah - the value for label name, i.e. "polls"
   SERVICE_NAME: legal-hold
 

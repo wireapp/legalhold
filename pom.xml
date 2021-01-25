@@ -6,12 +6,13 @@
 
     <artifactId>hold</artifactId>
     <groupId>com.wire.bots</groupId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
 
     <properties>
-        <dropwizard.version>2.0.11</dropwizard.version>
+        <lithium.version>3.0.3</lithium.version>
         <openhtml.version>1.0.2</openhtml.version>
-        <lithium.version>2.37.0</lithium.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.test.skip>true</maven.test.skip>
     </properties>
 
@@ -23,17 +24,24 @@
                 <enabled>true</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>helium</id>
+            <url>https://packagecloud.io/dkovacevic/helium/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>com.wire.bots</groupId>
+            <groupId>com.wire</groupId>
             <artifactId>lithium</artifactId>
             <version>${lithium.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.8.3</version>
+            <groupId>com.wire</groupId>
+            <artifactId>helium</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.mtakaki</groupId>
@@ -45,17 +53,6 @@
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-testing</artifactId>
-            <version>${dropwizard.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-jdbi</artifactId>
-            <version>2.0.0-rc9</version>
         </dependency>
         <dependency>
             <groupId>com.github.spullara.mustache.java</groupId>

@@ -1,8 +1,8 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wire.bots.sdk.models.ImageMessage;
-import com.wire.bots.sdk.models.TextMessage;
+import com.wire.xenon.models.ImageMessage;
+import com.wire.xenon.models.TextMessage;
 import org.junit.Test;
 
 import java.io.IOException;

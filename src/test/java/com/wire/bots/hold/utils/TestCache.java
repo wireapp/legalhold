@@ -1,7 +1,7 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.server.model.User;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.models.MessageAssetBase;
 
 import java.io.File;
 import java.util.UUID;

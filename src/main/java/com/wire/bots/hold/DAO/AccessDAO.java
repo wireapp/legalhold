@@ -1,10 +1,10 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.LHAccess;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.jdbi.v3.sqlobject.config.RegisterColumnMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,23 +31,23 @@ public interface AccessDAO {
                    @Bind("last") UUID last);
 
     @SqlQuery("SELECT * FROM Access WHERE token IS NOT NULL AND enabled = 1 ORDER BY created DESC LIMIT 1")
-    @RegisterMapper(AccessResultSetMapper.class)
+    @RegisterColumnMapper(AccessResultSetMapper.class)
     LHAccess getSingle();
 
     @SqlQuery("SELECT * FROM Access WHERE enabled = 1 ORDER BY created DESC")
-    @RegisterMapper(AccessResultSetMapper.class)
+    @RegisterColumnMapper(AccessResultSetMapper.class)
     List<LHAccess> listEnabled();
 
     @SqlQuery("SELECT * FROM Access ORDER BY created DESC")
-    @RegisterMapper(AccessResultSetMapper.class)
+    @RegisterColumnMapper(AccessResultSetMapper.class)
     List<LHAccess> listAll();
 
     @SqlQuery("SELECT * FROM Access ORDER BY created DESC LIMIT :count")
-    @RegisterMapper(AccessResultSetMapper.class)
+    @RegisterColumnMapper(AccessResultSetMapper.class)
     List<LHAccess> list(@Bind("count") int count);
 
     @SqlQuery("SELECT * FROM Access WHERE created < :created :: TIMESTAMP ORDER BY created DESC LIMIT :count")
-    @RegisterMapper(AccessResultSetMapper.class)
+    @RegisterColumnMapper(AccessResultSetMapper.class)
     List<LHAccess> list(@Bind("count") int count,
                         @Bind("created") String created);
 }

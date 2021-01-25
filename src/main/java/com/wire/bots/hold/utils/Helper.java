@@ -1,11 +1,11 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.server.model.Asset;
-import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.tools.Util;
-import com.wire.bots.sdk.user.API;
+import com.wire.helium.API;
+import com.wire.xenon.backend.models.Asset;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.tools.Util;
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
 import org.commonmark.node.Node;

@@ -2,7 +2,7 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.ConfirmPayload;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;

@@ -3,8 +3,8 @@ package com.wire.bots.hold.healthchecks;
 import com.codahale.metrics.health.HealthCheck;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.LHAccess;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.API;
+import com.wire.helium.API;
+import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
 import java.util.List;

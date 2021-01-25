@@ -1,16 +1,16 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.Event;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class EventsResultSetMapper implements ResultSetMapper<Event> {
+public class EventsResultSetMapper implements ColumnMapper<Event> {
     @Override
-    public Event map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
+    public Event map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
         Event event = new Event();
         Object conversationId = rs.getObject("conversationId");
         if (conversationId != null)

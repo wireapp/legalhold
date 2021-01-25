@@ -19,7 +19,7 @@
 package com.wire.bots.hold.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wire.bots.sdk.Configuration;
+import com.wire.lithium.Configuration;
 import io.dropwizard.util.Duration;
 
 public class Config extends Configuration {

@@ -13,7 +13,7 @@ COPY . ./
 RUN mvn -Dmaven.test.skip=true package
 
 # runtime stage
-FROM dejankovacevic/bots.runtime:2.10.3
+FROM wirebot/runtime
 
 RUN mkdir /opt/hold
 RUN mkdir /opt/hold/images

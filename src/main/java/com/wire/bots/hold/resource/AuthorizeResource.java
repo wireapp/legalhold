@@ -1,7 +1,7 @@
 package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.Service;
-import com.wire.bots.sdk.server.model.ErrorMessage;
+import com.wire.xenon.backend.models.ErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

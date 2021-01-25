@@ -1,12 +1,12 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.Event;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.statement.StatementContext;
+import org.jdbi.v3.sqlobject.config.RegisterColumnMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,15 +22,15 @@ public interface EventsDAO {
                @Bind("payload") String payload);
 
     @SqlQuery("SELECT * FROM Events WHERE messageId = :messageId")
-    @RegisterMapper(EventsResultSetMapper.class)
+    @RegisterColumnMapper(EventsResultSetMapper.class)
     Event get(@Bind("messageId") UUID messageId);
 
     @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId ORDER BY time DESC")
-    @RegisterMapper(EventsResultSetMapper.class)
+    @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAll(@Bind("conversationId") UUID conversationId);
 
     @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId ORDER BY time ASC")
-    @RegisterMapper(EventsResultSetMapper.class)
+    @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAllAsc(@Bind("conversationId") UUID conversationId);
 
     @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time " +
@@ -38,12 +38,12 @@ public interface EventsDAO {
             "GROUP BY conversationId " +
             "ORDER BY MAX(time) DESC, conversationId " +
             "LIMIT 400")
-    @RegisterMapper(_EventsResultSetMapper.class)
+    @RegisterColumnMapper(_EventsResultSetMapper.class)
     List<Event> listConversations();
 
-    class _EventsResultSetMapper implements ResultSetMapper<Event> {
+    class _EventsResultSetMapper implements ColumnMapper<Event> {
         @Override
-        public Event map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
+        public Event map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
             Event event = new Event();
             Object conversationId = rs.getObject("conversationId");
             if (conversationId != null)

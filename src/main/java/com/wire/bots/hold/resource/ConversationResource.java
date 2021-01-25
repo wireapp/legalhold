@@ -15,13 +15,12 @@ import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.*;
-import com.wire.bots.sdk.server.model.Conversation;
-import com.wire.bots.sdk.server.model.Member;
-import com.wire.bots.sdk.server.model.SystemMessage;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.API;
+import com.wire.helium.API;
+import com.wire.xenon.backend.models.Conversation;
+import com.wire.xenon.backend.models.Member;
+import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.models.*;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.annotation.Nullable;
@@ -271,8 +270,8 @@ public class ConversationResource {
     private void testAPI() {
         try {
             api.getSelf();
-        } catch (HttpException e) {
-            Logger.debug("reconnecting... code: %d", e.getCode());
+        } catch (Exception e) {
+            Logger.debug("reconnecting... %s", e);
             api = getLHApi();
         }
     }

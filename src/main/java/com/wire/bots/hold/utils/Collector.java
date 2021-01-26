@@ -1,8 +1,8 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.models.TextMessage;
-import com.wire.bots.sdk.server.model.User;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.TextMessage;
 
 import javax.annotation.Nullable;
 import java.io.File;

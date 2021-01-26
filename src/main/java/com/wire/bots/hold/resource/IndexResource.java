@@ -6,7 +6,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;

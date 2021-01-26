@@ -27,12 +27,12 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.Server;
-import com.wire.bots.sdk.factories.CryptoFactory;
+import com.wire.lithium.Server;
+import com.wire.xenon.MessageHandlerBase;
+import com.wire.xenon.factories.CryptoFactory;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.jdbi.bundles.DBIExceptionsBundle;
+import io.dropwizard.jdbi3.bundles.JdbiExceptionsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -56,7 +56,7 @@ public class Service extends Server<Config> {
         bootstrap.addBundle(new ImagesBundle("/opt/hold/avatars", "/avatars", "avatars"));
 
         bootstrap.addBundle(admin);
-        bootstrap.addBundle(new DBIExceptionsBundle());
+        bootstrap.addBundle(new JdbiExceptionsBundle());
 
         Application<Config> application = bootstrap.getApplication();
         instance = (Service) application;

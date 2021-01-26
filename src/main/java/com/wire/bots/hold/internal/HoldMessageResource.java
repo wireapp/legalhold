@@ -2,13 +2,13 @@ package com.wire.bots.hold.internal;
 
 import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.utils.HoldClientRepo;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.exceptions.MissingStateException;
-import com.wire.bots.sdk.server.model.ErrorMessage;
-import com.wire.bots.sdk.server.model.Payload;
-import com.wire.bots.sdk.server.resources.MessageResourceBase;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.MessageHandlerBase;
+import com.wire.xenon.MessageResourceBase;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.ErrorMessage;
+import com.wire.xenon.backend.models.Payload;
+import com.wire.xenon.exceptions.MissingStateException;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.ApiParam;
 
 import javax.validation.Valid;
@@ -25,11 +25,10 @@ public class HoldMessageResource extends MessageResourceBase {
     private final HoldClientRepo repo;
 
     public HoldMessageResource(MessageHandlerBase handler, HoldClientRepo repo) {
-        super(handler, repo);
+        super(handler);
         this.repo = repo;
     }
 
-    @Override
     protected WireClient getWireClient(UUID userId, Payload payload) throws CryptoException {
         return repo.getClient(userId, payload.data.recipient, payload.convId);
     }

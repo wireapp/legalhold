@@ -7,12 +7,12 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
-import com.wire.bots.sdk.exceptions.AuthException;
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.server.model.Payload;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.LoginClient;
-import com.wire.bots.sdk.user.model.Access;
+import com.wire.helium.LoginClient;
+import com.wire.helium.models.Access;
+import com.wire.xenon.backend.models.Payload;
+import com.wire.xenon.exceptions.AuthException;
+import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -75,12 +75,12 @@ public class NotificationProcessor implements Runnable {
 
             if (access.getCookie() != null) {
                 Logger.info("Set-Cookie: user: %s", userId);
-                cookieValue = access.getCookie().getValue();
+                cookieValue = access.getCookie().value;
             }
 
-            accessDAO.update(userId, access.token, cookieValue);
+            accessDAO.update(userId, access.getAccessToken(), cookieValue);
 
-            device.token = access.getToken();
+            device.token = access.getAccessToken();
 
             NotificationList notificationList = retrieveNotifications(device);
 

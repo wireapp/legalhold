@@ -2,9 +2,9 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.InitPayload;
-import com.wire.bots.sdk.crypto.Crypto;
-import com.wire.bots.sdk.factories.CryptoFactory;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.crypto.Crypto;
+import com.wire.xenon.factories.CryptoFactory;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;

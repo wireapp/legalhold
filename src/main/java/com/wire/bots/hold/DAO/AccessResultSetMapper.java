@@ -1,17 +1,16 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.LHAccess;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.jdbi.v3.core.mapper.ColumnMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-
-public class AccessResultSetMapper implements ResultSetMapper<LHAccess> {
+public class AccessResultSetMapper implements ColumnMapper<LHAccess> {
     @Override
-    public LHAccess map(int i, ResultSet rs, StatementContext statementContext) throws SQLException {
+    public LHAccess map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
         LHAccess LHAccess = new LHAccess();
         LHAccess.last = (UUID) rs.getObject("last");
         LHAccess.userId = (UUID) rs.getObject("userId");

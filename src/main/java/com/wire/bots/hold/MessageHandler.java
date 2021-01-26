@@ -2,11 +2,11 @@ package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.sdk.MessageHandlerBase;
-import com.wire.bots.sdk.WireClient;
-import com.wire.bots.sdk.models.*;
-import com.wire.bots.sdk.server.model.SystemMessage;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.MessageHandlerBase;
+import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.models.*;
+import com.wire.xenon.tools.Logger;
 
 import java.util.UUID;
 

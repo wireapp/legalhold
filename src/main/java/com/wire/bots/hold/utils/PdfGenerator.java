@@ -3,6 +3,7 @@ package com.wire.bots.hold.utils;
 import com.openhtmltopdf.extend.FSSupplier;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer;
+import com.openhtmltopdf.util.XRLog;
 
 import java.io.*;
 
@@ -15,6 +16,7 @@ public class PdfGenerator {
     private static final PdfRendererBuilder builder;
 
     static {
+        XRLog.setLoggingEnabled(false);
         builder = new PdfRendererBuilder().useSVGDrawer(new BatikSVGDrawer());
         for (String font : fonts) {
             builder.useFont(new FSSupplier<InputStream>() {

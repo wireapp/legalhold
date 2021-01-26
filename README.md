@@ -19,3 +19,5 @@ This is Legal Hold Service for Wire.
 - GET     /devices.html 
 - GET     /conv/{conversationId} 
 - GET     /events/{conversationId} 
+
+![Legal Hold](https://i.imgur.com/AQxzBGl.png)

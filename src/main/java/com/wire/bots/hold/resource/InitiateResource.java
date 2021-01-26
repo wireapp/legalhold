@@ -2,10 +2,10 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.model.InitPayload;
 import com.wire.bots.hold.model.InitResponse;
-import com.wire.bots.sdk.crypto.Crypto;
-import com.wire.bots.sdk.factories.CryptoFactory;
-import com.wire.bots.sdk.models.otr.PreKey;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.crypto.Crypto;
+import com.wire.xenon.factories.CryptoFactory;
+import com.wire.xenon.models.otr.PreKey;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;

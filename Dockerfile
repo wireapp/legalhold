@@ -34,8 +34,6 @@ COPY --from=build /app/target/hold.jar /opt/hold/
 ARG release_version=development
 ENV RELEASE_FILE_PATH=/opt/hold/release.txt
 RUN echo $release_version > $RELEASE_FILE_PATH
-# TODO - uncomment this when migration to JSON logging is finalized
-#ENV APPENDER_TYPE=json-console
 
 EXPOSE  8080 8081 8082
 ENTRYPOINT ["java", "-javaagent:/opt/wire/lib/prometheus-agent.jar=8082:/opt/wire/lib/metrics.yaml", "-jar", "hold.jar", "server", "/opt/hold/hold.yaml"]

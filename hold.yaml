@@ -1,4 +1,12 @@
 server:
+  applicationConnectors:
+    - type: http
+      port: ${HTTP_PORT:-8080}
+
+  adminConnectors:
+    - type: http
+      port: ${ADMIN_PORT:-8081}
+
   requestLog:
     appenders:
       - type: ${APPENDER_TYPE:-console}
@@ -24,8 +32,8 @@ swagger:
   contactEmail: dejan@wire.com
   contactUrl: "www.wire.com"
   schemes:
-    - http
     - https
+    - http
 
 jerseyClient:
   timeout: 40s

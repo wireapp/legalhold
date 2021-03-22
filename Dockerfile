@@ -22,7 +22,7 @@ RUN mkdir /opt/hold/avatars
 WORKDIR /opt/hold
 
 # Copy assets
-COPY src/main/resources/assets/*         /opt/hold/assets/
+COPY src/main/resources/assets/* /opt/hold/assets/
 
 # Copy configuration
 COPY hold.yaml /opt/hold/

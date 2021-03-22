@@ -25,12 +25,13 @@ logging:
     org.apache: ERROR
 
 swagger:
+  version: 1.0
   resourcePackage: com.wire.bots.hold.resource
   title: Legal Hold Service
   description: Legal Hold Service documentation
   contact: Wire GmbH
   contactEmail: dejan@wire.com
-  contactUrl: "www.wire.com"
+  contactUrl: "https://www.wire.com"
   schemes:
     - https
     - http

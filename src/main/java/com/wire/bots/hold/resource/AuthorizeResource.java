@@ -6,16 +6,17 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.util.Objects;
 
 @Api
 @Path("/authorize")
+@Consumes("application/x-www-form-urlencoded")
 public class AuthorizeResource {
     @POST
     @ApiOperation(value = "Authorize")
@@ -24,8 +25,7 @@ public class AuthorizeResource {
             final String auth = Service.instance.getConfig().token;
             if (Objects.equals(auth, token)) {
                 return Response.
-                        status(Response.Status.SEE_OTHER).
-                        header(HttpHeaders.LOCATION, "/index.html").
+                        status(Response.Status.OK).
                         cookie(new NewCookie("W-Legal-Hold", "Bearer " + token)).
                         build();
             } else {

@@ -15,7 +15,6 @@ import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
@@ -28,16 +27,15 @@ import java.util.logging.Level;
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
+    private final HoldMessageResource messageResource;
     private final WebTarget api;
-    private final WebTarget admin;
 
-    NotificationProcessor(Client client, AccessDAO accessDAO) {
+    NotificationProcessor(Client client, AccessDAO accessDAO, Config config, HoldMessageResource messageResource) {
         this.client = client;
         this.accessDAO = accessDAO;
+        this.messageResource = messageResource;
 
-        final Config config = Service.instance.getConfig();
         api = client.target(config.apiHost);
-        admin = client.target("http://localhost:8081/admin");  //todo read admin port from the config
     }
 
     @Override
@@ -131,23 +129,17 @@ public class NotificationProcessor implements Runnable {
         if (payload.from == null || payload.data == null)
             return true;
 
-        Response response = admin
-                .path(userId.toString())
-                .path("messages")
-                .queryParam("id", id)
-                .request(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
+        final boolean b = messageResource.onNewMessage(userId, id, payload);
 
-        if (response.getStatus() != 200) {
+        if (!b) {
             Logger.error("process: `%s` user: %s, from: %s:%s, error: %s",
                     payload.type,
                     userId,
                     payload.from,
-                    payload.data.sender,
-                    response.readEntity(String.class));
+                    payload.data.sender);
         }
 
-        return response.getStatus() == 200;
+        return b;
     }
 
     private void trace(Payload payload) {

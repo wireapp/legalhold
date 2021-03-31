@@ -98,6 +98,9 @@ public class Service extends Application<Config> {
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
+        // Liveliness probe
+        addResource(new StatusResource());
+
         // Used by Wire Server
         addResource(new InitiateResource(cf));
         addResource(new ConfirmResource(accessDAO));

@@ -8,7 +8,6 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.hold.Service;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
@@ -41,12 +40,14 @@ public class ConversationResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
+    private final Client httpClient;
     private final ObjectMapper mapper = new ObjectMapper();
     private API api;
 
-    public ConversationResource(EventsDAO eventsDAO, AccessDAO accessDAO) {
+    public ConversationResource(EventsDAO eventsDAO, AccessDAO accessDAO, Client httpClient) {
         this.eventsDAO = eventsDAO;
         this.accessDAO = accessDAO;
+        this.httpClient = httpClient;
         api = getLHApi();
     }
 
@@ -277,13 +278,12 @@ public class ConversationResource {
     }
 
     private API getLHApi() {
-        Client client = Service.instance.getClient();
         try {
             LHAccess single = accessDAO.getSingle();
-            return new API(client, null, single.token);
+            return new API(httpClient, null, single.token);
         } catch (Exception e) {
             Logger.warning("getLHApi: %s", e);
-            return new API(client, null, null);
+            return new API(httpClient, null, null);
         }
     }
 

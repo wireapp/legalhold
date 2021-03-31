@@ -26,6 +26,7 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
+import com.wire.xenon.Const;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
 import com.wire.xenon.factories.CryptoFactory;
@@ -83,6 +84,9 @@ public class Service extends Application<Config> {
     public void run(Config config, Environment environment) {
         this.config = config;
         this.environment = environment;
+
+        System.setProperty(Const.WIRE_BOTS_SDK_TOKEN, config.token);
+        System.setProperty(Const.WIRE_BOTS_SDK_API, config.apiHost);
 
         setupDatabase(config.database);
 

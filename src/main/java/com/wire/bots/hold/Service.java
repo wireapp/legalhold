@@ -98,6 +98,9 @@ public class Service extends Application<Config> {
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
 
+        // TODO remove this test resource
+        addResource(new ExceptionResource());
+
         // Liveliness probe
         addResource(new StatusResource());
 

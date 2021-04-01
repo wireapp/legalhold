@@ -3,8 +3,10 @@ package com.wire.bots.hold.monitoring;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
+import ch.qos.logback.core.filter.Filter;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,8 +14,16 @@ import java.util.Map;
  */
 public class LoggingEventJsonLayout extends AbstractJsonLayout<ILoggingEvent> {
 
+    public LoggingEventJsonLayout(List<Filter<ILoggingEvent>> filters) {
+        super(filters);
+    }
+
     @Override
     public String doLayout(ILoggingEvent event) {
+        if (shouldIgnoreEvent(event)) {
+            return null;
+        }
+
         final Map<String, Object> jsonMap = new LinkedHashMap<>(6);
 
         jsonMap.put("@timestamp", formatTime(event));

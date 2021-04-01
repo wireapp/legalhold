@@ -2,17 +2,28 @@ package com.wire.bots.hold.monitoring;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.core.filter.Filter;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Layout used on Wire production services in the ELK stack - for access events -> HTTP log.
  */
 public class AccessEventJsonLayout extends AbstractJsonLayout<IAccessEvent> {
+
+
+    public AccessEventJsonLayout(List<Filter<IAccessEvent>> filters) {
+        super(filters);
+    }
+
     @Override
     public String doLayout(IAccessEvent event) {
+        if (shouldIgnoreEvent(event)) {
+            return null;
+        }
         final Map<String, Object> jsonMap = new LinkedHashMap<>(10);
 
         jsonMap.put("@timestamp", formatTime(event));

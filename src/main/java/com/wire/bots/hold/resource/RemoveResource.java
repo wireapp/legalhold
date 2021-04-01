@@ -1,6 +1,7 @@
 package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.InitPayload;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.factories.CryptoFactory;
@@ -27,7 +28,7 @@ public class RemoveResource {
     }
 
     @POST
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "Remove legal hold device")
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),

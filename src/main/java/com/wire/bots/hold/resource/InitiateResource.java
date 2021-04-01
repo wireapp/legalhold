@@ -1,5 +1,6 @@
 package com.wire.bots.hold.resource;
 
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.InitPayload;
 import com.wire.bots.hold.model.InitResponse;
 import com.wire.xenon.crypto.Crypto;
@@ -9,6 +10,7 @@ import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -30,14 +32,13 @@ public class InitiateResource {
     }
 
     @POST
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "Initiate", response = InitResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "CryptoBox initiated")})
-    public Response initiate(@ApiParam @Valid InitPayload init) {
-
+    public Response initiate(@ApiParam @Valid @NotNull InitPayload init) {
         try (Crypto crypto = cf.create(init.userId)) {
             ArrayList<PreKey> preKeys = crypto.newPreKeys(0, 50);
             PreKey lastKey = crypto.newLastPreKey();

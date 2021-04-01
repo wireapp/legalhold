@@ -23,6 +23,8 @@ import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.model.Config;
+import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
+import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
@@ -101,8 +103,9 @@ public class Service extends Application<Config> {
         // TODO remove this test resource
         addResource(new ExceptionResource());
 
-        // Liveliness probe
+        // Monitoring resources
         addResource(new StatusResource());
+        addResource(new RequestMdcFactoryFilter());
 
         // Used by Wire Server
         addResource(new InitiateResource(cf));

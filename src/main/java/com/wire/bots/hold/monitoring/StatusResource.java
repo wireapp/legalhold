@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-package com.wire.bots.hold.resource;
+package com.wire.bots.hold.monitoring;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

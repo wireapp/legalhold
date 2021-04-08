@@ -31,7 +31,7 @@ public class ImagesBundle extends AssetsBundle {
             try {
                 return new URL(String.format("file:/%s", path));
             } catch (MalformedURLException e) {
-                Logger.error(e.toString());
+                Logger.exception("Could not create URL! %s", e, e.getMessage());
                 return null;
             }
         }

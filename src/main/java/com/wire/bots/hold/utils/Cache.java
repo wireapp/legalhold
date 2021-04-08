@@ -31,7 +31,7 @@ public class Cache {
             try {
                 return Helper.downloadAsset(api, message);
             } catch (Exception e) {
-                Logger.warning("Cache.getAssetFile: %s", e);
+                Logger.exception("Cache.getAssetFile: %s", e, e.getMessage());
                 return null;
             }
         });
@@ -46,7 +46,7 @@ public class Cache {
             try {
                 return Helper.getProfile(api, user);
             } catch (Exception e) {
-                Logger.warning("Cache.getProfileImage: userId: %s, ex: %s", user.id, e);
+                Logger.exception("Cache.getProfileImage: userId: %s, ex: %s", e, user.id, e.getMessage());
                 return null;
             }
         });
@@ -61,7 +61,7 @@ public class Cache {
             try {
                 return api.getUser(userId);
             } catch (HttpException e) {
-                Logger.warning("Cache.getUser: userId: %s, ex: %s", userId, e);
+                Logger.exception("Cache.getUser: userId: %s, ex: %s", e, userId, e.getMessage());
                 return null;
             }
         });

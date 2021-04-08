@@ -48,7 +48,7 @@ public class EventsResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("EventsResource.list: %s", e);
+            Logger.exception("EventsResource.list: %s", e, e.getMessage());
             return Response
                     .ok(e.getMessage())
                     .status(500)

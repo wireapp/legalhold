@@ -2,6 +2,7 @@ package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.Service;
 import com.wire.xenon.backend.models.ErrorMessage;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -34,7 +35,7 @@ public class AuthorizeResource {
                         build();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.exception("Authorization failed.", e);
             return Response
                     .ok(new ErrorMessage(e.getMessage()))
                     .status(500)

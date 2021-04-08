@@ -8,6 +8,7 @@ import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.bots.hold.utils.TestCache;
 import com.wire.xenon.models.MessageAssetBase;
 import com.wire.xenon.models.TextMessage;
+import com.wire.xenon.tools.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +87,7 @@ public class MessageTemplateTest {
             mustache.execute(new PrintWriter(sw), model).flush();
             return sw.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.exception("Mustache template write failed.", e);
             return null;
         }
     }

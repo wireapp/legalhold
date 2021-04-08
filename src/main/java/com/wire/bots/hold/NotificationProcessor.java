@@ -48,8 +48,7 @@ public class NotificationProcessor implements Runnable {
                 process(device);
             }
         } catch (Exception e) {
-            //e.printStackTrace();
-            Logger.error("NotificationProcessor: %s", e);
+            Logger.exception("NotificationProcessor: %s", e, e.getMessage());
         }
     }
 
@@ -86,9 +85,9 @@ public class NotificationProcessor implements Runnable {
 
         } catch (AuthException e) {
             accessDAO.disable(userId);
-            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e);
+            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
         } catch (Exception e) {
-            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e);
+            Logger.exception("NotificationProcessor: user: %s, last: %s, error: %s", e, userId, device.last, e.getMessage());
         }
     }
 
@@ -148,7 +147,7 @@ public class NotificationProcessor implements Runnable {
             try {
                 Logger.debug(objectMapper.writeValueAsString(payload));
             } catch (JsonProcessingException e) {
-                Logger.warning("%s", e);
+                Logger.exception("Exception during JSON parsing - %s.", e, e.getMessage());
             }
         }
     }

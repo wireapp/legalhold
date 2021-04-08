@@ -55,7 +55,7 @@ public class InitiateResource {
                     ok(response).
                     build();
         } catch (Exception e) {
-            Logger.error("InitiateResource: %s", e);
+            Logger.exception("InitiateResource: %s", e, e.getMessage());
             return Response
                     .ok(e)
                     .status(500)

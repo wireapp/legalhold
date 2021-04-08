@@ -47,7 +47,7 @@ public class SanityCheck extends HealthCheck {
 
             return Result.healthy();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.exception("SanityCheck failed.", e);
             return Result.unhealthy(e.getMessage());
         } finally {
             Logger.debug("Finished SanityCheck");

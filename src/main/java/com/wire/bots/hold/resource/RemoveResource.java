@@ -51,7 +51,7 @@ public class RemoveResource {
                     ok().
                     build();
         } catch (Exception e) {
-            Logger.error("RemoveResource.remove: %s", e);
+            Logger.exception("RemoveResource.remove: %s", e, e.getMessage());
             return Response
                     .ok(e)
                     .status(500)

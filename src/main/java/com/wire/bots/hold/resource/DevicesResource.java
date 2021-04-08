@@ -72,7 +72,7 @@ public class DevicesResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("DevicesResource.list: %s", e);
+            Logger.exception("DevicesResource.list: %s", e, e.getMessage());
             return Response
                     .ok(e.getMessage())
                     .status(500)

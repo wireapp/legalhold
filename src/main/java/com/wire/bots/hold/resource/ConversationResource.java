@@ -132,8 +132,7 @@ public class ConversationResource {
                     ok(out, "application/pdf").
                     build();
         } catch (Exception e) {
-            e.printStackTrace();
-            Logger.error("ConversationResource.list: %s", e);
+            Logger.exception("ConversationResource.list: %s", e, e.getMessage());
             return Response
                     .serverError()
                     .status(500)
@@ -146,7 +145,7 @@ public class ConversationResource {
             ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onImage: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onImage: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -155,7 +154,7 @@ public class ConversationResource {
             TextMessage message = mapper.readValue(event.payload, TextMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onText: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -166,7 +165,7 @@ public class ConversationResource {
                     getUserName(message.getUserId()), message.getText());
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onTextEdit: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onTextEdit: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -180,7 +179,7 @@ public class ConversationResource {
                     orgText);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onTextDelete: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -192,7 +191,7 @@ public class ConversationResource {
             String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onCall: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onCall: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -201,7 +200,7 @@ public class ConversationResource {
             AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onAttachment: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onAttachment: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -210,7 +209,7 @@ public class ConversationResource {
             AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onAudio: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onAudio: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -219,7 +218,7 @@ public class ConversationResource {
             VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onVideo: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onVideo: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -234,7 +233,7 @@ public class ConversationResource {
                 collector.addSystem(format, msg.time, event.type);
             }
         } catch (Exception e) {
-            Logger.error("onMember: %s conv: %s, msg: %s error: %s", event.type, event.conversationId, event.messageId, e);
+            Logger.exception("onMember: %s conv: %s, msg: %s error: %s", e, event.type, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -251,7 +250,7 @@ public class ConversationResource {
             String text = formatConversation(msg.conversation);
             collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
-            Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onConversationCreate: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -264,7 +263,7 @@ public class ConversationResource {
             String text = String.format("**%s** renamed the conversation to **%s**", userName, msg.conversation.name);
             collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
-            Logger.error("onConversationRename: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onConversationRename: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
         }
     }
 
@@ -282,7 +281,7 @@ public class ConversationResource {
             LHAccess single = accessDAO.getSingle();
             return new API(httpClient, null, single.token);
         } catch (Exception e) {
-            Logger.warning("getLHApi: %s", e);
+            Logger.exception("getLHApi: %s", e, e.getMessage());
             return new API(httpClient, null, null);
         }
     }

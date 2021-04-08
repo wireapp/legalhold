@@ -196,9 +196,9 @@ public class MessageHandler extends MessageHandlerBase {
                     convId,
                     userId,
                     msgId,
-                    e);
+                    e.getMessage());
 
-            Logger.error(error);
+            Logger.exception(error, e);
             throw new RuntimeException(error);
         }
     }

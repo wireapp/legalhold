@@ -28,11 +28,10 @@ public class HoldMessageResource extends MessageResourceBase {
         try (WireClient client = getWireClient(userId, payload)) {
             handleMessage(id, payload, client);
         } catch (CryptoException | MissingStateException e) {
-            Logger.error("newMessage: %s %s", userId, e);
+            Logger.error("newMessage: %s %s", userId, e.getMessage());
             return false;
         } catch (Exception e) {
-            Logger.error("newMessage: %s %s", userId, e);
-            e.printStackTrace();
+            Logger.exception("newMessage: %s %s", e, userId, e.getMessage());
             return false;
         }
 

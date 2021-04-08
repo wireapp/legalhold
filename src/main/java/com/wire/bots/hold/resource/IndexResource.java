@@ -49,7 +49,7 @@ public class IndexResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("IndexResource.list: %s", e);
+            Logger.exception("IndexResource.list: %s", e, e.getMessage());
             return Response
                     .ok(e.getMessage())
                     .status(500)

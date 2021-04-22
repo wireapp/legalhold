@@ -142,7 +142,7 @@ public class ConversationResource {
 
     private void onImage(Collector collector, Event event) {
         try {
-            ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
+            ImageMessage message = mapper.treeToValue(event.payload, ImageMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.exception("onImage: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
@@ -151,7 +151,7 @@ public class ConversationResource {
 
     private void onText(Collector collector, Event event) {
         try {
-            TextMessage message = mapper.readValue(event.payload, TextMessage.class);
+            TextMessage message = mapper.treeToValue(event.payload, TextMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.exception("onText: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
@@ -160,7 +160,7 @@ public class ConversationResource {
 
     private void onTextEdit(Collector collector, Event event) {
         try {
-            EditedTextMessage message = mapper.readValue(event.payload, EditedTextMessage.class);
+            EditedTextMessage message = mapper.treeToValue(event.payload, EditedTextMessage.class);
             String text = String.format("**%s** edited: %s",
                     getUserName(message.getUserId()), message.getText());
             collector.addSystem(text, message.getTime(), event.type);
@@ -171,7 +171,7 @@ public class ConversationResource {
 
     private void onTextDelete(Collector collector, Event event) {
         try {
-            DeletedTextMessage message = mapper.readValue(event.payload, DeletedTextMessage.class);
+            DeletedTextMessage message = mapper.treeToValue(event.payload, DeletedTextMessage.class);
             UUID deletedMessageId = message.getDeletedMessageId();
             String orgText = getText(deletedMessageId);
             String text = String.format("**%s** deleted text: '%s'",
@@ -185,7 +185,7 @@ public class ConversationResource {
 
     private void onCall(Collector collector, Event event) {
         try {
-            CallingMessage message = mapper.readValue(event.payload, CallingMessage.class);
+            CallingMessage message = mapper.treeToValue(event.payload, CallingMessage.class);
             String json = message.getContent().replace("\\", "");
             _CallingContent content = mapper.readValue(json, _CallingContent.class);
             String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
@@ -197,7 +197,7 @@ public class ConversationResource {
 
     private void onAttachment(Collector collector, Event event) {
         try {
-            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
+            AttachmentMessage message = mapper.treeToValue(event.payload, AttachmentMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.exception("onAttachment: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
@@ -206,7 +206,7 @@ public class ConversationResource {
 
     private void onAudio(Collector collector, Event event) {
         try {
-            AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
+            AudioMessage message = mapper.treeToValue(event.payload, AudioMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.exception("onAudio: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
@@ -215,7 +215,7 @@ public class ConversationResource {
 
     private void onVideo(Collector collector, Event event) {
         try {
-            VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
+            VideoMessage message = mapper.treeToValue(event.payload, VideoMessage.class);
             collector.add(message);
         } catch (Exception e) {
             Logger.exception("onVideo: conv: %s, msg: %s error: %s", e, event.conversationId, event.messageId, e.getMessage());
@@ -224,7 +224,7 @@ public class ConversationResource {
 
     private void onMember(Collector collector, Event event, String label) {
         try {
-            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            SystemMessage msg = mapper.treeToValue(event.payload, SystemMessage.class);
             for (UUID userId : msg.users) {
                 String format = String.format("**%s** %s **%s**",
                         getUserName(msg.from),
@@ -239,7 +239,7 @@ public class ConversationResource {
 
     private void onConversationCreate(Collector collector, Event event) {
         try {
-            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            SystemMessage msg = mapper.treeToValue(event.payload, SystemMessage.class);
             if (msg.conversation == null) {
                 Logger.warning("onConversationCreate: conv is null. Payload: %s", event.payload);
                 return;
@@ -256,7 +256,7 @@ public class ConversationResource {
 
     private void onConversationRename(Collector collector, Event event) {
         try {
-            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            SystemMessage msg = mapper.treeToValue(event.payload, SystemMessage.class);
             collector.setConvName(msg.conversation.name);
 
             String userName = getUserName(msg.from);
@@ -307,7 +307,7 @@ public class ConversationResource {
         Event event = eventsDAO.get(msgId);
         if (event == null)
             return null;
-        TextMessage orgMessage = mapper.readValue(event.payload, TextMessage.class);
+        TextMessage orgMessage = mapper.treeToValue(event.payload, TextMessage.class);
         return orgMessage.getText();
     }
 

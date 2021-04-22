@@ -279,6 +279,11 @@ public class ConversationResource {
     private API getLHApi() {
         try {
             LHAccess single = accessDAO.getSingle();
+
+            // if the db is empty just return a dummy API
+            if (single == null)
+                return new API(httpClient, null, null);
+
             return new API(httpClient, null, single.token);
         } catch (Exception e) {
             Logger.exception("getLHApi: %s", e, e.getMessage());

@@ -19,7 +19,7 @@ import java.util.UUID;
 //@Ignore("integration test, needs DB")
 public class DatabaseTest {
     private static EventsDAO eventsDAO;
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeClass
     public static void init() {
@@ -50,8 +50,8 @@ public class DatabaseTest {
         assert insert == 1;
 
         final Event event = eventsDAO.get(messageId);
-        final String content = event.payload.toPrettyString();
-        TextMessage message = mapper.readValue(content, TextMessage.class);
+
+        TextMessage message = mapper.readValue(event.payload, TextMessage.class);
 
         assert textMessage.getMessageId().equals(message.getMessageId());
     }

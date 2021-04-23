@@ -1,6 +1,7 @@
 package com.wire.bots.hold.DAO;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.model.Event;
@@ -14,7 +15,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 public class EventsResultSetMapper implements ColumnMapper<Event> {
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public Event map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
@@ -24,7 +25,7 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
             event.conversationId = (UUID) conversationId;
         event.time = rs.getString("time");
         event.type = rs.getString("type");
-        event.payload = getJsonNode(rs);
+        event.payload = getPayload(rs);
         Object messageId = rs.getObject("messageId");
         if (messageId != null)
             event.messageId = (UUID) messageId;
@@ -32,13 +33,14 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
         return event;
     }
 
-    private JsonNode getJsonNode(ResultSet rs) throws SQLException {
-        JsonParser jsonParser = null;
+    private String getPayload(ResultSet rs) throws SQLException {
         try {
-            jsonParser = mapper.getFactory().createParser(rs.getString("payload"));
-            return jsonParser.readValueAsTree();
+            JsonParser jsonParser = mapper.getFactory().createParser(rs.getString("payload"));
+            final TreeNode treeNode = jsonParser.readValueAsTree();
+            JsonNode node = (JsonNode) treeNode;
+            return node.asText();
         } catch (IOException e) {
-            Logger.exception("getJsonNode", e);
+            Logger.exception("getPayload", e);
             return null;
         }
     }

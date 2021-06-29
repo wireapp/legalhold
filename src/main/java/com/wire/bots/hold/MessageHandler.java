@@ -71,40 +71,7 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onImage(WireClient client, ImageMessage msg) {
-        UUID convId = client.getConversationId();
-        UUID userId = client.getId();
-        UUID messageId = msg.getMessageId();
-        UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-add.new-image";
-
-        persist(convId, senderId, userId, messageId, type, msg);
-    }
-
-    @Override
-    public void onAudio(WireClient client, AudioMessage msg) {
-        UUID convId = client.getConversationId();
-        UUID userId = client.getId();
-        UUID messageId = msg.getMessageId();
-        UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-add.new-audio";
-
-        persist(convId, senderId, userId, messageId, type, msg);
-    }
-
-    @Override
-    public void onVideo(WireClient client, VideoMessage msg) {
-        UUID convId = client.getConversationId();
-        UUID userId = client.getId();
-        UUID messageId = msg.getMessageId();
-        UUID senderId = msg.getUserId();
-        String type = "conversation.otr-message-add.new-video";
-
-        persist(convId, senderId, userId, messageId, type, msg);
-    }
-
-    @Override
-    public void onAttachment(WireClient client, AttachmentMessage msg) {
+    public void onAssetData(WireClient client, RemoteMessage msg) {
         UUID messageId = msg.getMessageId();
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();

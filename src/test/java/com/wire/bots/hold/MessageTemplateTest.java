@@ -22,26 +22,30 @@ import static com.wire.bots.hold.Consts.lipis;
 
 public class MessageTemplateTest {
     private static TextMessage txt(UUID userId, String time, String text) {
-        TextMessage msg = new TextMessage(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID().toString(), userId);
+        TextMessage msg = new TextMessage(UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
+                userId, time);
         msg.setText(text);
-        msg.setTime(time);
         return msg;
     }
 
     private static MessageAssetBase asset(UUID userId, String time, String assetId, String mime) {
-        MessageAssetBase msg = new MessageAssetBase(UUID.randomUUID(),
+        return new MessageAssetBase(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID().toString(),
                 userId,
+                time,
                 assetId,
-                null,
-                null,
+                null, //asset token
+                null,  // otr key
                 mime,
-                0L,
-                null,
+                0L,      // size
+                null,    // sha
                 assetId);
-        msg.setTime(time);
-        return msg;
     }
 
     @Before
@@ -74,6 +78,7 @@ public class MessageTemplateTest {
         PdfGenerator.save(pdfFilename, html, "file:src/test");
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Mustache compileTemplate(String template) {
         MustacheFactory mf = new DefaultMustacheFactory();
         String path = String.format("templates/%s", template);

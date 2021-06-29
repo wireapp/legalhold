@@ -13,7 +13,7 @@ import java.util.*;
 
 public class Collector {
     private final Cache cache;
-    private LinkedList<Day> days = new LinkedList<>();
+    private final LinkedList<Day> days = new LinkedList<>();
     private String convName;
 
     public Collector(Cache cache) {
@@ -39,7 +39,7 @@ public class Collector {
             Message message = new Message();
             message.time = toTime(event.getTime());
 
-            String assetFilename = getFilename(file, "images");
+            String assetFilename = getFilename(file);
 
             String mimeType = event.getMimeType();
             if (mimeType.startsWith("image")) {
@@ -169,8 +169,8 @@ public class Collector {
         }
     }
 
-    private String getFilename(File file, String dir) {
-        return String.format("/%s/%s", dir, file.getName());
+    private String getFilename(File file) {
+        return String.format("/%s/%s", "images", file.getName());
     }
 
     private String getAvatar(User user) {

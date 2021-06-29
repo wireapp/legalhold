@@ -6,7 +6,7 @@
 
     <artifactId>hold</artifactId>
     <groupId>com.wire.bots</groupId>
-    <version>0.5.0</version>
+    <version>0.6.0</version>
 
     <properties>
         <dropwizard.version>2.0.15</dropwizard.version>
@@ -48,7 +48,7 @@
         <dependency>
             <groupId>com.wire</groupId>
             <artifactId>helium</artifactId>
-            <version>1.0.1</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.smoketurner</groupId>

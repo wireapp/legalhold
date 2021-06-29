@@ -13,7 +13,7 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.sql.SQLException;
+import java.util.Date;
 import java.util.UUID;
 
 //@Ignore("integration test, needs DB")
@@ -36,13 +36,15 @@ public class DatabaseTest {
     }
 
     @Test
-    public void eventsTextMessageTest() throws JsonProcessingException, SQLException {
+    public void eventsTextMessageTest() throws JsonProcessingException {
         final String type = "conversation.otr-message-add.new-text";
+        final UUID eventId = UUID.randomUUID();
         final UUID messageId = UUID.randomUUID();
         final UUID convId = UUID.randomUUID();
         final String clientId = UUID.randomUUID().toString();
         final UUID userId = UUID.randomUUID();
-        final TextMessage textMessage = new TextMessage(messageId, convId, clientId, userId);
+        final String time = new Date().toString();
+        final TextMessage textMessage = new TextMessage(eventId, messageId, convId, clientId, userId, time);
         textMessage.addMention(UUID.randomUUID().toString(), 0, 5);
         textMessage.setText("Some text");
 

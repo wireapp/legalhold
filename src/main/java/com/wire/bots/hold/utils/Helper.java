@@ -4,7 +4,7 @@ import com.wire.helium.API;
 import com.wire.xenon.backend.models.Asset;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
-import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.tools.Util;
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
@@ -40,9 +40,9 @@ class Helper {
         return file;
     }
 
-    static File downloadAsset(API api, MessageAssetBase message) throws Exception {
-        File file = assetFile(message.getAssetKey(), message.getMimeType());
-        byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
+    static File downloadAsset(API api, RemoteMessage message) throws Exception {
+        File file = new File(String.format("%s.bin", message.getAssetId()));
+        byte[] cipher = api.downloadAsset(message.getAssetId(), message.getAssetToken());
 
         byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
         if (!Arrays.equals(sha256, message.getSha256()))

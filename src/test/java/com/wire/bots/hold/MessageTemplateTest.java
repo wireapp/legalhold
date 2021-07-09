@@ -6,7 +6,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.bots.hold.utils.TestCache;
-import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.models.TextMessage;
 import com.wire.xenon.tools.Logger;
 import org.junit.Assert;
@@ -31,8 +31,8 @@ public class MessageTemplateTest {
         return msg;
     }
 
-    private static MessageAssetBase asset(UUID userId, String time, String assetId, String mime) {
-        return new MessageAssetBase(
+    private static RemoteMessage asset(UUID userId, String time, String assetId, String mime) {
+        return new RemoteMessage(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID(),
@@ -41,11 +41,9 @@ public class MessageTemplateTest {
                 time,
                 assetId,
                 null, //asset token
-                null,  // otr key
-                mime,
-                0L,      // size
-                null,    // sha
-                assetId);
+                null, // otr key
+                null //sha
+        );
     }
 
     @Before

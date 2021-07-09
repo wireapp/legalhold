@@ -88,20 +88,24 @@ public class ConversationResource {
                         onTextDelete(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-image": {
-                        onImage(collector, event);
+                    case "conversation.otr-message-add.image-preview": {
+                        onImagePreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-attachment": {
-                        onAttachment(collector, event);
+                    case "conversation.otr-message-add.file-preview": {
+                        onFilePreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-audio": {
-                        onAudio(collector, event);
+                    case "conversation.otr-message-add.audio-preview": {
+                        onAudioPreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-video": {
-                        onVideo(collector, event);
+                    case "conversation.otr-message-add.video-preview": {
+                        onVideoPreview(collector, event);
+                    }
+                    break;
+                    case "conversation.otr-message-add.asset-data": {
+                        onAssetData(collector, event);
                     }
                     break;
                     case "conversation.otr-message-add.call": {
@@ -140,21 +144,12 @@ public class ConversationResource {
         }
     }
 
-    private void onImage(Collector collector, Event event) {
-        try {
-            ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
-            collector.add(message);
-        } catch (Exception e) {
-            Logger.exception("onImage: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
-        }
-    }
-
     private void onText(Collector collector, Event event) {
         try {
             TextMessage message = mapper.readValue(event.payload, TextMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.exception("onText: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onText: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -165,7 +160,7 @@ public class ConversationResource {
                     getUserName(message.getUserId()), message.getText());
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.exception("onTextEdit: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onTextEdit: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -179,7 +174,7 @@ public class ConversationResource {
                     orgText);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.exception("onTextDelete: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onTextDelete: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -191,34 +186,52 @@ public class ConversationResource {
             String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.exception("onCall: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onCall: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onAttachment(Collector collector, Event event) {
+    private void onImagePreview(Collector collector, Event event) {
         try {
-            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
+            PhotoPreviewMessage message = mapper.readValue(event.payload, PhotoPreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.exception("onAttachment: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onImagePreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onAudio(Collector collector, Event event) {
+    private void onFilePreview(Collector collector, Event event) {
         try {
-            AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
+            FilePreviewMessage message = mapper.readValue(event.payload, FilePreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.exception("onAudio: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onFilePreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onVideo(Collector collector, Event event) {
+    private void onAudioPreview(Collector collector, Event event) {
         try {
-            VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
+            AudioPreviewMessage message = mapper.readValue(event.payload, AudioPreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.exception("onVideo: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+            Logger.exception("onAudioPreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+        }
+    }
+
+    private void onVideoPreview(Collector collector, Event event) {
+        try {
+            VideoPreviewMessage message = mapper.readValue(event.payload, VideoPreviewMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.exception("onVideoPreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+        }
+    }
+
+    private void onAssetData(Collector collector, Event event) {
+        try {
+            RemoteMessage message = mapper.readValue(event.payload, RemoteMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.exception("onAssetData: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 

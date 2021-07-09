@@ -3,7 +3,7 @@ package com.wire.bots.hold.utils;
 import com.wire.helium.API;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
-import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.tools.Logger;
 
 import java.io.File;
@@ -26,8 +26,8 @@ public class Cache {
         profiles.clear();
     }
 
-    public File getAssetFile(MessageAssetBase message) {
-        File file = pictures.computeIfAbsent(message.getAssetKey(), k -> {
+    public File getAssetFile(RemoteMessage message) {
+        File file = pictures.computeIfAbsent(message.getAssetId(), k -> {
             try {
                 return Helper.downloadAsset(api, message);
             } catch (Exception e) {
@@ -37,7 +37,7 @@ public class Cache {
         });
 
         if (file == null)
-            file = Helper.assetFile(message.getAssetKey(), message.getMimeType());
+            file = new File(String.format("%s.bin", message.getAssetId()));
         return file;
     }
 

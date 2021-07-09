@@ -1,7 +1,7 @@
 package com.wire.bots.hold.utils;
 
 import com.wire.xenon.backend.models.User;
-import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.RemoteMessage;
 
 import java.io.File;
 import java.util.UUID;
@@ -14,9 +14,9 @@ public class TestCache extends Cache {
     }
 
     @Override
-    public File getAssetFile(MessageAssetBase message) {
-        String extension = Helper.getExtension(message.getMimeType());
-        return new File(String.format("src/test/images/%s.%s", message.getAssetKey(), extension));
+    public File getAssetFile(RemoteMessage message) {
+        String extension = Helper.getExtension("image/png");
+        return new File(String.format("src/test/images/%s.%s", message.getAssetId(), extension));
     }
 
     @Override

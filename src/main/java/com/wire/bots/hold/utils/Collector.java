@@ -1,7 +1,8 @@
 package com.wire.bots.hold.utils;
 
 import com.wire.xenon.backend.models.User;
-import com.wire.xenon.models.MessageAssetBase;
+import com.wire.xenon.models.OriginMessage;
+import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.models.TextMessage;
 
 import javax.annotation.Nullable;
@@ -33,23 +34,22 @@ public class Collector {
         append(sender, message, dateTime);
     }
 
-    public void add(MessageAssetBase event) throws ParseException {
+    public void add(RemoteMessage event) throws ParseException {
         File file = cache.getAssetFile(event);
         if (file.exists()) {
             Message message = new Message();
             message.time = toTime(event.getTime());
+            message.image = getFilename(file);
 
-            String assetFilename = getFilename(file);
-
-            String mimeType = event.getMimeType();
-            if (mimeType.startsWith("image")) {
-                message.image = assetFilename;
-            } else {
+            // for non images
+            /*
+            else {
                 String url = String.format("<a href=\"%s\">%s</a>",
                         assetFilename,
                         event.getName());
                 message.text = Helper.markdown2Html(url, false);
             }
+             */
 
             UUID senderId = event.getUserId();
             User user = cache.getUser(senderId);
@@ -57,6 +57,9 @@ public class Collector {
             Sender sender = sender(user, message);
             append(sender, message, event.getTime());
         }
+    }
+
+    public void add(OriginMessage event) {
     }
 
     public void addSystem(String text, String dateTime, String type) throws ParseException {

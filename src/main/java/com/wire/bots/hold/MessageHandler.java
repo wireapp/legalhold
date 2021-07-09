@@ -22,30 +22,30 @@ public class MessageHandler extends MessageHandlerBase {
     public void onNewConversation(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
-        UUID messageId = msg.id;
+        UUID eventId = msg.id;
         String type = msg.type;
 
-        persist(convId, null, userId, messageId, type, msg);
+        persist(convId, null, userId, eventId, type, msg);
     }
 
     @Override
     public void onMemberJoin(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
-        UUID messageId = msg.id;
+        UUID eventId = msg.id;
         String type = msg.type;
 
-        persist(convId, null, userId, messageId, type, msg);
+        persist(convId, null, userId, eventId, type, msg);
     }
 
     @Override
     public void onMemberLeave(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
-        UUID messageId = msg.id;
+        UUID eventId = msg.id;
         String type = msg.type;
 
-        persist(convId, null, userId, messageId, type, msg);
+        persist(convId, null, userId, eventId, type, msg);
     }
 
     @Override
@@ -140,10 +140,10 @@ public class MessageHandler extends MessageHandlerBase {
     public void onConversationRename(WireClient client, SystemMessage msg) {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
-        UUID messageId = msg.id;
+        UUID eventId = msg.id;
         String type = "conversation.rename";
 
-        persist(convId, null, userId, messageId, type, msg);
+        persist(convId, null, userId, eventId, type, msg);
     }
 
     @Override

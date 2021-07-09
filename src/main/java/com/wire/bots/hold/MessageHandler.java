@@ -120,7 +120,7 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();
         UUID userId = client.getId();
-        String type = "conversation.otr-message-add.new-attachment";
+        String type = "conversation.otr-message-add.asset-data";
 
         persist(convId, senderId, userId, eventId, type, msg);
     }

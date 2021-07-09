@@ -28,7 +28,7 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
         event.payload = getPayload(rs);
         Object messageId = rs.getObject("messageId");
         if (messageId != null)
-            event.messageId = (UUID) messageId;
+            event.eventId = (UUID) messageId;
 
         return event;
     }

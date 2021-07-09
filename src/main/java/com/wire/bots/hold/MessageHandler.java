@@ -53,10 +53,10 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.new-text";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
@@ -64,21 +64,65 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.new-text";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
+    }
+
+    @Override
+    public void onPhotoPreview(WireClient client, PhotoPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
+        UUID senderId = msg.getUserId();
+        UUID userId = client.getId();
+        String type = "conversation.otr-message-add.image-preview";
+
+        persist(convId, senderId, userId, eventId, type, msg);
+    }
+
+    @Override
+    public void onFilePreview(WireClient client, FilePreviewMessage msg) {
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
+        UUID senderId = msg.getUserId();
+        UUID userId = client.getId();
+        String type = "conversation.otr-message-add.file-preview";
+
+        persist(convId, senderId, userId, eventId, type, msg);
+    }
+
+    @Override
+    public void onAudioPreview(WireClient client, AudioPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
+        UUID senderId = msg.getUserId();
+        UUID userId = client.getId();
+        String type = "conversation.otr-message-add.audio-preview";
+
+        persist(convId, senderId, userId, eventId, type, msg);
+    }
+
+    @Override
+    public void onVideoPreview(WireClient client, VideoPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
+        UUID senderId = msg.getUserId();
+        UUID userId = client.getId();
+        String type = "conversation.otr-message-add.video-preview";
+
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
     public void onAssetData(WireClient client, RemoteMessage msg) {
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID senderId = msg.getUserId();
         UUID userId = client.getId();
         String type = "conversation.otr-message-add.new-attachment";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
@@ -86,10 +130,10 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.edit-text";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
@@ -107,10 +151,10 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.delete-text";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
@@ -118,20 +162,20 @@ public class MessageHandler extends MessageHandlerBase {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.call";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     public void onReaction(WireClient client, ReactionMessage msg) {
         UUID convId = client.getConversationId();
         UUID userId = client.getId();
         UUID senderId = msg.getUserId();
-        UUID messageId = msg.getMessageId();
+        UUID eventId = msg.getEventId();
         String type = "conversation.otr-message-add.reaction";
 
-        persist(convId, senderId, userId, messageId, type, msg);
+        persist(convId, senderId, userId, eventId, type, msg);
     }
 
     @Override
@@ -144,25 +188,25 @@ public class MessageHandler extends MessageHandlerBase {
 
     }
 
-    private void persist(UUID convId, UUID senderId, UUID userId, UUID msgId, String type, Object msg)
+    private void persist(UUID convId, UUID senderId, UUID userId, UUID eventId, String type, Object msg)
             throws RuntimeException {
         try {
             String payload = mapper.writeValueAsString(msg);
-            int insert = eventsDAO.insert(msgId, convId, type, payload);
+            int insert = eventsDAO.insert(eventId, convId, type, payload);
 
-            Logger.info("%s: conv: %s, %s -> %s, msg: %s, insert: %d",
+            Logger.info("%s: conv: %s, %s -> %s, event: %s, insert: %d",
                     type,
                     convId,
                     senderId,
                     userId,
-                    msgId,
+                    eventId,
                     insert);
         } catch (Exception e) {
-            String error = String.format("%s: conv: %s, user: %s, msg: %s, e: %s",
+            String error = String.format("%s: conv: %s, user: %s, event: %s, e: %s",
                     type,
                     convId,
                     userId,
-                    msgId,
+                    eventId,
                     e.getMessage());
 
             Logger.exception(error, e);

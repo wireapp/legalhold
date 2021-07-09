@@ -15,16 +15,16 @@ import java.util.UUID;
 
 public interface EventsDAO {
     @SqlUpdate("INSERT INTO Events (messageId, conversationId, type, payload, time) " +
-            "VALUES (:messageId, :conversationId, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
+            "VALUES (:eventId, :conversationId, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
             "ON CONFLICT (messageId) DO NOTHING")
-    int insert(@Bind("messageId") UUID messageId,
+    int insert(@Bind("eventId") UUID eventId,
                @Bind("conversationId") UUID conversationId,
                @Bind("type") String type,
                @Bind("payload") String payload);
 
-    @SqlQuery("SELECT messageId,  conversationId, type, payload, time FROM Events WHERE messageId = :messageId")
+    @SqlQuery("SELECT messageId,  conversationId, type, payload, time FROM Events WHERE messageId = :eventId")
     @RegisterColumnMapper(EventsResultSetMapper.class)
-    Event get(@Bind("messageId") UUID messageId);
+    Event get(@Bind("eventId") UUID eventId);
 
     @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId ORDER BY time DESC")
     @RegisterColumnMapper(EventsResultSetMapper.class)

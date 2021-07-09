@@ -48,10 +48,10 @@ public class DatabaseTest {
         textMessage.addMention(UUID.randomUUID().toString(), 0, 5);
         textMessage.setText("Some text");
 
-        final int insert = eventsDAO.insert(messageId, convId, type, mapper.writeValueAsString(textMessage));
+        final int insert = eventsDAO.insert(eventId, convId, type, mapper.writeValueAsString(textMessage));
         assert insert == 1;
 
-        final Event event = eventsDAO.get(messageId);
+        final Event event = eventsDAO.get(eventId);
 
         TextMessage message = mapper.readValue(event.payload, TextMessage.class);
 

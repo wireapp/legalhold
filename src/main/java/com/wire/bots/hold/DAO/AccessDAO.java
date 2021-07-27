@@ -34,6 +34,10 @@ public interface AccessDAO {
     @RegisterColumnMapper(AccessResultSetMapper.class)
     LHAccess getSingle();
 
+    @SqlQuery("SELECT * FROM Access WHERE userId = :userId")
+    @RegisterColumnMapper(AccessResultSetMapper.class)
+    LHAccess get(@Bind("userId") UUID userId);
+
     @SqlQuery("SELECT * FROM Access WHERE enabled = 1 ORDER BY created DESC")
     @RegisterColumnMapper(AccessResultSetMapper.class)
     List<LHAccess> listEnabled();

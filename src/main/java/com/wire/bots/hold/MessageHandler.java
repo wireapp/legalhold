@@ -1,21 +1,26 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
+import org.jdbi.v3.core.Jdbi;
 
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
     private final EventsDAO eventsDAO;
+    private final AssetsDAO assetsDAO;
+
     private final ObjectMapper mapper = new ObjectMapper();
 
-    MessageHandler(EventsDAO eventsDAO) {
-        this.eventsDAO = eventsDAO;
+    MessageHandler(Jdbi jdbi) {
+        eventsDAO = jdbi.onDemand(EventsDAO.class);
+        assetsDAO = jdbi.onDemand(AssetsDAO.class);
     }
 
     @Override
@@ -73,6 +78,8 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.image-preview";
 
         persist(convId, senderId, userId, type, msg);
+
+        assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
@@ -113,6 +120,13 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.asset-data";
 
         persist(convId, senderId, userId, type, msg);
+
+        try {
+            final byte[] assetData = client.downloadAsset(msg.getAssetId(), msg.getAssetToken(), msg.getSha256(), msg.getOtrKey());
+            assetsDAO.insert(msg.getMessageId(), assetData);
+        } catch (Exception e) {
+            Logger.error("onAssetData, msg: %s, %s", msg.getMessageId(), e);
+        }
     }
 
     @Override

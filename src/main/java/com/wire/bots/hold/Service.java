@@ -54,6 +54,7 @@ public class Service extends Application<Config> {
     public static Service instance;
     protected Config config;
     protected Environment environment;
+    protected Jdbi jdbi;
 
     public static void main(String[] args) throws Exception {
         instance = new Service();
@@ -93,7 +94,7 @@ public class Service extends Application<Config> {
         setupDatabase(config.database);
 
         final Client httpClient = createHttpClient(config, environment);
-        final Jdbi jdbi = buildJdbi(config.database, environment);
+        jdbi = buildJdbi(config.database, environment);
 
         final CryptoFactory cf = getCryptoFactory(jdbi);
 
@@ -120,8 +121,8 @@ public class Service extends Application<Config> {
 
         environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
 
-        final HoldClientRepo repo = new HoldClientRepo(cf);
-        final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(eventsDAO), repo);
+        final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
+        final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
 
         environment.lifecycle()
@@ -132,6 +133,10 @@ public class Service extends Application<Config> {
 
     public Config getConfig() {
         return config;
+    }
+
+    public Jdbi getJdbi() {
+        return jdbi;
     }
 
     protected void addResource(Object component) {

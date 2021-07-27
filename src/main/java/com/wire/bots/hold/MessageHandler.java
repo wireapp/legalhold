@@ -90,6 +90,8 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.file-preview";
 
         persist(convId, senderId, userId, type, msg);
+
+        assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
@@ -100,6 +102,8 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.audio-preview";
 
         persist(convId, senderId, userId, type, msg);
+
+        assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
@@ -110,6 +114,8 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.video-preview";
 
         persist(convId, senderId, userId, type, msg);
+
+        assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override

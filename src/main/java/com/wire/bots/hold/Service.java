@@ -114,7 +114,7 @@ public class Service extends Application<Config> {
         addResource(new AuthorizeResource());
         addResource(new DevicesResource(accessDAO, cf));
         addResource(new EventsResource(eventsDAO));
-        addResource(new ConversationResource(eventsDAO, accessDAO, httpClient));
+        addResource(new ConversationResource(jdbi, httpClient));
         addResource(new IndexResource(eventsDAO));
 
         addResource(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);

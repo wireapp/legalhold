@@ -52,16 +52,16 @@ class Helper {
         return save(image, file);
     }
 
-    private static File save(byte[] image, File file) throws IOException {
+    public static File save(byte[] image, File file) throws IOException {
         try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
             os.write(image);
         }
         return file;
     }
 
-    static File assetFile(String assetKey, String mimeType) {
+    static File assetFile(String assetId, String mimeType) {
         String extension = getExtension(mimeType);
-        String filename = String.format("images/%s.%s", assetKey, extension);
+        String filename = String.format("images/%s.%s", assetId, extension);
         return new File(filename);
     }
 

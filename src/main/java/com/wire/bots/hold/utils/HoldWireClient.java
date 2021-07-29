@@ -1,5 +1,6 @@
 package com.wire.bots.hold.utils;
 
+import com.wire.helium.API;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.WireClientBase;
 import com.wire.xenon.assets.IAsset;
@@ -19,8 +20,8 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     private final UUID convId;
     private final String deviceId;
 
-    HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto) {
-        super(null, crypto, null);
+    HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto, API api) {
+        super(api, crypto, null);
         this.userId = userId;
         this.convId = convId;
         this.deviceId = deviceId;
@@ -47,10 +48,6 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     ////////////////////////////////////////////////////////////
-    @Override
-    public byte[] downloadAsset(String assetKey, String assetToken, byte[] sha256Challenge, byte[] otrKey) {
-        return new byte[0];
-    }
 
     @Override
     public User getSelf() {

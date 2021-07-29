@@ -7,6 +7,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
@@ -21,6 +22,7 @@ import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
+import org.jdbi.v3.core.Jdbi;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.*;
@@ -40,13 +42,15 @@ public class ConversationResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
+    private final AssetsDAO assetsDAO;
     private final Client httpClient;
     private final ObjectMapper mapper = new ObjectMapper();
     private API api;
 
-    public ConversationResource(EventsDAO eventsDAO, AccessDAO accessDAO, Client httpClient) {
-        this.eventsDAO = eventsDAO;
-        this.accessDAO = accessDAO;
+    public ConversationResource(Jdbi jdbi, Client httpClient) {
+        eventsDAO = jdbi.onDemand(EventsDAO.class);
+        accessDAO = jdbi.onDemand(AccessDAO.class);
+        assetsDAO = jdbi.onDemand(AssetsDAO.class);
         this.httpClient = httpClient;
         api = getLHApi();
     }
@@ -64,7 +68,7 @@ public class ConversationResource {
 
             testAPI();
 
-            Cache cache = new Cache(api);
+            Cache cache = new Cache(api, assetsDAO);
             Collector collector = new Collector(cache);
             for (Event event : events) {
                 switch (event.type) {
@@ -102,10 +106,6 @@ public class ConversationResource {
                     break;
                     case "conversation.otr-message-add.video-preview": {
                         onVideoPreview(collector, event);
-                    }
-                    break;
-                    case "conversation.otr-message-add.asset-data": {
-                        onAssetData(collector, event);
                     }
                     break;
                     case "conversation.otr-message-add.call": {
@@ -226,15 +226,6 @@ public class ConversationResource {
         }
     }
 
-    private void onAssetData(Collector collector, Event event) {
-        try {
-            RemoteMessage message = mapper.readValue(event.payload, RemoteMessage.class);
-            collector.add(message);
-        } catch (Exception e) {
-            Logger.exception("onAssetData: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
-        }
-    }
-
     private void onMember(Collector collector, Event event, String label) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
@@ -326,7 +317,7 @@ public class ConversationResource {
 
     @Nullable
     private String getUserName(UUID userId) {
-        Cache cache = new Cache(api);
+        Cache cache = new Cache(api, assetsDAO);
         return cache.getUser(userId).name;
     }
 

@@ -7,21 +7,22 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.hold.Service;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.*;
-import com.wire.bots.sdk.server.model.Conversation;
-import com.wire.bots.sdk.server.model.Member;
-import com.wire.bots.sdk.server.model.SystemMessage;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.API;
+import com.wire.helium.API;
+import com.wire.xenon.backend.models.Conversation;
+import com.wire.xenon.backend.models.Member;
+import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.models.*;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
+import org.jdbi.v3.core.Jdbi;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.*;
@@ -41,17 +42,21 @@ public class ConversationResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
+    private final AssetsDAO assetsDAO;
+    private final Client httpClient;
     private final ObjectMapper mapper = new ObjectMapper();
     private API api;
 
-    public ConversationResource(EventsDAO eventsDAO, AccessDAO accessDAO) {
-        this.eventsDAO = eventsDAO;
-        this.accessDAO = accessDAO;
+    public ConversationResource(Jdbi jdbi, Client httpClient) {
+        eventsDAO = jdbi.onDemand(EventsDAO.class);
+        accessDAO = jdbi.onDemand(AccessDAO.class);
+        assetsDAO = jdbi.onDemand(AssetsDAO.class);
+        this.httpClient = httpClient;
         api = getLHApi();
     }
 
     @GET
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "Render Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),
@@ -63,7 +68,7 @@ public class ConversationResource {
 
             testAPI();
 
-            Cache cache = new Cache(api);
+            Cache cache = new Cache(api, assetsDAO);
             Collector collector = new Collector(cache);
             for (Event event : events) {
                 switch (event.type) {
@@ -87,20 +92,20 @@ public class ConversationResource {
                         onTextDelete(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-image": {
-                        onImage(collector, event);
+                    case "conversation.otr-message-add.image-preview": {
+                        onImagePreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-attachment": {
-                        onAttachment(collector, event);
+                    case "conversation.otr-message-add.file-preview": {
+                        onFilePreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-audio": {
-                        onAudio(collector, event);
+                    case "conversation.otr-message-add.audio-preview": {
+                        onAudioPreview(collector, event);
                     }
                     break;
-                    case "conversation.otr-message-add.new-video": {
-                        onVideo(collector, event);
+                    case "conversation.otr-message-add.video-preview": {
+                        onVideoPreview(collector, event);
                     }
                     break;
                     case "conversation.otr-message-add.call": {
@@ -131,21 +136,11 @@ public class ConversationResource {
                     ok(out, "application/pdf").
                     build();
         } catch (Exception e) {
-            e.printStackTrace();
-            Logger.error("ConversationResource.list: %s", e);
+            Logger.exception("ConversationResource.list: %s", e, e.getMessage());
             return Response
                     .serverError()
                     .status(500)
                     .build();
-        }
-    }
-
-    private void onImage(Collector collector, Event event) {
-        try {
-            ImageMessage message = mapper.readValue(event.payload, ImageMessage.class);
-            collector.add(message);
-        } catch (Exception e) {
-            Logger.error("onImage: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
         }
     }
 
@@ -154,7 +149,7 @@ public class ConversationResource {
             TextMessage message = mapper.readValue(event.payload, TextMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onText: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onText: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -165,7 +160,7 @@ public class ConversationResource {
                     getUserName(message.getUserId()), message.getText());
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onTextEdit: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onTextEdit: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -179,7 +174,7 @@ public class ConversationResource {
                     orgText);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onTextDelete: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onTextDelete: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -191,34 +186,43 @@ public class ConversationResource {
             String text = String.format("**%s** called: %s", getUserName(message.getUserId()), content.type);
             collector.addSystem(text, message.getTime(), event.type);
         } catch (Exception e) {
-            Logger.error("onCall: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onCall: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onAttachment(Collector collector, Event event) {
+    private void onImagePreview(Collector collector, Event event) {
         try {
-            AttachmentMessage message = mapper.readValue(event.payload, AttachmentMessage.class);
+            PhotoPreviewMessage message = mapper.readValue(event.payload, PhotoPreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onAttachment: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onImagePreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onAudio(Collector collector, Event event) {
+    private void onFilePreview(Collector collector, Event event) {
         try {
-            AudioMessage message = mapper.readValue(event.payload, AudioMessage.class);
+            FilePreviewMessage message = mapper.readValue(event.payload, FilePreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onAudio: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onFilePreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
-    private void onVideo(Collector collector, Event event) {
+    private void onAudioPreview(Collector collector, Event event) {
         try {
-            VideoMessage message = mapper.readValue(event.payload, VideoMessage.class);
+            AudioPreviewMessage message = mapper.readValue(event.payload, AudioPreviewMessage.class);
             collector.add(message);
         } catch (Exception e) {
-            Logger.error("onVideo: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onAudioPreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
+        }
+    }
+
+    private void onVideoPreview(Collector collector, Event event) {
+        try {
+            VideoPreviewMessage message = mapper.readValue(event.payload, VideoPreviewMessage.class);
+            collector.add(message);
+        } catch (Exception e) {
+            Logger.exception("onVideoPreview: conv: %s, event: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -233,19 +237,24 @@ public class ConversationResource {
                 collector.addSystem(format, msg.time, event.type);
             }
         } catch (Exception e) {
-            Logger.error("onMember: %s conv: %s, msg: %s error: %s", event.type, event.conversationId, event.messageId, e);
+            Logger.exception("onMember: %s conv: %s, msg: %s error: %s", e, event.type, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
     private void onConversationCreate(Collector collector, Event event) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+            if (msg.conversation == null) {
+                Logger.warning("onConversationCreate: conv is null. Payload: %s", event.payload);
+                return;
+            }
+
             collector.setConvName(msg.conversation.name);
 
             String text = formatConversation(msg.conversation);
             collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
-            Logger.error("onConversationCreate: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onConversationCreate: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
@@ -258,27 +267,31 @@ public class ConversationResource {
             String text = String.format("**%s** renamed the conversation to **%s**", userName, msg.conversation.name);
             collector.addSystem(text, msg.time, event.type);
         } catch (Exception e) {
-            Logger.error("onConversationRename: conv: %s, msg: %s error: %s", event.conversationId, event.messageId, e);
+            Logger.exception("onConversationRename: conv: %s, msg: %s error: %s", e, event.conversationId, event.eventId, e.getMessage());
         }
     }
 
     private void testAPI() {
         try {
             api.getSelf();
-        } catch (HttpException e) {
-            Logger.debug("reconnecting... code: %d", e.getCode());
+        } catch (Exception e) {
+            Logger.debug("reconnecting... %s", e);
             api = getLHApi();
         }
     }
 
     private API getLHApi() {
-        Client client = Service.instance.getClient();
         try {
             LHAccess single = accessDAO.getSingle();
-            return new API(client, null, single.token);
+
+            // if the db is empty just return a dummy API
+            if (single == null)
+                return new API(httpClient, null, null);
+
+            return new API(httpClient, null, single.token);
         } catch (Exception e) {
-            Logger.warning("getLHApi: %s", e);
-            return new API(client, null, null);
+            Logger.exception("getLHApi: %s", e, e.getMessage());
+            return new API(httpClient, null, null);
         }
     }
 
@@ -304,7 +317,7 @@ public class ConversationResource {
 
     @Nullable
     private String getUserName(UUID userId) {
-        Cache cache = new Cache(api);
+        Cache cache = new Cache(api, assetsDAO);
         return cache.getUser(userId).name;
     }
 

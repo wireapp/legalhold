@@ -1,44 +1,48 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.API;
+import com.wire.bots.hold.DAO.AssetsDAO;
+import com.wire.helium.API;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.tools.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
-    private static final ConcurrentHashMap<String, File> pictures = new ConcurrentHashMap<>();//<assetKey, Picture>
+    private static final ConcurrentHashMap<UUID, File> assets = new ConcurrentHashMap<>();//<messageId, File>
     private static final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();//<userId, User>
     private static final ConcurrentHashMap<UUID, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
     private final API api;
+    private final AssetsDAO assetsDAO;
 
-    public Cache(API api) {
+    public Cache(API api, AssetsDAO assetsDAO) {
         this.api = api;
+        this.assetsDAO = assetsDAO;
     }
 
     public static void clear() {
-        pictures.clear();
+        assets.clear();
         users.clear();
         profiles.clear();
     }
 
-    public File getAssetFile(MessageAssetBase message) {
-        File file = pictures.computeIfAbsent(message.getAssetKey(), k -> {
+    @Nullable
+    public File getAssetFile(UUID messageId) {
+
+        return assets.computeIfAbsent(messageId, k -> {
             try {
-                return Helper.downloadAsset(api, message);
+                final AssetsDAO.Asset asset = assetsDAO.get(messageId);
+                File f = Helper.assetFile(asset.messageId, asset.mimeType);
+                Helper.save(asset.data, f);
+                return f;
             } catch (Exception e) {
-                Logger.warning("Cache.getAssetFile: %s", e);
+                Logger.exception("Cache.getAssetFile: %s", e, e.getMessage());
                 return null;
             }
         });
-
-        if (file == null)
-            file = Helper.assetFile(message.getAssetKey(), message.getMimeType());
-        return file;
     }
 
     public File getProfileImage(User user) {
@@ -46,7 +50,7 @@ public class Cache {
             try {
                 return Helper.getProfile(api, user);
             } catch (Exception e) {
-                Logger.warning("Cache.getProfileImage: userId: %s, ex: %s", user.id, e);
+                Logger.exception("Cache.getProfileImage: userId: %s, ex: %s", e, user.id, e.getMessage());
                 return null;
             }
         });
@@ -61,7 +65,7 @@ public class Cache {
             try {
                 return api.getUser(userId);
             } catch (HttpException e) {
-                Logger.warning("Cache.getUser: userId: %s, ex: %s", userId, e);
+                Logger.exception("Cache.getUser: userId: %s, ex: %s", e, userId, e.getMessage());
                 return null;
             }
         });

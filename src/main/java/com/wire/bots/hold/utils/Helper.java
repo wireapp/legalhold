@@ -1,11 +1,9 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.server.model.Asset;
-import com.wire.bots.sdk.server.model.User;
-import com.wire.bots.sdk.tools.Util;
-import com.wire.bots.sdk.user.API;
+import com.wire.helium.API;
+import com.wire.xenon.backend.models.Asset;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.exceptions.HttpException;
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
 import org.commonmark.node.Node;
@@ -16,8 +14,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -40,28 +36,16 @@ class Helper {
         return file;
     }
 
-    static File downloadAsset(API api, MessageAssetBase message) throws Exception {
-        File file = assetFile(message.getAssetKey(), message.getMimeType());
-        byte[] cipher = api.downloadAsset(message.getAssetKey(), message.getAssetToken());
-
-        byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
-        if (!Arrays.equals(sha256, message.getSha256()))
-            throw new Exception("Failed sha256 check");
-
-        byte[] image = Util.decrypt(message.getOtrKey(), cipher);
-        return save(image, file);
-    }
-
-    private static File save(byte[] image, File file) throws IOException {
+    public static File save(byte[] image, File file) throws IOException {
         try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
             os.write(image);
         }
         return file;
     }
 
-    static File assetFile(String assetKey, String mimeType) {
+    static File assetFile(UUID messageId, String mimeType) {
         String extension = getExtension(mimeType);
-        String filename = String.format("images/%s.%s", assetKey, extension);
+        String filename = String.format("images/%s.%s", messageId, extension);
         return new File(filename);
     }
 

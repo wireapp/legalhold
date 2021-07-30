@@ -7,15 +7,14 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.bots.hold.model.Notification;
 import com.wire.bots.hold.model.NotificationList;
-import com.wire.bots.sdk.exceptions.AuthException;
-import com.wire.bots.sdk.exceptions.HttpException;
-import com.wire.bots.sdk.server.model.Payload;
-import com.wire.bots.sdk.tools.Logger;
-import com.wire.bots.sdk.user.LoginClient;
-import com.wire.bots.sdk.user.model.Access;
+import com.wire.helium.LoginClient;
+import com.wire.helium.models.Access;
+import com.wire.xenon.backend.models.Payload;
+import com.wire.xenon.exceptions.AuthException;
+import com.wire.xenon.exceptions.HttpException;
+import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
@@ -28,16 +27,15 @@ import java.util.logging.Level;
 public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
+    private final HoldMessageResource messageResource;
     private final WebTarget api;
-    private final WebTarget admin;
 
-    NotificationProcessor(Client client, AccessDAO accessDAO) {
+    NotificationProcessor(Client client, AccessDAO accessDAO, Config config, HoldMessageResource messageResource) {
         this.client = client;
         this.accessDAO = accessDAO;
+        this.messageResource = messageResource;
 
-        final Config config = Service.instance.getConfig();
         api = client.target(config.apiHost);
-        admin = client.target("http://localhost:8081/admin");  //todo read admin port from the config
     }
 
     @Override
@@ -50,8 +48,7 @@ public class NotificationProcessor implements Runnable {
                 process(device);
             }
         } catch (Exception e) {
-            //e.printStackTrace();
-            Logger.error("NotificationProcessor: %s", e);
+            Logger.exception("NotificationProcessor: %s", e, e.getMessage());
         }
     }
 
@@ -75,22 +72,22 @@ public class NotificationProcessor implements Runnable {
 
             if (access.getCookie() != null) {
                 Logger.info("Set-Cookie: user: %s", userId);
-                cookieValue = access.getCookie().getValue();
+                cookieValue = access.getCookie().value;
             }
 
-            accessDAO.update(userId, access.token, cookieValue);
+            accessDAO.update(userId, access.getAccessToken(), cookieValue);
 
-            device.token = access.getToken();
+            device.token = access.getAccessToken();
 
-            NotificationList notificationList = retrieveNotifications(device, 100);
+            NotificationList notificationList = retrieveNotifications(device);
 
             process(userId, device.clientId, notificationList);
 
         } catch (AuthException e) {
             accessDAO.disable(userId);
-            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e);
+            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
         } catch (Exception e) {
-            Logger.error("NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e);
+            Logger.exception("NotificationProcessor: user: %s, last: %s, error: %s", e, userId, device.last, e.getMessage());
         }
     }
 
@@ -131,23 +128,17 @@ public class NotificationProcessor implements Runnable {
         if (payload.from == null || payload.data == null)
             return true;
 
-        Response response = admin
-                .path(userId.toString())
-                .path("messages")
-                .queryParam("id", id)
-                .request(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(payload, MediaType.APPLICATION_JSON));
+        final boolean b = messageResource.onNewMessage(userId, id, payload);
 
-        if (response.getStatus() != 200) {
+        if (!b) {
             Logger.error("process: `%s` user: %s, from: %s:%s, error: %s",
                     payload.type,
                     userId,
                     payload.from,
-                    payload.data.sender,
-                    response.readEntity(String.class));
+                    payload.data.sender);
         }
 
-        return response.getStatus() == 200;
+        return b;
     }
 
     private void trace(Payload payload) {
@@ -156,18 +147,18 @@ public class NotificationProcessor implements Runnable {
             try {
                 Logger.debug(objectMapper.writeValueAsString(payload));
             } catch (JsonProcessingException e) {
-                Logger.warning("%s", e);
+                Logger.exception("Exception during JSON parsing - %s.", e, e.getMessage());
             }
         }
     }
 
-    private NotificationList retrieveNotifications(LHAccess LHAccess, int size)
+    private NotificationList retrieveNotifications(LHAccess LHAccess)
             throws HttpException {
         Response response = api
                 .path("notifications")
                 .queryParam("client", LHAccess.clientId)
                 .queryParam("since", LHAccess.last)
-                .queryParam("size", size)
+                .queryParam("size", 100)
                 .request(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, bearer(LHAccess.token))

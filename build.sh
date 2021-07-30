@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-mvn package -DskipTests=true -Dmaven.javadoc.skip=true
 docker build -t $DOCKER_USERNAME/hold:latest .
 docker push $DOCKER_USERNAME/hold
 kubectl delete pod -l name=hold

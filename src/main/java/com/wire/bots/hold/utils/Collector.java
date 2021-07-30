@@ -1,8 +1,8 @@
 package com.wire.bots.hold.utils;
 
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.models.TextMessage;
-import com.wire.bots.sdk.server.model.User;
+import com.wire.xenon.backend.models.User;
+import com.wire.xenon.models.OriginMessage;
+import com.wire.xenon.models.TextMessage;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -13,7 +13,7 @@ import java.util.*;
 
 public class Collector {
     private final Cache cache;
-    private LinkedList<Day> days = new LinkedList<>();
+    private final LinkedList<Day> days = new LinkedList<>();
     private String convName;
 
     public Collector(Cache cache) {
@@ -33,20 +33,17 @@ public class Collector {
         append(sender, message, dateTime);
     }
 
-    public void add(MessageAssetBase event) throws ParseException {
-        File file = cache.getAssetFile(event);
-        if (file.exists()) {
+    public void add(OriginMessage event) throws ParseException {
+        File file = cache.getAssetFile(event.getMessageId());
+        if (file != null && file.exists()) {
             Message message = new Message();
             message.time = toTime(event.getTime());
 
-            String assetFilename = getFilename(file, "images");
-
-            String mimeType = event.getMimeType();
-            if (mimeType.startsWith("image")) {
-                message.image = assetFilename;
+            if (event.getMimeType().startsWith("image")) {
+                message.image = getFilename(file);
             } else {
                 String url = String.format("<a href=\"%s\">%s</a>",
-                        assetFilename,
+                        getFilename(file),
                         event.getName());
                 message.text = Helper.markdown2Html(url, false);
             }
@@ -169,8 +166,8 @@ public class Collector {
         }
     }
 
-    private String getFilename(File file, String dir) {
-        return String.format("/%s/%s", dir, file.getName());
+    private String getFilename(File file) {
+        return String.format("/%s/%s", "images", file.getName());
     }
 
     private String getAvatar(User user) {

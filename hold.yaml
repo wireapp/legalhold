@@ -1,30 +1,45 @@
 server:
+  applicationConnectors:
+    - type: http
+      port: ${HTTP_PORT:-8080}
+
+  adminConnectors:
+    - type: http
+      port: ${ADMIN_PORT:-8081}
+
   requestLog:
     appenders:
-      - type: console
+      - type: ${APPENDER_TYPE:-console}
         filterFactories:
           - type: status-filter-factory
 
 logging:
   level: INFO
+  appenders:
+    - type: ${APPENDER_TYPE:-console}
   loggers:
-    "com.wire.bots.logger": ${LOG_LEVEL:-INFO}
+    com.wire.bots.logger: ${LOG_LEVEL:-INFO}
+    org.eclipse.jetty: WARN
+    io.dropwizard: INFO
+    org.reflections: WARN
+    org.apache: ERROR
 
 swagger:
+  version: 1.0
   resourcePackage: com.wire.bots.hold.resource
   title: Legal Hold Service
   description: Legal Hold Service documentation
-  contact: Dejan Kovačević
+  contact: Wire GmbH
   contactEmail: dejan@wire.com
-  contactUrl: "wire://user/eda5984e-3a23-495e-9110-73ed905876cf"
+  contactUrl: "https://www.wire.com"
   schemes:
-    - http
     - https
+    - http
 
 jerseyClient:
-  timeout: 10s
-  connectionTimeout: 4s
-  connectionRequestTimeout: 4s
+  timeout: 40s
+  connectionTimeout: 40s
+  connectionRequestTimeout: 40s
   keepAlive: 0ms
   retries: 3
   userAgent: legalhold
@@ -35,8 +50,8 @@ jerseyClient:
       - TLSv1.1
       - TLSv1.2
 
-sleep: ${DELAY:-60} #seconds
-auth: ${SERVICE_TOKEN:-}
+sleep: ${DELAY:-60s}
+token: ${SERVICE_TOKEN:-}
 apiHost: ${WIRE_API_HOST:-https://prod-nginz-https.wire.com}
 
 database:
@@ -44,4 +59,3 @@ database:
   url: ${DB_URL:-jdbc:postgresql://localhost/legalhold}
   user: ${DB_USER:-}
   password: ${DB_PASSWORD:-}
-  baseline: true

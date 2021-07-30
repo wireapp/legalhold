@@ -6,8 +6,10 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.bots.hold.utils.TestCache;
-import com.wire.bots.sdk.models.MessageAssetBase;
-import com.wire.bots.sdk.models.TextMessage;
+import com.wire.xenon.models.OriginMessage;
+import com.wire.xenon.models.PhotoPreviewMessage;
+import com.wire.xenon.models.TextMessage;
+import com.wire.xenon.tools.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,26 +23,24 @@ import static com.wire.bots.hold.Consts.lipis;
 
 public class MessageTemplateTest {
     private static TextMessage txt(UUID userId, String time, String text) {
-        TextMessage msg = new TextMessage(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID().toString(), userId);
+        TextMessage msg = new TextMessage(UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID().toString(),
+                userId, time);
         msg.setText(text);
-        msg.setTime(time);
         return msg;
     }
 
-    private static MessageAssetBase asset(UUID userId, String time, String assetId, String mime) {
-        MessageAssetBase msg = new MessageAssetBase(UUID.randomUUID(),
+    private static OriginMessage asset(UUID userId, String time, String name, String mime) {
+        return new PhotoPreviewMessage(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
                 UUID.randomUUID(),
                 UUID.randomUUID().toString(),
                 userId,
-                assetId,
-                null,
-                null,
-                mime,
-                0L,
-                null,
-                assetId);
-        msg.setTime(time);
-        return msg;
+                time,
+                mime, 0, name, 0, 0);
     }
 
     @Before
@@ -73,6 +73,7 @@ public class MessageTemplateTest {
         PdfGenerator.save(pdfFilename, html, "file:src/test");
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Mustache compileTemplate(String template) {
         MustacheFactory mf = new DefaultMustacheFactory();
         String path = String.format("templates/%s", template);
@@ -86,7 +87,7 @@ public class MessageTemplateTest {
             mustache.execute(new PrintWriter(sw), model).flush();
             return sw.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.exception("Mustache template write failed.", e);
             return null;
         }
     }

@@ -1,11 +1,13 @@
 package com.wire.bots.hold.resource;
 
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.ConfirmPayload;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -23,13 +25,13 @@ public class ConfirmResource {
     }
 
     @POST
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "Confirm legal hold device")
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
-    public Response confirm(@ApiParam @Valid ConfirmPayload payload) {
+    public Response confirm(@ApiParam @Valid @NotNull ConfirmPayload payload) {
         try {
             int insert = accessDAO.insert(payload.userId,
                     payload.clientId,
@@ -54,8 +56,7 @@ public class ConfirmResource {
                     ok().
                     build();
         } catch (Exception e) {
-            Logger.error("ConfirmResource.confirm: %s err: %s", payload.userId, e);
-            e.printStackTrace();
+            Logger.exception("ConfirmResource.confirm: %s err: %s", e, payload.userId, e.getMessage());
             return Response
                     .ok(e)
                     .status(500)

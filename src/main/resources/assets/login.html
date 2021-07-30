@@ -3,25 +3,19 @@
 <html>
 
 <head>
-    <title>Wire Login</title>
+    <title>Audit Login</title>
 </head>
 
 <body>
 
-<form action="/register" content="application/json" method="post">
+<form action="/authorize" content="application/x-www-form-urlencoded" method="post">
     <div>
-        <label for="email">Email:</label>
+        <label for="token">Service Token:</label>
         <div>
-            <input id="email" name="email" type="text" value=""/>
+            <input id="token" name="token" type="password" value=""/>
         </div>
     </div>
-    <div>
-        <label for="password">Password:</label>
-        <div>
-            <input id="password" name="password" type="password" value=""/>
-        </div>
-    </div>
-    <button type="submit">Accept</button>
+    <button type="submit">Submit</button>
 </form>
 
 </body>

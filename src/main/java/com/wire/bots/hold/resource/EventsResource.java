@@ -4,8 +4,9 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.Event;
-import com.wire.bots.sdk.tools.Logger;
+import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
 import javax.ws.rs.GET;
@@ -32,7 +33,7 @@ public class EventsResource {
     }
 
     @GET
-    @Authorization("Bearer")
+    @ServiceAuthorization
     @ApiOperation(value = "List all Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),
@@ -47,7 +48,7 @@ public class EventsResource {
                     ok(html, MediaType.TEXT_HTML).
                     build();
         } catch (Exception e) {
-            Logger.error("EventsResource.list: %s", e);
+            Logger.exception("EventsResource.list: %s", e, e.getMessage());
             return Response
                     .ok(e.getMessage())
                     .status(500)
@@ -68,7 +69,7 @@ public class EventsResource {
         }
     }
 
-    class Model {
+    static class Model {
         List<Event> events;
     }
 }

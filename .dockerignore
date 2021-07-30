@@ -1,0 +1,11 @@
+.gitignore
+.travis.yml
+Dockerfile
+don.iml
+.idea/
+build/
+target/
+README.md
+script.txt
+docker-compose.yml
+build.sh

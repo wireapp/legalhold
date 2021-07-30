@@ -4,8 +4,6 @@ import com.wire.helium.API;
 import com.wire.xenon.backend.models.Asset;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
-import com.wire.xenon.models.RemoteMessage;
-import com.wire.xenon.tools.Util;
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
 import org.commonmark.node.Node;
@@ -16,8 +14,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -40,18 +36,6 @@ class Helper {
         return file;
     }
 
-    static File downloadAsset(API api, RemoteMessage message) throws Exception {
-        File file = new File(String.format("%s.bin", message.getAssetId()));
-        byte[] cipher = api.downloadAsset(message.getAssetId(), message.getAssetToken());
-
-        byte[] sha256 = MessageDigest.getInstance("SHA-256").digest(cipher);
-        if (!Arrays.equals(sha256, message.getSha256()))
-            throw new Exception("Failed sha256 check");
-
-        byte[] image = Util.decrypt(message.getOtrKey(), cipher);
-        return save(image, file);
-    }
-
     public static File save(byte[] image, File file) throws IOException {
         try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
             os.write(image);
@@ -59,9 +43,9 @@ class Helper {
         return file;
     }
 
-    static File assetFile(String assetId, String mimeType) {
+    static File assetFile(UUID messageId, String mimeType) {
         String extension = getExtension(mimeType);
-        String filename = String.format("images/%s.%s", assetId, extension);
+        String filename = String.format("images/%s.%s", messageId, extension);
         return new File(filename);
     }
 

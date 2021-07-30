@@ -35,7 +35,7 @@ public class Cache {
         return assets.computeIfAbsent(messageId, k -> {
             try {
                 final AssetsDAO.Asset asset = assetsDAO.get(messageId);
-                File f = new File(String.format("%s.%s", messageId, Helper.getExtension(asset.mimeType)));
+                File f = Helper.assetFile(asset.messageId, asset.mimeType);
                 Helper.save(asset.data, f);
                 return f;
             } catch (Exception e) {

@@ -43,7 +43,7 @@ public class Collector {
                 message.image = getFilename(file);
             } else {
                 String url = String.format("<a href=\"%s\">%s</a>",
-                        file.getName(),
+                        getFilename(file),
                         event.getName());
                 message.text = Helper.markdown2Html(url, false);
             }

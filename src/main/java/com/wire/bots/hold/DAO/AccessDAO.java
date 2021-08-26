@@ -13,7 +13,7 @@ public interface AccessDAO {
     @SqlUpdate("INSERT INTO Access (userId, clientId, cookie, updated, created, enabled) " +
             "VALUES (:userId, :clientId, :cookie, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1) " +
             "ON CONFLICT (userId) DO UPDATE SET cookie = EXCLUDED.cookie, clientId = EXCLUDED.clientId, " +
-            "updated = EXCLUDED.updated")
+            "updated = EXCLUDED.updated, enabled = EXCLUDED.enabled")
     int insert(@Bind("userId") UUID userId,
                @Bind("clientId") String clientId,
                @Bind("cookie") String cookie);

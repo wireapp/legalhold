@@ -4,9 +4,26 @@ This is Legal Hold Service for Wire.
 - SERVICE_TOKEN: <mandatory>. Must be set to some random value (at least 16 alphanumeric chars)
 - WIRE_API_HOST: <optional>. Your Wire Backend host. Default: https://prod-nginz-https.wire.com
 - DB_DRIVER: <optional>. Default: org.postgresql.Driver
-- DB_URL: <mandatory>. Default: jdbc:postgresql://localhost/legalhold
-- DB_USER:
-- DB_PASSWORD:
+- DB_URL: <optional>. Default: jdbc:postgresql://localhost/legalhold
+- DB_USER: <optional>
+- DB_PASSWORD: <optional>
+
+## Build the code
+docker build -t $DOCKER_USERNAME/legalhold .
+
+## Prebuilt Docker images (public):
+https://quay.io/repository/wire/legalhold?tab=tags
+
+## Run docker container (example)
+```
+docker run \
+-e DB_URL='jdbc:postgresql://localhost/legalhold' \
+-e DB_USER='admin' \
+-e DB_PASSWORD='s3cret' \
+-e SERVICE_TOKEN='secr3t' \
+-p 80:8080 \
+--name secure-hold --rm quay.io/wire/legalhold:1.0.4
+``` 
 
 ## Endpoints visible to Wire Server
 - POST    /initiate

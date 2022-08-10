@@ -17,6 +17,8 @@
 
 package com.wire.bots.hold;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.servlets.MetricsServlet;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -42,16 +44,19 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.prometheus.client.CollectorRegistry;
 import org.flywaydb.core.Flyway;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import io.prometheus.client.dropwizard.DropwizardExports;
 
 import javax.ws.rs.client.Client;
 import java.util.concurrent.TimeUnit;
 
 public class Service extends Application<Config> {
     public static Service instance;
+    public static MetricRegistry metrics;
     protected Config config;
     protected Environment environment;
     protected Jdbi jdbi;
@@ -66,7 +71,7 @@ public class Service extends Application<Config> {
         bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
                 bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
 
-        bootstrap.addBundle(new SwaggerBundle<Config>() {
+        bootstrap.addBundle(new SwaggerBundle<>() {
             @Override
             protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(Config configuration) {
                 return configuration.swagger;
@@ -87,6 +92,7 @@ public class Service extends Application<Config> {
     public void run(Config config, Environment environment) {
         this.config = config;
         this.environment = environment;
+        Service.metrics = environment.metrics();
 
         System.setProperty(Const.WIRE_BOTS_SDK_TOKEN, config.token);
         System.setProperty(Const.WIRE_BOTS_SDK_API, config.apiHost);
@@ -129,6 +135,10 @@ public class Service extends Application<Config> {
                 .scheduledExecutorService("notifications")
                 .build()
                 .scheduleWithFixedDelay(notificationProcessor, 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
+
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
+
+        environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
     }
 
     public Config getConfig() {

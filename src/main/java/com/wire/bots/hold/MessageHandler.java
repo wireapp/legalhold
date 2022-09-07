@@ -227,11 +227,11 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void trace(WireClient client, TextMessage msg, UUID convId, UUID senderId) {
         try {
-            User user = client.getUser(senderId);
+            //User user = client.getUser(senderId);
             _Event event = new _Event();
             event.conversationID = convId;
             event.messageID = msg.getMessageId();
-            event.sender = user.handle;
+            event.sender = senderId.toString();
             event.type = "text";
             event.text = msg.getText();
             event.time = new Date();
@@ -239,7 +239,7 @@ public class MessageHandler extends MessageHandlerBase {
             System.out.println(mapper.writeValueAsString(event));
 
         } catch (Exception e) {
-            Logger.warning("onText: %s", e);
+            Logger.exception(e, "Error tracing");
         }
     }
 

@@ -6,10 +6,12 @@ import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.backend.models.SystemMessage;
+import com.wire.xenon.backend.models.User;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.Date;
 import java.util.UUID;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -58,6 +60,8 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.new-text";
 
         persist(convId, senderId, userId, type, msg);
+
+        trace(client, msg, convId, senderId);
     }
 
     @Override
@@ -216,8 +220,35 @@ public class MessageHandler extends MessageHandlerBase {
                     id,
                     e.getMessage());
 
-            Logger.exception(error, e);
+            Logger.exception(e, error);
             throw new RuntimeException(error);
         }
+    }
+
+    private void trace(WireClient client, TextMessage msg, UUID convId, UUID senderId) {
+        try {
+            User user = client.getUser(senderId);
+            _Event event = new _Event();
+            event.conversationID = convId;
+            event.messageID = msg.getMessageId();
+            event.sender = user.handle;
+            event.type = "text";
+            event.text = msg.getText();
+            event.time = new Date();
+
+            System.out.println(mapper.writeValueAsString(event));
+
+        } catch (Exception e) {
+            Logger.warning("onText: %s", e);
+        }
+    }
+
+    static class _Event {
+        public String type;
+        public UUID conversationID;
+        public UUID messageID;
+        public String sender;
+        public String text;
+        public Date time;
     }
 }

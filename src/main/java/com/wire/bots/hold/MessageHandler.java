@@ -5,14 +5,18 @@ import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import org.jdbi.v3.core.Jdbi;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MessageHandler extends MessageHandlerBase {
     private final EventsDAO eventsDAO;
@@ -227,11 +231,18 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void trace(WireClient client, TextMessage msg, UUID convId, UUID senderId) {
         try {
-            //User user = client.getUser(senderId);
+            Conversation conversation = client.getConversation();
+            List<UUID> members = conversation.members.stream().map(x -> x.id).collect(Collectors.toList());
+            Collection<User> users = client.getUsers(members);
+            List<String> participants = users.stream().map(x -> x.handle).collect(Collectors.toList());
+            String sender = users.stream().filter(x -> x.id.equals(senderId)).map(x -> x.handle).findFirst().orElse(null);
+
             _Event event = new _Event();
-            event.conversationID = convId;
-            event.messageID = msg.getMessageId();
-            event.sender = senderId.toString();
+            event.conversationId = convId;
+            event.conversationName = conversation.name;
+            event.participants = participants;
+            event.messageId = msg.getMessageId();
+            event.sender = sender;
             event.type = "text";
             event.text = msg.getText();
             event.time = new Date();
@@ -245,10 +256,12 @@ public class MessageHandler extends MessageHandlerBase {
 
     static class _Event {
         public String type;
-        public UUID conversationID;
-        public UUID messageID;
+        public UUID conversationId;
+        public String conversationName;
+        public UUID messageId;
         public String sender;
         public String text;
         public Date time;
+        public List<String> participants;
     }
 }

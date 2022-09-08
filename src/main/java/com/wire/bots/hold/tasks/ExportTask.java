@@ -53,44 +53,57 @@ public class ExportTask extends Task {
         API api = new API(httpClient, null, access.token);
         Cache cache = new Cache(api, null);
 
-        for (Event e : eventsDAO.listConversations()) {
+        List<Event> events = eventsDAO.listConversations();
+        Logger.info("Exporting %d conversations to Kibana", events.size());
+        for (Event e : events) {
             Conversation conversation = null;
             List<User> participants = new ArrayList<>();
 
-            for (Event event : eventsDAO.listAllAsc(e.conversationId)) {
+            List<Event> messages = eventsDAO.listAllAsc(e.conversationId);
+            Logger.info("Exporting %d messages to Kibana", messages.size());
+
+            for (Event event : messages) {
                 try {
-                    if (event.type.equals("conversation.create")) {
-                        SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                        for (Member m : msg.conversation.members) {
-                            User user = cache.getUser(m.id);
-                            participants.add(user);
+                    switch (event.type) {
+                        case "conversation.create": {
+                            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
                             conversation = msg.conversation;
-                        }
-                    }
-                    if (event.type.equals("conversation.member-join")) {
-                        SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                        for (UUID userId : msg.users) {
-                            User user = cache.getUser(userId);
-                            participants.add(user);
-                        }
-                    }
-                    if (event.type.equals("conversation.otr-message-add.new-text")) {
-                        TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
 
-                        Kibana kibana = new Kibana();
-                        kibana.conversationId = event.conversationId;
-                        kibana.conversationName = conversation == null ? null : conversation.name;
-                        kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
-                        kibana.messageId = msg.getMessageId();
-                        kibana.sender = cache.getUser(msg.getUserId()).handle;
-                        kibana.type = "text";
-                        kibana.text = msg.getText();
-                        kibana.time = event.time;
+                            if (conversation != null) {
+                                for (Member m : conversation.members) {
+                                    User user = cache.getUser(m.id);
+                                    participants.add(user);
+                                }
+                            }
+                        }
+                        break;
+                        case "conversation.member-join": {
+                            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+                            for (UUID userId : msg.users) {
+                                User user = cache.getUser(userId);
+                                participants.add(user);
+                            }
+                        }
+                        break;
+                        case "conversation.otr-message-add.new-text": {
+                            TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
 
-                        System.out.println(mapper.writeValueAsString(kibana));
+                            Kibana kibana = new Kibana();
+                            kibana.conversationId = event.conversationId;
+                            kibana.conversationName = conversation == null ? null : conversation.name;
+                            kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
+                            kibana.messageId = msg.getMessageId();
+                            kibana.sender = cache.getUser(msg.getUserId()).handle;
+                            kibana.type = "text";
+                            kibana.text = msg.getText();
+                            kibana.time = event.time;
+
+                            Logger.info(mapper.writeValueAsString(kibana));
+                        }
+                        break;
                     }
                 } catch (Exception ex) {
-                    Logger.exception(ex, "Export %s %s", event.conversationId, event.eventId);
+                    Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
                 }
             }
         }

@@ -73,7 +73,7 @@ public class MessageHandler extends MessageHandlerBase {
 
         persist(convId, senderId, userId, type, msg);
 
-        trace(msg, convId, senderId);
+        trace(msg, convId, senderId, userId);
     }
 
     @Override
@@ -237,9 +237,9 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void trace(TextMessage msg, UUID convId, UUID senderId) {
+    private void trace(TextMessage msg, UUID convId, UUID senderId, UUID userId) {
         try {
-            LHAccess single = accessDAO.getSingle();
+            LHAccess single = accessDAO.get(userId);
             API api = new API(httpClient, convId, single.token);
 
             Conversation conversation = api.getConversation();

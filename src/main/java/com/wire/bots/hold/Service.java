@@ -128,7 +128,7 @@ public class Service extends Application<Config> {
         environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
-        final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
+        final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi, httpClient), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
 
         environment.lifecycle()

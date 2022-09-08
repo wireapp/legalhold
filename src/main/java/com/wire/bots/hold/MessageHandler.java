@@ -1,8 +1,11 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.model.LHAccess;
+import com.wire.helium.API;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.backend.models.Conversation;
@@ -12,6 +15,7 @@ import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import org.jdbi.v3.core.Jdbi;
 
+import javax.ws.rs.client.Client;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -21,12 +25,16 @@ import java.util.stream.Collectors;
 public class MessageHandler extends MessageHandlerBase {
     private final EventsDAO eventsDAO;
     private final AssetsDAO assetsDAO;
+    private final AccessDAO accessDAO;
+    private final Client httpClient;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    MessageHandler(Jdbi jdbi) {
+    MessageHandler(Jdbi jdbi, Client httpClient) {
         eventsDAO = jdbi.onDemand(EventsDAO.class);
         assetsDAO = jdbi.onDemand(AssetsDAO.class);
+        accessDAO = jdbi.onDemand(AccessDAO.class);
+        this.httpClient = httpClient;
     }
 
     @Override
@@ -65,7 +73,7 @@ public class MessageHandler extends MessageHandlerBase {
 
         persist(convId, senderId, userId, type, msg);
 
-        trace(client, msg, convId, senderId);
+        trace(msg, convId, senderId);
     }
 
     @Override
@@ -229,11 +237,14 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void trace(WireClient client, TextMessage msg, UUID convId, UUID senderId) {
+    private void trace(TextMessage msg, UUID convId, UUID senderId) {
         try {
-            Conversation conversation = client.getConversation();
+            LHAccess single = accessDAO.getSingle();
+            API api = new API(httpClient, convId, single.token);
+
+            Conversation conversation = api.getConversation();
             List<UUID> members = conversation.members.stream().map(x -> x.id).collect(Collectors.toList());
-            Collection<User> users = client.getUsers(members);
+            Collection<User> users = api.getUsers(members);
             List<String> participants = users.stream().map(x -> x.handle).collect(Collectors.toList());
             String sender = users.stream().filter(x -> x.id.equals(senderId)).map(x -> x.handle).findFirst().orElse(null);
 

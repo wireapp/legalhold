@@ -1,40 +1,26 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.hold.model.LHAccess;
-import com.wire.helium.API;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
-import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.SystemMessage;
-import com.wire.xenon.backend.models.User;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import org.jdbi.v3.core.Jdbi;
 
-import javax.ws.rs.client.Client;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class MessageHandler extends MessageHandlerBase {
     private final EventsDAO eventsDAO;
     private final AssetsDAO assetsDAO;
-    private final AccessDAO accessDAO;
-    private final Client httpClient;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    MessageHandler(Jdbi jdbi, Client httpClient) {
+    MessageHandler(Jdbi jdbi) {
         eventsDAO = jdbi.onDemand(EventsDAO.class);
         assetsDAO = jdbi.onDemand(AssetsDAO.class);
-        accessDAO = jdbi.onDemand(AccessDAO.class);
-        this.httpClient = httpClient;
     }
 
     @Override
@@ -72,8 +58,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = "conversation.otr-message-add.new-text";
 
         persist(convId, senderId, userId, type, msg);
-
-        trace(msg, convId, senderId, userId);
     }
 
     @Override
@@ -235,44 +219,5 @@ public class MessageHandler extends MessageHandlerBase {
             Logger.exception(e, error);
             throw new RuntimeException(error);
         }
-    }
-
-    private void trace(TextMessage msg, UUID convId, UUID senderId, UUID userId) {
-        try {
-            LHAccess single = accessDAO.get(userId);
-            API api = new API(httpClient, convId, single.token);
-
-            Conversation conversation = api.getConversation();
-            List<UUID> members = conversation.members.stream().map(x -> x.id).collect(Collectors.toList());
-            Collection<User> users = api.getUsers(members);
-            List<String> participants = users.stream().map(x -> x.handle).collect(Collectors.toList());
-            String sender = users.stream().filter(x -> x.id.equals(senderId)).map(x -> x.handle).findFirst().orElse(null);
-
-            _Event event = new _Event();
-            event.conversationId = convId;
-            event.conversationName = conversation.name;
-            event.participants = participants;
-            event.messageId = msg.getMessageId();
-            event.sender = sender;
-            event.type = "text";
-            event.text = msg.getText();
-            event.time = new Date();
-
-            System.out.println(mapper.writeValueAsString(event));
-
-        } catch (Exception e) {
-            Logger.exception(e, "Error tracing");
-        }
-    }
-
-    static class _Event {
-        public String type;
-        public UUID conversationId;
-        public String conversationName;
-        public UUID messageId;
-        public String sender;
-        public String text;
-        public Date time;
-        public List<String> participants;
     }
 }

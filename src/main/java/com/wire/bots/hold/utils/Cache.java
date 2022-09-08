@@ -65,7 +65,7 @@ public class Cache {
             try {
                 return api.getUser(userId);
             } catch (HttpException e) {
-                Logger.exception("Cache.getUser: userId: %s, ex: %s", e, userId, e.getMessage());
+                Logger.exception(e, "Cache.getUser: userId: %s, ex: %s", userId, e.getMessage());
                 return null;
             }
         });
@@ -74,6 +74,7 @@ public class Cache {
             user = new User();
             user.id = userId;
             user.name = userId.toString();
+            user.handle = userId.toString();
         }
         return user;
     }

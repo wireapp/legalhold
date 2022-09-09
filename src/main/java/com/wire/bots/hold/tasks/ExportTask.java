@@ -84,17 +84,26 @@ public class ExportTask extends Task {
                                 participants.add(user);
                             }
                         }
+                        case "conversation.member-leave": {
+                            SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+                            for (UUID userId : msg.users) {
+                                participants.removeIf(x -> x.id.equals(userId));
+                            }
+                        }
                         break;
                         case "conversation.otr-message-add.new-text": {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
+                            User sender = cache.getUser(msg.getUserId());
 
                             Kibana kibana = new Kibana();
                             kibana.type = "text";
                             kibana.conversationID = msg.getConversationId();
                             kibana.conversationName = conversation == null ? null : conversation.name;
-                            kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
+                            kibana.participants = participants.stream()
+                                    .map(x -> x.handle != null ? x.handle : x.id.toString())
+                                    .collect(Collectors.toList());
                             kibana.messageID = msg.getMessageId();
-                            kibana.sender = cache.getUser(msg.getUserId()).handle;
+                            kibana.sender = sender.handle != null ? sender.handle : sender.id.toString();
                             kibana.text = msg.getText();
                             kibana.sent = msg.getTime();
 

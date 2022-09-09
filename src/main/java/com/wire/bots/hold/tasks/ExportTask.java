@@ -96,7 +96,7 @@ public class ExportTask extends Task {
                             kibana.messageID = msg.getMessageId();
                             kibana.sender = cache.getUser(msg.getUserId()).handle;
                             kibana.text = msg.getText();
-                            kibana.time = msg.getTime();
+                            kibana.sent = msg.getTime();
 
                             System.out.println(mapper.writeValueAsString(kibana));
                         }
@@ -114,7 +114,7 @@ public class ExportTask extends Task {
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
-        public String time;
+        public String sent;
         public String sender;
         public UUID messageID;
         public String text;

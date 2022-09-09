@@ -45,7 +45,7 @@ public class ExportTask extends Task {
                 .build()
                 .schedule(this::export, 1, TimeUnit.SECONDS);
 
-        output.println("ExportTask task has been queued");
+        output.println("Kibana task has been queued");
     }
 
     void export() {
@@ -100,7 +100,7 @@ public class ExportTask extends Task {
                             kibana.text = msg.getText();
                             kibana.time = event.time;
 
-                            Logger.info("kibana: %s", mapper.writeValueAsString(kibana));
+                            Logger.info(mapper.writeValueAsString(kibana));
                         }
                         break;
                     }

@@ -21,7 +21,6 @@ import javax.ws.rs.client.Client;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class ExportTask extends Task {
     private final Client httpClient;
@@ -86,21 +85,19 @@ public class ExportTask extends Task {
                         }
                         break;
                         case "conversation.otr-message-add.new-text": {
-                            Logger.info(event.type);
-
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
 
                             Kibana kibana = new Kibana();
                             kibana.type = "text";
-                            kibana.conversationId = msg.getConversationId();
+                            kibana.conversationID = msg.getConversationId();
                             kibana.conversationName = conversation == null ? null : conversation.name;
-                            kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
+                            kibana.participants = participants;
                             kibana.messageId = msg.getMessageId();
-                            kibana.sender = cache.getUser(msg.getUserId()).handle;
+                            kibana.sender = cache.getUser(msg.getUserId());
                             kibana.text = msg.getText();
                             kibana.time = event.time;
 
-                            Logger.info(mapper.writeValueAsString(kibana));
+                            System.out.println(mapper.writeValueAsString(kibana));
                         }
                         break;
                     }
@@ -113,11 +110,11 @@ public class ExportTask extends Task {
 
     static class Kibana {
         public String type;
-        public UUID conversationId;
+        public UUID conversationID;
         public String conversationName;
-        public List<String> participants;
+        public List<User> participants;
         public String time;
-        public String sender;
+        public User sender;
         public UUID messageId;
         public String text;
     }

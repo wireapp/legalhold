@@ -23,12 +23,6 @@ public class Cache {
         this.assetsDAO = assetsDAO;
     }
 
-    public static void clear() {
-        assets.clear();
-        users.clear();
-        profiles.clear();
-    }
-
     @Nullable
     public File getAssetFile(UUID messageId) {
 
@@ -39,7 +33,7 @@ public class Cache {
                 Helper.save(asset.data, f);
                 return f;
             } catch (Exception e) {
-                Logger.exception("Cache.getAssetFile: %s", e, e.getMessage());
+                Logger.exception(e,"Cache.getAssetFile: %s", e.getMessage());
                 return null;
             }
         });
@@ -50,7 +44,7 @@ public class Cache {
             try {
                 return Helper.getProfile(api, user);
             } catch (Exception e) {
-                Logger.exception("Cache.getProfileImage: userId: %s, ex: %s", e, user.id, e.getMessage());
+                Logger.exception(e, "Cache.getProfileImage: userId: %s, ex: %s", user.id, e.getMessage());
                 return null;
             }
         });

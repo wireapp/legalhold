@@ -63,6 +63,7 @@ public class ExportTask extends Task {
             Logger.info("Exporting %d messages to Kibana", messages.size());
 
             for (Event event : messages) {
+                Logger.info("%s %s", event.type, event.payload);
                 try {
                     switch (event.type) {
                         case "conversation.create": {
@@ -89,12 +90,12 @@ public class ExportTask extends Task {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
 
                             Kibana kibana = new Kibana();
-                            kibana.conversationId = event.conversationId;
+                            kibana.type = "text";
+                            kibana.conversationId = msg.getConversationId();
                             kibana.conversationName = conversation == null ? null : conversation.name;
                             kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
                             kibana.messageId = msg.getMessageId();
                             kibana.sender = cache.getUser(msg.getUserId()).handle;
-                            kibana.type = "text";
                             kibana.text = msg.getText();
                             kibana.time = event.time;
 

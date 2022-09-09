@@ -55,15 +55,14 @@ public class ExportTask extends Task {
 
         List<Event> events = eventsDAO.listConversations();
         Logger.info("Exporting %d conversations to Kibana", events.size());
+
         for (Event e : events) {
             Conversation conversation = null;
             List<User> participants = new ArrayList<>();
 
             List<Event> messages = eventsDAO.listAllAsc(e.conversationId);
-            Logger.info("Exporting %d messages to Kibana", messages.size());
 
             for (Event event : messages) {
-                Logger.info("%s %s", event.type, event.payload);
                 try {
                     switch (event.type) {
                         case "conversation.create": {
@@ -87,6 +86,8 @@ public class ExportTask extends Task {
                         }
                         break;
                         case "conversation.otr-message-add.new-text": {
+                            Logger.info(event.type);
+
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
 
                             Kibana kibana = new Kibana();
@@ -99,7 +100,7 @@ public class ExportTask extends Task {
                             kibana.text = msg.getText();
                             kibana.time = event.time;
 
-                            Logger.info(mapper.writeValueAsString(kibana));
+                            Logger.info("kibana: %s", mapper.writeValueAsString(kibana));
                         }
                         break;
                     }
@@ -114,10 +115,10 @@ public class ExportTask extends Task {
         public String type;
         public UUID conversationId;
         public String conversationName;
-        public UUID messageId;
-        public String sender;
-        public String text;
-        public String time;
         public List<String> participants;
+        public String time;
+        public String sender;
+        public UUID messageId;
+        public String text;
     }
 }

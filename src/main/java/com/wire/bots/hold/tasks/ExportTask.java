@@ -90,10 +90,10 @@ public class ExportTask extends Task {
 
                             Kibana kibana = new Kibana();
                             kibana.type = "text";
-                            kibana.conversationId = msg.getConversationId();
+                            kibana.conversationID = msg.getConversationId();
                             kibana.conversationName = conversation == null ? null : conversation.name;
-                            //kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
-                            kibana.messageId = msg.getMessageId();
+                            kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
+                            kibana.messageID = msg.getMessageId();
                             kibana.sender = cache.getUser(msg.getUserId()).handle;
                             kibana.text = msg.getText();
                             kibana.time = msg.getTime();
@@ -111,12 +111,12 @@ public class ExportTask extends Task {
 
     static class Kibana {
         public String type;
-        public UUID conversationId;
+        public UUID conversationID;
         public String conversationName;
-        //public List<String> participants;
+        public List<String> participants;
         public String time;
         public String sender;
-        public UUID messageId;
+        public UUID messageID;
         public String text;
     }
 }

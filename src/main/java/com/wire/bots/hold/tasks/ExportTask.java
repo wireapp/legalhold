@@ -21,6 +21,7 @@ import javax.ws.rs.client.Client;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ExportTask extends Task {
     private final Client httpClient;
@@ -89,13 +90,13 @@ public class ExportTask extends Task {
 
                             Kibana kibana = new Kibana();
                             kibana.type = "text";
-                            kibana.conversationID = msg.getConversationId();
+                            kibana.conversationId = msg.getConversationId();
                             kibana.conversationName = conversation == null ? null : conversation.name;
-                            kibana.participants = participants;
+                            //kibana.participants = participants.stream().map(x -> x.handle).collect(Collectors.toList());
                             kibana.messageId = msg.getMessageId();
-                            kibana.sender = cache.getUser(msg.getUserId());
+                            kibana.sender = cache.getUser(msg.getUserId()).handle;
                             kibana.text = msg.getText();
-                            kibana.time = event.time;
+                            kibana.time = msg.getTime();
 
                             System.out.println(mapper.writeValueAsString(kibana));
                         }
@@ -110,11 +111,11 @@ public class ExportTask extends Task {
 
     static class Kibana {
         public String type;
-        public UUID conversationID;
+        public UUID conversationId;
         public String conversationName;
-        public List<User> participants;
+        //public List<String> participants;
         public String time;
-        public User sender;
+        public String sender;
         public UUID messageId;
         public String text;
     }

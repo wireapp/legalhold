@@ -1,5 +1,6 @@
 package com.wire.bots.hold.tasks;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
@@ -207,6 +208,7 @@ public class ExportTask extends Task {
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
+        @JsonProperty("sent_on")
         public String sent;
         public String sender;
         public UUID messageID;

@@ -31,13 +31,13 @@ public class ExportTask extends Task {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Cache cache;
 
-    public ExportTask(Jdbi jdbi, Client httpClient, LifecycleEnvironment lifecycleEnvironment) {
+    public ExportTask(Jdbi jdbi, Client httpClient, LifecycleEnvironment lifecycle) {
         super("kibana");
-        this.lifecycleEnvironment = lifecycleEnvironment;
-        AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
+
+        lifecycleEnvironment = lifecycle;
         eventsDAO = jdbi.onDemand(EventsDAO.class);
 
-        LHAccess access = accessDAO.getSingle();
+        LHAccess access = jdbi.onDemand(AccessDAO.class).getSingle();
         API api = new API(httpClient, null, access.token);
         cache = new Cache(api, null);
     }
@@ -59,6 +59,7 @@ public class ExportTask extends Task {
         for (Event e : events) {
             String name = null;
             List<User> participants = new ArrayList<>();
+            Set<UUID> uniques = new HashSet<>();
 
             List<Event> messages = eventsDAO.listAllAsc(e.conversationId);
 
@@ -67,6 +68,8 @@ public class ExportTask extends Task {
                     switch (event.type) {
                         case "conversation.create": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+                            if(!uniques.add(msg.id))
+                                continue;
 
                             name = msg.conversation.name;
 
@@ -82,27 +85,31 @@ public class ExportTask extends Task {
                         break;
                         case "conversation.member-join": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+                            if(!uniques.add(msg.id))
+                                continue;
 
                             StringBuilder sb = new StringBuilder();
-                            sb.append(String.format("**%s** added these participants: \n", name(msg.from)));
+                            sb.append(String.format("%s added these participants: ", name(msg.from)));
                             for (UUID userId : msg.users) {
                                 User user = cache.getUser(userId);
                                 participants.add(user);
 
-                                sb.append(String.format("- **%s** \n", name(userId)));
+                                sb.append(String.format("%s,", name(userId)));
                             }
 
                             log(name, participants, msg, sb.toString());
                         }
                         case "conversation.member-leave": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+                            if(!uniques.add(msg.id))
+                                continue;
 
                             StringBuilder sb = new StringBuilder();
-                            sb.append(String.format("**%s** removed these participants: \n", name(msg.from)));
+                            sb.append(String.format("%s removed these participants: ", name(msg.from)));
                             for (UUID userId : msg.users) {
                                 participants.removeIf(x -> x.id.equals(userId));
 
-                                sb.append(String.format("- **%s** \n", name(userId)));
+                                sb.append(String.format("%s,", name(userId)));
                             }
 
                             log(name, participants, msg, sb.toString());
@@ -110,6 +117,9 @@ public class ExportTask extends Task {
                         break;
                         case "conversation.otr-message-add.new-text": {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
+                            if(!uniques.add(msg.getMessageId()))
+                                continue;
+
                             log(name, participants, msg);
                         }
                         break;
@@ -123,7 +133,6 @@ public class ExportTask extends Task {
 
     private void log(String conversation, List<User> participants, TextMessage msg) throws JsonProcessingException {
         Kibana kibana = new Kibana();
-        kibana.id = msg.getMessageId();
         kibana.type = "text";
         kibana.conversationID = msg.getConversationId();
         kibana.conversationName = conversation;
@@ -140,7 +149,6 @@ public class ExportTask extends Task {
 
     private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws JsonProcessingException {
         Kibana kibana = new Kibana();
-        kibana.id = msg.id;
         kibana.type = "system";
         kibana.conversationID = msg.convId;
         kibana.conversationName = conversation;
@@ -157,11 +165,11 @@ public class ExportTask extends Task {
 
     private String format(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("**%s** created conversation **%s** with: \n",
+        sb.append(String.format("%s created conversation '%s' with: ",
                 name(conversation.creator),
                 conversation.name));
         for (Member member : conversation.members) {
-            sb.append(String.format("- **%s** \n", name(member.id)));
+            sb.append(String.format("%s,", name(member.id)));
         }
         return sb.toString();
     }
@@ -172,8 +180,6 @@ public class ExportTask extends Task {
     }
 
     static class Kibana {
-        @JsonProperty("_id")
-        public UUID id;
         public String type;
         public UUID conversationID;
         public String conversationName;

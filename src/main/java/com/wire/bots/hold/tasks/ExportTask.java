@@ -1,6 +1,5 @@
 package com.wire.bots.hold.tasks;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
@@ -26,24 +25,29 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ExportTask extends Task {
+    private final Client httpClient;
     private final LifecycleEnvironment lifecycleEnvironment;
     private final EventsDAO eventsDAO;
+    private final AccessDAO accessDAO;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Cache cache;
+    private Cache cache;
 
     public ExportTask(Jdbi jdbi, Client httpClient, LifecycleEnvironment lifecycle) {
         super("kibana");
+        this.httpClient = httpClient;
 
         lifecycleEnvironment = lifecycle;
         eventsDAO = jdbi.onDemand(EventsDAO.class);
-
-        LHAccess access = jdbi.onDemand(AccessDAO.class).getSingle();
-        API api = new API(httpClient, null, access.token);
-        cache = new Cache(api, null);
+        accessDAO = jdbi.onDemand(AccessDAO.class);
     }
 
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
+        final LHAccess access = accessDAO.getSingle();
+        final API api = new API(httpClient, null, access.token);
+
+        cache = new Cache(api, null);
+
         lifecycleEnvironment.scheduledExecutorService("ExportTask")
                 .threads(1)
                 .build()
@@ -53,7 +57,7 @@ public class ExportTask extends Task {
     }
 
     void export() {
-        List<Event> events = eventsDAO.listConversations();
+        List<Event> events = eventsDAO.getUnexportedConvs();
         Logger.info("Exporting %d conversations to Kibana", events.size());
 
         for (Event e : events) {
@@ -61,14 +65,14 @@ public class ExportTask extends Task {
             List<User> participants = new ArrayList<>();
             Set<UUID> uniques = new HashSet<>();
 
-            List<Event> messages = eventsDAO.listAllAsc(e.conversationId);
+            List<Event> messages = eventsDAO.listAllUnxported(e.conversationId);
 
             for (Event event : messages) {
                 try {
                     switch (event.type) {
                         case "conversation.create": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            if(!uniques.add(msg.id))
+                            if (!uniques.add(msg.id))
                                 continue;
 
                             name = msg.conversation.name;
@@ -81,11 +85,13 @@ public class ExportTask extends Task {
                             String text = format(msg.conversation);
 
                             log(name, participants, msg, text);
+
+                            eventsDAO.markExported(event.eventId);
                         }
                         break;
                         case "conversation.member-join": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            if(!uniques.add(msg.id))
+                            if (!uniques.add(msg.id))
                                 continue;
 
                             StringBuilder sb = new StringBuilder();
@@ -98,10 +104,12 @@ public class ExportTask extends Task {
                             }
 
                             log(name, participants, msg, sb.toString());
+
+                            eventsDAO.markExported(event.eventId);
                         }
                         case "conversation.member-leave": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            if(!uniques.add(msg.id))
+                            if (!uniques.add(msg.id))
                                 continue;
 
                             StringBuilder sb = new StringBuilder();
@@ -113,14 +121,18 @@ public class ExportTask extends Task {
                             }
 
                             log(name, participants, msg, sb.toString());
+
+                            eventsDAO.markExported(event.eventId);
                         }
                         break;
                         case "conversation.otr-message-add.new-text": {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
-                            if(!uniques.add(msg.getMessageId()))
+                            if (!uniques.add(msg.getMessageId()))
                                 continue;
 
                             log(name, participants, msg);
+
+                            eventsDAO.markExported(event.eventId);
                         }
                         break;
                     }

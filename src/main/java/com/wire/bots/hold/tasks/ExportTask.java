@@ -1,5 +1,7 @@
 package com.wire.bots.hold.tasks;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -24,18 +26,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ExportTask extends Task {
-    private final Client httpClient;
     private final LifecycleEnvironment lifecycleEnvironment;
-    private final AccessDAO accessDAO;
     private final EventsDAO eventsDAO;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Cache cache;
 
     public ExportTask(Jdbi jdbi, Client httpClient, LifecycleEnvironment lifecycleEnvironment) {
         super("kibana");
-        this.httpClient = httpClient;
         this.lifecycleEnvironment = lifecycleEnvironment;
-        accessDAO = jdbi.onDemand(AccessDAO.class);
+        AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         eventsDAO = jdbi.onDemand(EventsDAO.class);
+
+        LHAccess access = accessDAO.getSingle();
+        API api = new API(httpClient, null, access.token);
+        cache = new Cache(api, null);
     }
 
     @Override
@@ -49,15 +53,11 @@ public class ExportTask extends Task {
     }
 
     void export() {
-        LHAccess access = accessDAO.getSingle();
-        API api = new API(httpClient, null, access.token);
-        Cache cache = new Cache(api, null);
-
         List<Event> events = eventsDAO.listConversations();
         Logger.info("Exporting %d conversations to Kibana", events.size());
 
         for (Event e : events) {
-            Conversation conversation = null;
+            String name = null;
             List<User> participants = new ArrayList<>();
 
             List<Event> messages = eventsDAO.listAllAsc(e.conversationId);
@@ -67,47 +67,50 @@ public class ExportTask extends Task {
                     switch (event.type) {
                         case "conversation.create": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            conversation = msg.conversation;
 
-                            if (conversation != null) {
-                                for (Member m : conversation.members) {
-                                    User user = cache.getUser(m.id);
-                                    participants.add(user);
-                                }
+                            name = msg.conversation.name;
+
+                            for (Member m : msg.conversation.members) {
+                                User user = cache.getUser(m.id);
+                                participants.add(user);
                             }
+
+                            String text = format(msg.conversation);
+
+                            log(name, participants, msg, text);
                         }
                         break;
                         case "conversation.member-join": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("**%s** added these participants: \n", name(msg.from)));
                             for (UUID userId : msg.users) {
                                 User user = cache.getUser(userId);
                                 participants.add(user);
+
+                                sb.append(String.format("- **%s** \n", name(userId)));
                             }
+
+                            log(name, participants, msg, sb.toString());
                         }
                         case "conversation.member-leave": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(String.format("**%s** removed these participants: \n", name(msg.from)));
                             for (UUID userId : msg.users) {
                                 participants.removeIf(x -> x.id.equals(userId));
+
+                                sb.append(String.format("- **%s** \n", name(userId)));
                             }
+
+                            log(name, participants, msg, sb.toString());
                         }
                         break;
                         case "conversation.otr-message-add.new-text": {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
-                            User sender = cache.getUser(msg.getUserId());
-
-                            Kibana kibana = new Kibana();
-                            kibana.type = "text";
-                            kibana.conversationID = msg.getConversationId();
-                            kibana.conversationName = conversation == null ? null : conversation.name;
-                            kibana.participants = participants.stream()
-                                    .map(x -> x.handle != null ? x.handle : x.id.toString())
-                                    .collect(Collectors.toList());
-                            kibana.messageID = msg.getMessageId();
-                            kibana.sender = sender.handle != null ? sender.handle : sender.id.toString();
-                            kibana.text = msg.getText();
-                            kibana.sent = msg.getTime();
-
-                            System.out.println(mapper.writeValueAsString(kibana));
+                            log(name, participants, msg);
                         }
                         break;
                     }
@@ -118,7 +121,59 @@ public class ExportTask extends Task {
         }
     }
 
+    private void log(String conversation, List<User> participants, TextMessage msg) throws JsonProcessingException {
+        Kibana kibana = new Kibana();
+        kibana.id = msg.getMessageId();
+        kibana.type = "text";
+        kibana.conversationID = msg.getConversationId();
+        kibana.conversationName = conversation;
+        kibana.participants = participants.stream()
+                .map(x -> x.handle != null ? x.handle : x.id.toString())
+                .collect(Collectors.toList());
+        kibana.messageID = msg.getMessageId();
+        kibana.sender = name(msg.getUserId());
+        kibana.text = msg.getText();
+        kibana.sent = msg.getTime();
+
+        System.out.println(mapper.writeValueAsString(kibana));
+    }
+
+    private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws JsonProcessingException {
+        Kibana kibana = new Kibana();
+        kibana.id = msg.id;
+        kibana.type = "system";
+        kibana.conversationID = msg.convId;
+        kibana.conversationName = conversation;
+        kibana.participants = participants.stream()
+                .map(x -> x.handle != null ? x.handle : x.id.toString())
+                .collect(Collectors.toList());
+        kibana.messageID = msg.id;
+        kibana.sender = name(msg.from);
+        kibana.text = text;
+        kibana.sent = msg.time;
+
+        System.out.println(mapper.writeValueAsString(kibana));
+    }
+
+    private String format(Conversation conversation) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("**%s** created conversation **%s** with: \n",
+                name(conversation.creator),
+                conversation.name));
+        for (Member member : conversation.members) {
+            sb.append(String.format("- **%s** \n", name(member.id)));
+        }
+        return sb.toString();
+    }
+
+    private String name(UUID userId) {
+        User user = cache.getUser(userId);
+        return user.handle != null ? user.handle : user.id.toString();
+    }
+
     static class Kibana {
+        @JsonProperty("_id")
+        public UUID id;
         public String type;
         public UUID conversationID;
         public String conversationName;

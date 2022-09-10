@@ -55,21 +55,13 @@ public class Cache {
     }
 
     public User getUser(UUID userId) {
-        User user = users.computeIfAbsent(userId, k -> {
+        return users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);
             } catch (HttpException e) {
                 Logger.exception(e, "Cache.getUser: userId: %s, ex: %s", userId, e.getMessage());
-                return null;
+                throw new RuntimeException(e);
             }
         });
-
-        if (user == null) {
-            user = new User();
-            user.id = userId;
-            user.name = userId.toString();
-            user.handle = userId.toString();
-        }
-        return user;
     }
 }

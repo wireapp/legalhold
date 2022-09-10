@@ -44,6 +44,11 @@ public class ExportTask extends Task {
 
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
+        final LHAccess access = accessDAO.getSingle();
+        final API api = new API(httpClient, null, access.token);
+
+        cache = new Cache(api, null);
+
         lifecycleEnvironment.scheduledExecutorService("ExportTask")
                 .threads(1)
                 .build()
@@ -64,11 +69,6 @@ public class ExportTask extends Task {
             Set<UUID> uniques = new HashSet<>();
 
             List<Event> messages = eventsDAO.listAllUnxported(e.conversationId);
-
-            final LHAccess access = accessDAO.getSingle();
-            final API api = new API(httpClient, e.conversationId, access.token);
-
-            cache = new Cache(api, null);
 
             for (Event event : messages) {
                 try {
@@ -152,6 +152,10 @@ public class ExportTask extends Task {
                     }
                 } catch (Exception ex) {
                     Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
+                    final LHAccess access = accessDAO.getSingle();
+                    final API api = new API(httpClient, null, access.token);
+
+                    cache = new Cache(api, null);
                 }
             }
         }

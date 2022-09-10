@@ -75,6 +75,13 @@ public class ExportTask extends Task {
                     switch (event.type) {
                         case "conversation.create": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
+
+                            //TODO: only while testing
+                            if (msg.conversation == null) {
+                                eventsDAO.delete(event.eventId);
+                                continue;
+                            }
+
                             if (!uniques.add(msg.id))
                                 continue;
 

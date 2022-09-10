@@ -53,6 +53,9 @@ public interface EventsDAO {
     @SqlUpdate("UPDATE Events SET exported = 'TRUE' WHERE messageId = :eventId")
     int markExported(@Bind("eventId") UUID eventId);
 
+    @SqlUpdate("DELETE FROM Events WHERE messageId = :eventId")
+    int delete(@Bind("eventId") UUID eventId);
+
     class _EventsResultSetMapper implements ColumnMapper<Event> {
         @Override
         public Event map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {

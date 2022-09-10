@@ -57,6 +57,8 @@ public class ExportTask extends Task {
     }
 
     void export() {
+        int count = 0;
+
         List<Event> events = eventsDAO.getUnexportedConvs();
         Logger.info("Exporting %d conversations to Kibana", events.size());
 
@@ -86,7 +88,8 @@ public class ExportTask extends Task {
 
                             log(name, participants, msg, text);
 
-                            eventsDAO.markExported(event.eventId);
+                            if (eventsDAO.markExported(event.eventId) > 0)
+                                count++;
                         }
                         break;
                         case "conversation.member-join": {
@@ -105,7 +108,8 @@ public class ExportTask extends Task {
 
                             log(name, participants, msg, sb.toString());
 
-                            eventsDAO.markExported(event.eventId);
+                            if (eventsDAO.markExported(event.eventId) > 0)
+                                count++;
                         }
                         case "conversation.member-leave": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
@@ -122,7 +126,8 @@ public class ExportTask extends Task {
 
                             log(name, participants, msg, sb.toString());
 
-                            eventsDAO.markExported(event.eventId);
+                            if (eventsDAO.markExported(event.eventId) > 0)
+                                count++;
                         }
                         break;
                         case "conversation.otr-message-add.new-text": {
@@ -132,15 +137,21 @@ public class ExportTask extends Task {
 
                             log(name, participants, msg);
 
-                            eventsDAO.markExported(event.eventId);
+                            if (eventsDAO.markExported(event.eventId) > 0)
+                                count++;
                         }
                         break;
                     }
                 } catch (Exception ex) {
                     Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
+                    final LHAccess access = accessDAO.getSingle();
+                    final API api = new API(httpClient, null, access.token);
+
+                    cache = new Cache(api, null);
                 }
             }
         }
+        Logger.info("Finished exporting %d messages to Kibana", count);
     }
 
     private void log(String conversation, List<User> participants, TextMessage msg) throws JsonProcessingException {

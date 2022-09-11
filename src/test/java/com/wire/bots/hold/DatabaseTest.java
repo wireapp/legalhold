@@ -15,10 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 //@Ignore("integration test, needs DB")
 public class DatabaseTest {
@@ -59,7 +56,10 @@ public class DatabaseTest {
         textMessage.addMention(UUID.randomUUID().toString(), 0, 5);
         textMessage.setText("Some text");
 
-        final int insert = eventsDAO.insert(eventId, convId, type, mapper.writeValueAsString(textMessage));
+         int insert = eventsDAO.insert(eventId, convId, type, mapper.writeValueAsString(textMessage));
+        assert insert == 1;
+
+        insert = eventsDAO.insert(UUID.randomUUID(), convId, type, mapper.writeValueAsString(textMessage));
         assert insert == 1;
 
         final Event event = eventsDAO.get(eventId);
@@ -67,6 +67,9 @@ public class DatabaseTest {
         TextMessage message = mapper.readValue(event.payload, TextMessage.class);
 
         assert textMessage.getMessageId().equals(message.getMessageId());
+
+        List<Event> events = eventsDAO.listAllUnxported(convId);
+        assert events.size() == 2;
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.wire.bots.hold.tasks;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -12,6 +11,7 @@ import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.backend.models.User;
+import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.models.TextMessage;
 import com.wire.xenon.tools.Logger;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
@@ -45,13 +45,7 @@ public class ExportTask extends Task implements Runnable {
 
     @Override
     public void execute(Map<String, List<String>> parameters, PrintWriter output) {
-        final LHAccess access = accessDAO.getSingle();
-        final API api = new API(httpClient, null, access.token);
-
-        cache = new Cache(api, null);
-
-        lifecycleEnvironment.scheduledExecutorService("ExportTask")
-                .threads(1)
+        lifecycleEnvironment.scheduledExecutorService("Kibana")
                 .build()
                 .schedule(this, 1, TimeUnit.SECONDS);
 
@@ -60,6 +54,11 @@ public class ExportTask extends Task implements Runnable {
 
     public void run() {
         int count = 0;
+
+        final LHAccess access = accessDAO.getSingle();
+        final API api = new API(httpClient, null, access.token);
+
+        cache = new Cache(api, null);
 
         List<Event> events = eventsDAO.getUnexportedConvs();
         Logger.info("Exporting %d conversations to Kibana", events.size());
@@ -76,15 +75,7 @@ public class ExportTask extends Task implements Runnable {
                     switch (event.type) {
                         case "conversation.create": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-
-                            //TODO: only while testing
-                            if (msg.conversation == null) {
-                                eventsDAO.delete(event.eventId);
-                                continue;
-                            }
-
-                            if (!uniques.add(msg.id))
-                                continue;
+                            if (!uniques.add(msg.id)) continue;
 
                             name = msg.conversation.name;
 
@@ -95,16 +86,14 @@ public class ExportTask extends Task implements Runnable {
 
                             String text = format(msg.conversation);
 
-                            log(name, participants, msg, text);
+                            log(event, name, participants, msg, text);
 
-                            if (eventsDAO.markExported(event.eventId) > 0)
-                                count++;
+                            if (eventsDAO.markExported(event.eventId) > 0) count++;
                         }
                         break;
                         case "conversation.member-join": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            if (!uniques.add(msg.id))
-                                continue;
+                            if (!uniques.add(msg.id)) continue;
 
                             StringBuilder sb = new StringBuilder();
                             sb.append(String.format("%s added these participants: ", name(msg.from)));
@@ -115,15 +104,13 @@ public class ExportTask extends Task implements Runnable {
                                 sb.append(String.format("%s,", name(userId)));
                             }
 
-                            log(name, participants, msg, sb.toString());
+                            log(event, name, participants, msg, sb.toString());
 
-                            if (eventsDAO.markExported(event.eventId) > 0)
-                                count++;
+                            if (eventsDAO.markExported(event.eventId) > 0) count++;
                         }
                         case "conversation.member-leave": {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-                            if (!uniques.add(msg.id))
-                                continue;
+                            if (!uniques.add(msg.id)) continue;
 
                             StringBuilder sb = new StringBuilder();
                             sb.append(String.format("%s removed these participants: ", name(msg.from)));
@@ -133,18 +120,33 @@ public class ExportTask extends Task implements Runnable {
                                 sb.append(String.format("%s,", name(userId)));
                             }
 
-                            log(name, participants, msg, sb.toString());
+                            log(event, name, participants, msg, sb.toString());
+
+                            if (eventsDAO.markExported(event.eventId) > 0) count++;
+                        }
+                        break;
+                        case "conversation.otr-message-add.new-text": {
+                            TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
+                            if (!uniques.add(msg.getMessageId())) continue;
+
+                            log(event, name, participants, msg);
 
                             if (eventsDAO.markExported(event.eventId) > 0)
                                 count++;
                         }
                         break;
-                        case "conversation.otr-message-add.new-text": {
-                            TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
-                            if (!uniques.add(msg.getMessageId()))
-                                continue;
+                        case "conversation.otr-message-add.image-preview":
+                        case "conversation.otr-message-add.video-preview":
+                        case "conversation.otr-message-add.file-preview":
+                        case "conversation.otr-message-add.audio-preview": {
+                            eventsDAO.markExported(event.eventId);
+                        }
+                        break;
+                        case "conversation.otr-message-add.asset-data": {
+                            RemoteMessage msg = mapper.readValue(event.payload, RemoteMessage.class);
+                            if (!uniques.add(msg.getMessageId())) continue;
 
-                            log(name, participants, msg);
+                            log(event, name, participants, msg);
 
                             if (eventsDAO.markExported(event.eventId) > 0)
                                 count++;
@@ -153,24 +155,19 @@ public class ExportTask extends Task implements Runnable {
                     }
                 } catch (Exception ex) {
                     Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
-                    final LHAccess access = accessDAO.getSingle();
-                    final API api = new API(httpClient, null, access.token);
-
-                    cache = new Cache(api, null);
                 }
             }
         }
         Logger.info("Finished exporting %d messages to Kibana", count);
     }
 
-    private void log(String conversation, List<User> participants, TextMessage msg) throws Exception {
+    private void log(Event event, String conversation, List<User> participants, TextMessage msg) throws Exception {
         Kibana kibana = new Kibana();
+        kibana.id = event.eventId;
         kibana.type = "text";
         kibana.conversationID = msg.getConversationId();
         kibana.conversationName = conversation;
-        kibana.participants = participants.stream()
-                .map(x -> x.handle != null ? x.handle : x.id.toString())
-                .collect(Collectors.toList());
+        kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());
         kibana.messageID = msg.getMessageId();
         kibana.sender = name(msg.getUserId());
         kibana.text = msg.getText();
@@ -181,14 +178,30 @@ public class ExportTask extends Task implements Runnable {
         System.out.println(mapper.writeValueAsString(log));
     }
 
-    private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws Exception {
+    private void log(Event event, String conversation, List<User> participants, RemoteMessage msg) throws Exception {
         Kibana kibana = new Kibana();
+        kibana.id = event.eventId;
+        kibana.type = "file";
+        kibana.conversationID = msg.getConversationId();
+        kibana.conversationName = conversation;
+        kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());
+        kibana.messageID = msg.getMessageId();
+        kibana.sender = name(msg.getUserId());
+        kibana.text = msg.getAssetId();
+        kibana.sent = date(msg.getTime());
+
+        _Log log = new _Log();
+        log.securehold = kibana;
+        System.out.println(mapper.writeValueAsString(log));
+    }
+
+    private void log(Event event, String conversation, List<User> participants, SystemMessage msg, String text) throws Exception {
+        Kibana kibana = new Kibana();
+        kibana.id = event.eventId;
         kibana.type = "system";
         kibana.conversationID = msg.convId;
         kibana.conversationName = conversation;
-        kibana.participants = participants.stream()
-                .map(x -> x.handle != null ? x.handle : x.id.toString())
-                .collect(Collectors.toList());
+        kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());
         kibana.messageID = msg.id;
         kibana.sender = name(msg.from);
         kibana.text = text;
@@ -201,9 +214,7 @@ public class ExportTask extends Task implements Runnable {
 
     private String format(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s created conversation '%s' with: ",
-                name(conversation.creator),
-                conversation.name));
+        sb.append(String.format("%s created conversation '%s' with: ", name(conversation.creator), conversation.name));
         for (Member member : conversation.members) {
             sb.append(String.format("%s,", name(member.id)));
         }
@@ -222,11 +233,11 @@ public class ExportTask extends Task implements Runnable {
     }
 
     static class Kibana {
+        public UUID id;
         public String type;
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
-        @JsonProperty("sent")
         public long sent;
         public String sender;
         public UUID messageID;

@@ -15,7 +15,7 @@ public class Serialization {
     public void testDateParser() throws ParseException {
         String str = "2022-05-28T04:26:07.325Z";
         long date = ExportTask.date(str);
-        assert date == 1653704767L;
+        assert date == 1653704767000L;
     }
 
     @Test

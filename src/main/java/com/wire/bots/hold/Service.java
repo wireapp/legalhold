@@ -131,17 +131,23 @@ public class Service extends Application<Config> {
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
+        final ExportTask exportTask = new ExportTask(jdbi, httpClient, environment.lifecycle());
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
                 .build()
                 .scheduleWithFixedDelay(notificationProcessor, 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
 
+        environment.lifecycle()
+                .scheduledExecutorService("exporter")
+                .build()
+                .scheduleWithFixedDelay(exportTask, 5, config.sleep.toSeconds(), TimeUnit.SECONDS);
+
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
 
-        environment.admin().addTask(new ExportTask(jdbi, httpClient, environment.lifecycle()));
+        environment.admin().addTask(exportTask);
     }
 
     public Config getConfig() {

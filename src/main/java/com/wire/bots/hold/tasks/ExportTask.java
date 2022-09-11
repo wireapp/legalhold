@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class ExportTask extends Task {
+public class ExportTask extends Task implements Runnable {
     private final Client httpClient;
     private final LifecycleEnvironment lifecycleEnvironment;
     private final EventsDAO eventsDAO;
@@ -53,12 +53,12 @@ public class ExportTask extends Task {
         lifecycleEnvironment.scheduledExecutorService("ExportTask")
                 .threads(1)
                 .build()
-                .schedule(this::export, 1, TimeUnit.SECONDS);
+                .schedule(this, 1, TimeUnit.SECONDS);
 
         output.println("Kibana task has been queued");
     }
 
-    void export() {
+    public void run() {
         int count = 0;
 
         List<Event> events = eventsDAO.getUnexportedConvs();
@@ -218,7 +218,7 @@ public class ExportTask extends Task {
     public static long date(String date) throws ParseException {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date ret = parser.parse(date);
-        return ret.getTime() / 1000;
+        return ret.getTime();
     }
 
     static class Kibana {

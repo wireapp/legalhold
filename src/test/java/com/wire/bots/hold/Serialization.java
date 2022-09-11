@@ -1,13 +1,22 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wire.bots.hold.tasks.ExportTask;
 import com.wire.xenon.models.ImageMessage;
 import com.wire.xenon.models.TextMessage;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 public class Serialization {
+
+    @Test
+    public void testDateParser() throws ParseException {
+        String str = "2022-05-28T04:26:07.325Z";
+        long date = ExportTask.date(str);
+        assert date == 1653704767000L;
+    }
 
     @Test
     public void imageMessage() throws IOException {

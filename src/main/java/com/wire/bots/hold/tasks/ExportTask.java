@@ -1,7 +1,6 @@
 package com.wire.bots.hold.tasks;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -21,6 +20,8 @@ import org.jdbi.v3.core.Jdbi;
 
 import javax.ws.rs.client.Client;
 import java.io.PrintWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -162,7 +163,7 @@ public class ExportTask extends Task {
         Logger.info("Finished exporting %d messages to Kibana", count);
     }
 
-    private void log(String conversation, List<User> participants, TextMessage msg) throws JsonProcessingException {
+    private void log(String conversation, List<User> participants, TextMessage msg) throws Exception {
         Kibana kibana = new Kibana();
         kibana.type = "text";
         kibana.conversationID = msg.getConversationId();
@@ -173,12 +174,12 @@ public class ExportTask extends Task {
         kibana.messageID = msg.getMessageId();
         kibana.sender = name(msg.getUserId());
         kibana.text = msg.getText();
-        kibana.sent = msg.getTime();
+        kibana.sent = date(msg.getTime());
 
         System.out.println(mapper.writeValueAsString(kibana));
     }
 
-    private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws JsonProcessingException {
+    private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws Exception {
         Kibana kibana = new Kibana();
         kibana.type = "system";
         kibana.conversationID = msg.convId;
@@ -189,7 +190,7 @@ public class ExportTask extends Task {
         kibana.messageID = msg.id;
         kibana.sender = name(msg.from);
         kibana.text = text;
-        kibana.sent = msg.time;
+        kibana.sent = date(msg.time);
 
         System.out.println(mapper.writeValueAsString(kibana));
     }
@@ -210,13 +211,19 @@ public class ExportTask extends Task {
         return user.handle != null ? user.handle : user.id.toString();
     }
 
+    public static long date(String date) throws ParseException {
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        Date ret = parser.parse(date);
+        return ret.getTime();
+    }
+
     static class Kibana {
         public String type;
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
-        @JsonProperty("sent_on")
-        public String sent;
+        @JsonProperty("created")
+        public long sent;
         public String sender;
         public UUID messageID;
         public String text;

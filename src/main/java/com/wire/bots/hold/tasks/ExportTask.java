@@ -176,7 +176,9 @@ public class ExportTask extends Task {
         kibana.text = msg.getText();
         kibana.sent = date(msg.getTime());
 
-        System.out.println(mapper.writeValueAsString(kibana));
+        _Log log = new _Log();
+        log.securehold = kibana;
+        System.out.println(mapper.writeValueAsString(log));
     }
 
     private void log(String conversation, List<User> participants, SystemMessage msg, String text) throws Exception {
@@ -192,7 +194,9 @@ public class ExportTask extends Task {
         kibana.text = text;
         kibana.sent = date(msg.time);
 
-        System.out.println(mapper.writeValueAsString(kibana));
+        _Log log = new _Log();
+        log.securehold = kibana;
+        System.out.println(mapper.writeValueAsString(log));
     }
 
     private String format(Conversation conversation) {
@@ -214,7 +218,7 @@ public class ExportTask extends Task {
     public static long date(String date) throws ParseException {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date ret = parser.parse(date);
-        return ret.getTime();
+        return ret.getTime() / 1000;
     }
 
     static class Kibana {
@@ -222,10 +226,14 @@ public class ExportTask extends Task {
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
-        @JsonProperty("created")
+        @JsonProperty("sent")
         public long sent;
         public String sender;
         public UUID messageID;
         public String text;
+    }
+
+    static class _Log {
+        public Kibana securehold;
     }
 }

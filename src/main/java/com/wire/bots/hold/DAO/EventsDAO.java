@@ -50,6 +50,10 @@ public interface EventsDAO {
     @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAllUnxported(@Bind("conversationId") UUID conversationId);
 
+    @SqlQuery("SELECT * FROM Events WHERE exported = 'FALSE' LIMIT 1000")
+    @RegisterColumnMapper(EventsResultSetMapper.class)
+    List<Event> listAllUnxported();
+
     @SqlUpdate("UPDATE Events SET exported = 'TRUE' WHERE messageId = :eventId")
     int markExported(@Bind("eventId") UUID eventId);
 

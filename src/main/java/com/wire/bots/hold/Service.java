@@ -131,7 +131,7 @@ public class Service extends Application<Config> {
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
-        final ExportTask exportTask = new ExportTask(jdbi, httpClient, environment.lifecycle());
+        final KibanaExporter kibanaExporter = new KibanaExporter(jdbi, httpClient, environment.lifecycle());
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
@@ -141,13 +141,13 @@ public class Service extends Application<Config> {
         environment.lifecycle()
                 .scheduledExecutorService("exporter")
                 .build()
-                .scheduleWithFixedDelay(exportTask, 5, config.sleep.toSeconds(), TimeUnit.SECONDS);
+                .scheduleWithFixedDelay(kibanaExporter, 5, config.sleep.toSeconds(), TimeUnit.SECONDS);
 
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
 
-        environment.admin().addTask(exportTask);
+        environment.admin().addTask(new ExportTask(jdbi, httpClient, environment.lifecycle()));
     }
 
     public Config getConfig() {

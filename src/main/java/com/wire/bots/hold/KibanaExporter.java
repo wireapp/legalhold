@@ -112,6 +112,13 @@ public class KibanaExporter implements Runnable {
                 return null;
         }
 
+        //todo Remove
+        if (event.conversationId == null) {
+            Logger.info("Deleting old event: %s", event.eventId);
+            eventsDAO.delete(event.eventId);
+            return null;
+        }
+
         _Conversation conversation = fetchConversation(event.conversationId, userId);
 
         Kibana ret = new Kibana();

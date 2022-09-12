@@ -60,7 +60,8 @@ public class KibanaExporter extends Task implements Runnable {
         for (Event event : eventsDAO.listAllUnxported()) {
             try {
                 Kibana kibana = processEvent(event);
-                if (!uniques.add(kibana.messageID))
+
+                if (kibana == null || !uniques.add(kibana.messageID))
                     continue;
 
                 _Log log = new _Log();
@@ -77,10 +78,11 @@ public class KibanaExporter extends Task implements Runnable {
         Logger.info("Finished exporting %d messages to Kibana", count);
     }
 
+    @Nullable
     private Kibana processEvent(Event event) throws JsonProcessingException, ParseException {
-        UUID userId = null;
-        UUID messageId = null;
-        String time = null;
+        UUID userId;
+        UUID messageId;
+        String time;
         String text = null;
 
         switch (event.type) {
@@ -118,18 +120,10 @@ public class KibanaExporter extends Task implements Runnable {
             case "conversation.otr-message-add.call":
             case "conversation.otr-message-add.delete-text":
             case "conversation.otr-message-add.reaction":
-                break;
-            case "conversation.otr-message-add.new-video":
-            case "conversation.otr-message-add.new-audio":
-            case "conversation.otr-message-add.new-attachment":
-            case "conversation.otr-message-add.new-image": {
-                Logger.warning("Kibana exporter: Deleting old type: %s", event.type);
-                eventsDAO.delete(event.eventId);
-            }
-            break;
+                return null;
             default:
                 Logger.warning("Kibana exporter: Unknown type: %s", event.type);
-                break;
+                return null;
         }
 
         _Conversation conversation = fetchConversation(event.conversationId, userId);
@@ -148,11 +142,8 @@ public class KibanaExporter extends Task implements Runnable {
         return ret;
     }
 
-    private _Conversation fetchConversation(UUID conversationId, @Nullable UUID userId) {
+    private _Conversation fetchConversation(UUID conversationId, UUID userId) {
         _Conversation ret = new _Conversation();
-
-        if (userId == null)
-            return ret;
 
         final LHAccess access = accessDAO.get(userId);
         final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, access.token);
@@ -172,7 +163,7 @@ public class KibanaExporter extends Task implements Runnable {
         return user.handle != null ? user.handle : user.id.toString();
     }
 
-    public static long date(String date) throws ParseException {
+    public static Long date(@Nullable String date) throws ParseException {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date ret = parser.parse(date);
         return ret.getTime();
@@ -184,7 +175,7 @@ public class KibanaExporter extends Task implements Runnable {
         public UUID conversationID;
         public String conversationName;
         public List<String> participants;
-        public long sent;
+        public Long sent;
         public String sender;
         public UUID messageID;
         public String text;

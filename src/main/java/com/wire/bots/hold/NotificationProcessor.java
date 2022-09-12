@@ -152,16 +152,15 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private NotificationList retrieveNotifications(LHAccess LHAccess)
-            throws HttpException {
+    private NotificationList retrieveNotifications(LHAccess access) throws HttpException {
         Response response = api
                 .path("notifications")
-                .queryParam("client", LHAccess.clientId)
-                .queryParam("since", LHAccess.last)
+                .queryParam("client", access.clientId)
+                .queryParam("since", access.last)
                 .queryParam("size", 100)
                 .request(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, bearer(LHAccess.token))
+                .header(HttpHeaders.AUTHORIZATION, bearer(access.token))
                 .get();
 
         int status = response.getStatus();

@@ -47,11 +47,22 @@ public class KibanaExporter implements Runnable {
             try {
                 Kibana kibana = processEvent(event);
 
-                if (kibana == null || !uniques.add(kibana.messageID)) {
-                    Logger.info("KibanaExporter: skipping %s %s", event.type, event.eventId);
+                if (kibana == null) {
+                    Logger.info("KibanaExporter: skipping %s evt: %s", event.type, event.eventId);
                     eventsDAO.markExported(event.eventId);
                     continue;
                 }
+
+                if (!uniques.add(kibana.messageID)) {
+                    Logger.info("KibanaExporter: de-dup. msg: %s", kibana.messageID);
+                    eventsDAO.markExported(event.eventId);
+                    continue;
+                }
+
+                _Conversation conversation = fetchConversation(kibana.conversationID, kibana.from);
+                kibana.conversationName = conversation.name;
+                kibana.participants = conversation.participants;
+                kibana.sender = conversation.user;
 
                 _Log log = new _Log();
                 log.securehold = kibana;
@@ -61,7 +72,7 @@ public class KibanaExporter implements Runnable {
                     count++;
 
             } catch (Exception ex) {
-                Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
+                Logger.exception(ex, "Export exception. cvn: %s, evt: %s", event.conversationId, event.eventId);
             }
         }
         Logger.info("Finished exporting %d messages to Kibana", count);
@@ -115,16 +126,12 @@ public class KibanaExporter implements Runnable {
                 return null;
         }
 
-        _Conversation conversation = fetchConversation(event.conversationId, userId);
-
         Kibana ret = new Kibana();
         ret.id = event.eventId;
         ret.type = event.type;
         ret.messageID = messageId;
         ret.conversationID = event.conversationId;
-        ret.conversationName = conversation.name;
-        ret.participants = conversation.participants;
-        ret.sender = conversation.user;
+        ret.from = userId;
         ret.sent = date(time);
         ret.text = text;
 
@@ -135,10 +142,11 @@ public class KibanaExporter implements Runnable {
         _Conversation ret = new _Conversation();
 
         final LHAccess access = accessDAO.get(userId);
-        if (access == null || access.token == null || !access.enabled)
+        if (access == null || !access.enabled)
             return ret;
 
-        final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, access.token);
+        final String token = access.token != null ? access.token : access.cookie;
+        final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, token);
         Cache cache = new Cache(api, null);
 
         Conversation conversation = api.getConversation();
@@ -171,6 +179,7 @@ public class KibanaExporter implements Runnable {
         public String sender;
         public UUID messageID;
         public String text;
+        public UUID from;
     }
 
     static class _Log {

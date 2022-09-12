@@ -70,6 +70,8 @@ public class DatabaseTest {
 
         List<Event> events = eventsDAO.listAllUnxported(convId);
         assert events.size() == 2;
+
+        List<Event> events1 = eventsDAO.listAllUnxported();
     }
 
     @Test

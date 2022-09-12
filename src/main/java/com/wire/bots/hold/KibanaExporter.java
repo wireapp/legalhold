@@ -19,6 +19,7 @@ import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.servlets.tasks.Task;
 import org.jdbi.v3.core.Jdbi;
 
+import javax.annotation.Nullable;
 import javax.ws.rs.client.Client;
 import java.io.PrintWriter;
 import java.text.ParseException;
@@ -110,6 +111,17 @@ public class KibanaExporter extends Task implements Runnable {
                 text = msg.getAssetId();
             }
             break;
+            case "conversation.otr-message-add.image-preview":
+            case "conversation.otr-message-add.video-preview":
+            case "conversation.otr-message-add.file-preview":
+            case "conversation.otr-message-add.audio-preview":
+            case "conversation.otr-message-add.call":
+            case "conversation.otr-message-add.delete-text":
+            case "conversation.otr-message-add.reaction":
+                break;
+            default:
+                Logger.warning("Kibana exporter: Unknown type: %s", event.type);
+                break;
         }
 
         _Conversation conversation = fetchConversation(event.conversationId, userId);
@@ -128,13 +140,17 @@ public class KibanaExporter extends Task implements Runnable {
         return ret;
     }
 
-    private _Conversation fetchConversation(UUID conversationId, UUID userId) {
+    private _Conversation fetchConversation(UUID conversationId, @Nullable UUID userId) {
+        _Conversation ret = new _Conversation();
+
+        if (userId == null)
+            return ret;
+
         final LHAccess access = accessDAO.get(userId);
         final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, access.token);
         Cache cache = new Cache(api, null);
 
         Conversation conversation = api.getConversation();
-        _Conversation ret = new _Conversation();
         ret.name = conversation.name;
         ret.user = name(cache.getUser(userId));
         for (Member m : conversation.members) {

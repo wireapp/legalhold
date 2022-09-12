@@ -131,7 +131,7 @@ public class Service extends Application<Config> {
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
-        final KibanaExporter kibanaExporter = new KibanaExporter(jdbi, httpClient, environment.lifecycle());
+        final KibanaExporter kibanaExporter = new KibanaExporter(jdbi, httpClient);
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")

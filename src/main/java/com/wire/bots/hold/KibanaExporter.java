@@ -27,29 +27,17 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class KibanaExporter extends Task implements Runnable {
+public class KibanaExporter implements Runnable {
     private final Client httpClient;
-    private final LifecycleEnvironment lifecycleEnvironment;
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public KibanaExporter(Jdbi jdbi, Client httpClient, LifecycleEnvironment lifecycle) {
-        super("kibana");
+    public KibanaExporter(Jdbi jdbi, Client httpClient) {
         this.httpClient = httpClient;
 
-        lifecycleEnvironment = lifecycle;
         eventsDAO = jdbi.onDemand(EventsDAO.class);
         accessDAO = jdbi.onDemand(AccessDAO.class);
-    }
-
-    @Override
-    public void execute(Map<String, List<String>> parameters, PrintWriter output) {
-        lifecycleEnvironment.scheduledExecutorService("Kibana")
-                .build()
-                .schedule(this, 1, TimeUnit.SECONDS);
-
-        output.println("Kibana task has been queued");
     }
 
     public void run() {
@@ -57,7 +45,9 @@ public class KibanaExporter extends Task implements Runnable {
 
         Set<UUID> uniques = new HashSet<>();
 
-        for (Event event : eventsDAO.listAllUnxported()) {
+        List<Event> events = eventsDAO.listAllUnxported();
+        Logger.info("KibanaExporter: exporting %d events", events.size());
+        for (Event event : events) {
             try {
                 Kibana kibana = processEvent(event);
 

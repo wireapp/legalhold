@@ -119,6 +119,14 @@ public class KibanaExporter extends Task implements Runnable {
             case "conversation.otr-message-add.delete-text":
             case "conversation.otr-message-add.reaction":
                 break;
+            case "conversation.otr-message-add.new-video":
+            case "conversation.otr-message-add.new-audio":
+            case "conversation.otr-message-add.new-attachment":
+            case "conversation.otr-message-add.new-image": {
+                Logger.warning("Kibana exporter: Deleting old type: %s", event.type);
+                eventsDAO.delete(event.eventId);
+            }
+            break;
             default:
                 Logger.warning("Kibana exporter: Unknown type: %s", event.type);
                 break;

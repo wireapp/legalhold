@@ -47,8 +47,11 @@ public class KibanaExporter implements Runnable {
             try {
                 Kibana kibana = processEvent(event);
 
-                if (kibana == null || !uniques.add(kibana.messageID))
+                if (kibana == null || !uniques.add(kibana.messageID)) {
+                    Logger.info("KibanaExporter: skipping %s %s", event.type, event.eventId);
+                    eventsDAO.markExported(event.eventId);
                     continue;
+                }
 
                 _Log log = new _Log();
                 log.securehold = kibana;
@@ -59,10 +62,6 @@ public class KibanaExporter implements Runnable {
 
             } catch (Exception ex) {
                 Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
-
-                //todo Remove
-                Logger.info("Deleting old event: %s", event.eventId);
-                eventsDAO.delete(event.eventId);
             }
         }
         Logger.info("Finished exporting %d messages to Kibana", count);

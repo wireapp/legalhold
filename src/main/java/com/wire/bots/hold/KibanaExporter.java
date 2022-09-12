@@ -59,6 +59,10 @@ public class KibanaExporter implements Runnable {
 
             } catch (Exception ex) {
                 Logger.exception(ex, "Export exception %s %s", event.conversationId, event.eventId);
+
+                //todo Remove
+                Logger.info("Deleting old event: %s", event.eventId);
+                eventsDAO.delete(event.eventId);
             }
         }
         Logger.info("Finished exporting %d messages to Kibana", count);
@@ -112,13 +116,6 @@ public class KibanaExporter implements Runnable {
                 return null;
         }
 
-        //todo Remove
-        if (event.conversationId == null) {
-            Logger.info("Deleting old event: %s", event.eventId);
-            eventsDAO.delete(event.eventId);
-            return null;
-        }
-
         _Conversation conversation = fetchConversation(event.conversationId, userId);
 
         Kibana ret = new Kibana();
@@ -139,6 +136,9 @@ public class KibanaExporter implements Runnable {
         _Conversation ret = new _Conversation();
 
         final LHAccess access = accessDAO.get(userId);
+        if (access == null || access.token == null || !access.enabled)
+            return ret;
+
         final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, access.token);
         Cache cache = new Cache(api, null);
 

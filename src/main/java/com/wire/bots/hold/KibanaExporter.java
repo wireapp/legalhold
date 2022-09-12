@@ -15,17 +15,13 @@ import com.wire.xenon.backend.models.User;
 import com.wire.xenon.models.RemoteMessage;
 import com.wire.xenon.models.TextMessage;
 import com.wire.xenon.tools.Logger;
-import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
-import io.dropwizard.servlets.tasks.Task;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.client.Client;
-import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class KibanaExporter implements Runnable {
     private final Client httpClient;

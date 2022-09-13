@@ -142,8 +142,10 @@ public class KibanaExporter implements Runnable {
         _Conversation ret = new _Conversation();
 
         final LHAccess access = accessDAO.get(userId);
-        if (access == null || !access.enabled)
+        if (access == null) {
+            Logger.warning("Missing access for: %s", userId);
             return ret;
+        }
 
         final String token = access.token != null ? access.token : access.cookie;
         final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, token);

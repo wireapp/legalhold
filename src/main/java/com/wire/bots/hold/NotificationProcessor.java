@@ -48,7 +48,7 @@ public class NotificationProcessor implements Runnable {
                 process(device);
             }
         } catch (Exception e) {
-            Logger.exception("NotificationProcessor: %s", e, e.getMessage());
+            Logger.exception(e, "NotificationProcessor: %s", e.getMessage());
         }
     }
 
@@ -60,9 +60,7 @@ public class NotificationProcessor implements Runnable {
     private void process(LHAccess device) {
         UUID userId = device.userId;
         try {
-            Logger.debug("`GET /notifications`: user: %s, last: %s",
-                    userId,
-                    device.last);
+            Logger.debug("`GET /notifications`: user: %s, last: %s", userId, device.last);
 
             String cookieValue = device.cookie;
 
@@ -87,7 +85,7 @@ public class NotificationProcessor implements Runnable {
             accessDAO.disable(userId);
             Logger.warning("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
         } catch (Exception e) {
-            Logger.exception("NotificationProcessor: user: %s, last: %s, error: %s", e, userId, device.last, e.getMessage());
+            Logger.exception(e, "NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e.getMessage());
         }
     }
 
@@ -103,12 +101,7 @@ public class NotificationProcessor implements Runnable {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
                     //return;
                 } else {
-                    Logger.debug("Processed: `%s` conv: %s, user: %s:%s, notifId: %s",
-                            payload.type,
-                            payload.convId,
-                            userId,
-                            clientId,
-                            notif.id);
+                    Logger.debug("Processed: `%s` conv: %s, user: %s:%s, notifId: %s", payload.type, payload.convId, userId, clientId, notif.id);
                 }
             }
 
@@ -119,23 +112,14 @@ public class NotificationProcessor implements Runnable {
     private boolean process(UUID userId, String clientId, Payload payload, UUID id) {
         trace(payload);
 
-        Logger.debug("Payload: %s %s:%s, from: %s",
-                payload.type,
-                userId,
-                clientId,
-                payload.from);
+        Logger.debug("Payload: %s %s:%s, from: %s", payload.type, userId, clientId, payload.from);
 
-        if (payload.from == null || payload.data == null)
-            return true;
+        if (payload.from == null || payload.data == null) return true;
 
         final boolean b = messageResource.onNewMessage(userId, id, payload);
 
         if (!b) {
-            Logger.error("process: `%s` user: %s, from: %s:%s, error: %s",
-                    payload.type,
-                    userId,
-                    payload.from,
-                    payload.data.sender);
+            Logger.error("process: `%s` user: %s, from: %s:%s, error: %s", payload.type, userId, payload.from, payload.data.sender);
         }
 
         return b;
@@ -147,21 +131,13 @@ public class NotificationProcessor implements Runnable {
             try {
                 Logger.debug(objectMapper.writeValueAsString(payload));
             } catch (JsonProcessingException e) {
-                Logger.exception("Exception during JSON parsing - %s.", e, e.getMessage());
+                Logger.exception(e, "Exception during JSON parsing - %s.", e.getMessage());
             }
         }
     }
 
     private NotificationList retrieveNotifications(LHAccess access) throws HttpException {
-        Response response = api
-                .path("notifications")
-                .queryParam("client", access.clientId)
-                .queryParam("since", access.last)
-                .queryParam("size", 100)
-                .request(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, bearer(access.token))
-                .get();
+        Response response = api.path("notifications").queryParam("client", access.clientId).queryParam("since", access.last).queryParam("size", 100).request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, bearer(access.token)).get();
 
         int status = response.getStatus();
 

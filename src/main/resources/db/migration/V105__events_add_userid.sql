@@ -1,0 +1,5 @@
+ALTER TABLE Events
+ADD COLUMN userID UUID;
+
+ALTER TABLE Events
+RENAME COLUMN messageId TO eventId;

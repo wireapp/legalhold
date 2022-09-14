@@ -20,17 +20,22 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
     @Override
     public Event map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
         Event event = new Event();
-        Object conversationId = rs.getObject("conversationId");
-        if (conversationId != null)
-            event.conversationId = (UUID) conversationId;
+        event.eventId = (UUID) rs.getObject("eventId");
+        event.conversationId = getUuid(rs, "conversationId");
+        event.userId = getUuid(rs, "userId");
         event.time = rs.getString("time");
         event.type = rs.getString("type");
         event.payload = getPayload(rs);
-        Object messageId = rs.getObject("messageId");
-        if (messageId != null)
-            event.eventId = (UUID) messageId;
 
         return event;
+    }
+
+    private UUID getUuid(ResultSet rs, String field) throws SQLException {
+        UUID uuid = null;
+        Object obj = rs.getObject(field);
+        if (obj != null)
+            uuid = (UUID) obj;
+        return uuid;
     }
 
     private String getPayload(ResultSet rs) throws SQLException {
@@ -40,7 +45,7 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
             JsonNode node = (JsonNode) treeNode;
             return node.asText();
         } catch (IOException e) {
-            Logger.exception("getPayload", e);
+            Logger.exception(e, "EventsResultSetMapper");
             return null;
         }
     }

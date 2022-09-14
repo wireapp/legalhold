@@ -14,15 +14,16 @@ import java.util.List;
 import java.util.UUID;
 
 public interface EventsDAO {
-    @SqlUpdate("INSERT INTO Events (messageId, conversationId, type, payload, time) " +
-            "VALUES (:eventId, :conversationId, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
-            "ON CONFLICT (messageId) DO NOTHING")
+    @SqlUpdate("INSERT INTO Events (eventId, conversationId, userId, type, payload, time) " +
+            "VALUES (:eventId, :conversationId, :userId, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
+            "ON CONFLICT (eventId) DO NOTHING")
     int insert(@Bind("eventId") UUID eventId,
                @Bind("conversationId") UUID conversationId,
+               @Bind("userId") UUID userId,
                @Bind("type") String type,
                @Bind("payload") String payload);
 
-    @SqlQuery("SELECT messageId,  conversationId, type, payload, time FROM Events WHERE messageId = :eventId")
+    @SqlQuery("SELECT * FROM Events WHERE eventId = :eventId")
     @RegisterColumnMapper(EventsResultSetMapper.class)
     Event get(@Bind("eventId") UUID eventId);
 
@@ -54,10 +55,10 @@ public interface EventsDAO {
     @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAllUnxported();
 
-    @SqlUpdate("UPDATE Events SET exported = 'TRUE' WHERE messageId = :eventId")
+    @SqlUpdate("UPDATE Events SET exported = 'TRUE' WHERE eventId = :eventId")
     int markExported(@Bind("eventId") UUID eventId);
 
-    @SqlUpdate("DELETE FROM Events WHERE messageId = :eventId")
+    @SqlUpdate("DELETE FROM Events WHERE eventId = :eventId")
     int delete(@Bind("eventId") UUID eventId);
 
     class _EventsResultSetMapper implements ColumnMapper<Event> {

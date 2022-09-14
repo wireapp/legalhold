@@ -45,6 +45,16 @@ public class KibanaExporter implements Runnable {
         Logger.info("KibanaExporter: exporting %d events", events.size());
         for (Event event : events) {
             try {
+                final LHAccess access = accessDAO.get(event.userId);
+
+                if (!access.enabled) {
+                    Logger.warning("KibanaExporter: skipping event: %s, userId: %s", event.eventId, event.userId);
+
+                    //todo only for testing
+                    eventsDAO.markExported(event.eventId);
+                    continue;
+                }
+
                 Kibana kibana = processEvent(event);
 
                 if (kibana == null) {
@@ -53,13 +63,15 @@ public class KibanaExporter implements Runnable {
                     continue;
                 }
 
+                assert event.userId.equals(kibana.from);
+
                 if (!uniques.add(kibana.messageID)) {
                     Logger.info("KibanaExporter: de-dup. msg: %s", kibana.messageID);
                     eventsDAO.markExported(event.eventId);
                     continue;
                 }
 
-                _Conversation conversation = fetchConversation(kibana.conversationID, kibana.from);
+                _Conversation conversation = fetchConversation(event, access);
                 kibana.conversationName = conversation.name;
                 kibana.participants = conversation.participants;
                 kibana.sender = conversation.user;
@@ -138,22 +150,16 @@ public class KibanaExporter implements Runnable {
         return ret;
     }
 
-    private _Conversation fetchConversation(UUID conversationId, UUID userId) {
+    private _Conversation fetchConversation(Event event, LHAccess access) {
         _Conversation ret = new _Conversation();
 
-        final LHAccess access = accessDAO.get(userId);
-        if (access == null) {
-            Logger.warning("Missing access for: %s", userId);
-            return ret;
-        }
-
         final String token = access.token != null ? access.token : access.cookie;
-        final LegalHoldAPI api = new LegalHoldAPI(httpClient, conversationId, token);
+        final LegalHoldAPI api = new LegalHoldAPI(httpClient, event.conversationId, token);
         Cache cache = new Cache(api, null);
 
         Conversation conversation = api.getConversation();
         ret.name = conversation.name;
-        ret.user = name(cache.getUser(userId));
+        ret.user = name(cache.getUser(event.userId));
         for (Member m : conversation.members) {
             User user = cache.getUser(m.id);
             ret.participants.add(user.handle != null ? user.handle : user.id.toString());

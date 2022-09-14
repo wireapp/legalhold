@@ -199,7 +199,7 @@ public class MessageHandler extends MessageHandlerBase {
 
         try {
             String payload = mapper.writeValueAsString(msg);
-            int insert = eventsDAO.insert(id, convId, type, payload);
+            int insert = eventsDAO.insert(id, convId, userId, type, payload);
 
             Logger.info("%s: conv: %s, %s -> %s, id: %s, insert: %d",
                     type,

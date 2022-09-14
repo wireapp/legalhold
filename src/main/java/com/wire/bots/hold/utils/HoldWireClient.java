@@ -42,25 +42,10 @@ public class HoldWireClient extends WireClientBase implements WireClient {
         return convId;
     }
 
-    @Override
-    public Conversation getConversation() {
-        return null;
-    }
-
     ////////////////////////////////////////////////////////////
 
     @Override
     public User getSelf() {
-        return null;
-    }
-
-    @Override
-    public Collection<User> getUsers(Collection<UUID> userIds) {
-        return null;
-    }
-
-    @Override
-    public User getUser(UUID userId) {
         return null;
     }
 

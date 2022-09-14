@@ -56,7 +56,7 @@ public class ConfirmResource {
                     ok().
                     build();
         } catch (Exception e) {
-            Logger.exception("ConfirmResource.confirm: %s err: %s", e, payload.userId, e.getMessage());
+            Logger.exception(e, "ConfirmResource.confirm: %s err: %s", payload.userId, e.getMessage());
             return Response
                     .ok(e)
                     .status(500)

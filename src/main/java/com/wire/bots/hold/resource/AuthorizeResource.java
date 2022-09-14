@@ -35,7 +35,7 @@ public class AuthorizeResource {
                         build();
             }
         } catch (Exception e) {
-            Logger.exception("Authorization failed.", e);
+            Logger.exception(e, "Authorization failed.");
             return Response
                     .ok(new ErrorMessage(e.getMessage()))
                     .status(500)

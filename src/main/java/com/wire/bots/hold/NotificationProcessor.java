@@ -83,7 +83,7 @@ public class NotificationProcessor implements Runnable {
 
         } catch (AuthException e) {
             accessDAO.disable(userId);
-            Logger.warning("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
+            Logger.info("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
         } catch (Exception e) {
             Logger.exception(e, "NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e.getMessage());
         }

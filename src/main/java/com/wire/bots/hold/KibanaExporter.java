@@ -45,6 +45,14 @@ public class KibanaExporter implements Runnable {
         Logger.info("KibanaExporter: exporting %d events", events.size());
         for (Event event : events) {
             try {
+
+                //todo remove this
+                if (event.userId == null) {
+                    Logger.warning("KibanaExporter: skipping event: %s, no userId", event.eventId);
+                    eventsDAO.markExported(event.eventId);
+                    continue;
+                }
+
                 final LHAccess access = accessDAO.get(event.userId);
 
                 if (!access.enabled) {

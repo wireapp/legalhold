@@ -1,6 +1,7 @@
 package com.wire.bots.hold.tasks;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wire.bots.hold.Const;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.model.Event;
@@ -25,6 +26,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.wire.bots.hold.Const.*;
 
 public class ExportTask extends Task implements Runnable {
     private final Client httpClient;
@@ -73,7 +76,7 @@ public class ExportTask extends Task implements Runnable {
             for (Event event : messages) {
                 try {
                     switch (event.type) {
-                        case "conversation.create": {
+                        case CONVERSATION_RENAME: {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
                             if (!uniques.add(msg.id)) continue;
 
@@ -91,7 +94,7 @@ public class ExportTask extends Task implements Runnable {
                             if (eventsDAO.markExported(event.eventId) > 0) count++;
                         }
                         break;
-                        case "conversation.member-join": {
+                        case CONVERSATION_MEMBER_JOIN: {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
                             if (!uniques.add(msg.id)) continue;
 
@@ -108,7 +111,7 @@ public class ExportTask extends Task implements Runnable {
 
                             if (eventsDAO.markExported(event.eventId) > 0) count++;
                         }
-                        case "conversation.member-leave": {
+                        case CONVERSATION_MEMBER_LEAVE: {
                             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
                             if (!uniques.add(msg.id)) continue;
 
@@ -125,7 +128,8 @@ public class ExportTask extends Task implements Runnable {
                             if (eventsDAO.markExported(event.eventId) > 0) count++;
                         }
                         break;
-                        case "conversation.otr-message-add.new-text": {
+                        case CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT:
+                        case CONVERSATION_OTR_MESSAGE_ADD_EDIT_TEXT: {
                             TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
                             if (!uniques.add(msg.getMessageId())) continue;
 
@@ -135,14 +139,17 @@ public class ExportTask extends Task implements Runnable {
                                 count++;
                         }
                         break;
-                        case "conversation.otr-message-add.image-preview":
-                        case "conversation.otr-message-add.video-preview":
-                        case "conversation.otr-message-add.file-preview":
-                        case "conversation.otr-message-add.audio-preview": {
+                        case CONVERSATION_OTR_MESSAGE_ADD_CALL:
+                        case CONVERSATION_OTR_MESSAGE_ADD_REACTION:
+                        case CONVERSATION_OTR_MESSAGE_ADD_VIDEO_PREVIEW:
+                        case CONVERSATION_OTR_MESSAGE_ADD_AUDIO_PREVIEW:
+                        case CONVERSATION_OTR_MESSAGE_ADD_FILE_PREVIEW:
+                        case CONVERSATION_OTR_MESSAGE_ADD_IMAGE_PREVIEW:
+                        case CONVERSATION_OTR_MESSAGE_ADD_DELETE_TEXT: {
                             eventsDAO.markExported(event.eventId);
                         }
                         break;
-                        case "conversation.otr-message-add.asset-data": {
+                        case CONVERSATION_OTR_MESSAGE_ADD_ASSET_DATA: {
                             RemoteMessage msg = mapper.readValue(event.payload, RemoteMessage.class);
                             if (!uniques.add(msg.getMessageId())) continue;
 
@@ -164,7 +171,7 @@ public class ExportTask extends Task implements Runnable {
     private void log(Event event, String conversation, List<User> participants, TextMessage msg) throws Exception {
         Kibana kibana = new Kibana();
         kibana.id = event.eventId;
-        kibana.type = "text";
+        kibana.type = event.type;
         kibana.conversationID = msg.getConversationId();
         kibana.conversationName = conversation;
         kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());
@@ -181,7 +188,7 @@ public class ExportTask extends Task implements Runnable {
     private void log(Event event, String conversation, List<User> participants, RemoteMessage msg) throws Exception {
         Kibana kibana = new Kibana();
         kibana.id = event.eventId;
-        kibana.type = "file";
+        kibana.type = event.type;
         kibana.conversationID = msg.getConversationId();
         kibana.conversationName = conversation;
         kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());
@@ -198,7 +205,7 @@ public class ExportTask extends Task implements Runnable {
     private void log(Event event, String conversation, List<User> participants, SystemMessage msg, String text) throws Exception {
         Kibana kibana = new Kibana();
         kibana.id = event.eventId;
-        kibana.type = "system";
+        kibana.type = event.type;
         kibana.conversationID = msg.convId;
         kibana.conversationName = conversation;
         kibana.participants = participants.stream().map(x -> x.handle != null ? x.handle : x.id.toString()).collect(Collectors.toList());

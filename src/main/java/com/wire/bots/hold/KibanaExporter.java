@@ -6,6 +6,7 @@ import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.Log;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.LegalHoldAPI;
 import com.wire.xenon.backend.models.Conversation;
@@ -22,6 +23,8 @@ import javax.ws.rs.client.Client;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.wire.bots.hold.Const.*;
 
 public class KibanaExporter implements Runnable {
     private final Client httpClient;
@@ -42,17 +45,18 @@ public class KibanaExporter implements Runnable {
         Set<UUID> uniques = new HashSet<>();
 
         List<Event> events = eventsDAO.listAllUnxported();
-        Logger.info("KibanaExporter: exporting %d events", events.size());
+        Logger.info("KibanaExporter: Starting export of %d events", events.size());
         for (Event event : events) {
             try {
                 final LHAccess access = accessDAO.get(event.userId);
 
                 if (!access.enabled) {
                     Logger.warning("KibanaExporter: skipping event: %s, userId: %s", event.eventId, event.userId);
+                    eventsDAO.markExported(event.eventId);
                     continue;
                 }
 
-                Kibana kibana = processEvent(event);
+                Log.Kibana kibana = processEvent(event);
 
                 if (kibana == null) {
                     Logger.info("KibanaExporter: skipping %s evt: %s", event.type, event.eventId);
@@ -73,7 +77,7 @@ public class KibanaExporter implements Runnable {
                 kibana.participants = conversation.participants;
                 kibana.sender = conversation.user;
 
-                _Log log = new _Log();
+                Log log = new Log();
                 log.securehold = kibana;
                 System.out.println(mapper.writeValueAsString(log));
 
@@ -81,32 +85,32 @@ public class KibanaExporter implements Runnable {
                     count++;
 
             } catch (Exception ex) {
-                Logger.exception(ex, "Export exception. cvn: %s, evt: %s", event.conversationId, event.eventId);
+                Logger.exception(ex, "Export exception. cnv: %s, evt: %s", event.conversationId, event.eventId);
             }
         }
-        Logger.info("Finished exporting %d messages to Kibana", count);
+        Logger.info("KibanaExporter: Finished exporting %d events", count);
     }
 
     @Nullable
-    private Kibana processEvent(Event event) throws JsonProcessingException, ParseException {
+    private Log.Kibana processEvent(Event event) throws JsonProcessingException, ParseException {
         UUID userId;
         UUID messageId;
         String time;
         String text = null;
 
         switch (event.type) {
-            case "conversation.create":
-            case "conversation.rename":
-            case "conversation.member-leave":
-            case "conversation.member-join": {
+            case Const.CONVERSATION_CREATE:
+            case Const.CONVERSATION_RENAME:
+            case Const.CONVERSATION_MEMBER_LEAVE:
+            case Const.CONVERSATION_MEMBER_JOIN: {
                 SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
                 userId = msg.from;
                 messageId = msg.id;
                 time = msg.time;
             }
             break;
-            case "conversation.otr-message-add.new-text":
-            case "conversation.otr-message-add.edit-text": {
+            case Const.CONVERSATION_OTR_MESSAGE_ADD_EDIT_TEXT:
+            case Const.CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT: {
                 TextMessage msg = mapper.readValue(event.payload, TextMessage.class);
                 userId = msg.getUserId();
                 messageId = msg.getMessageId();
@@ -114,7 +118,7 @@ public class KibanaExporter implements Runnable {
                 text = msg.getText();
             }
             break;
-            case "conversation.otr-message-add.asset-data": {
+            case Const.CONVERSATION_OTR_MESSAGE_ADD_ASSET_DATA: {
                 RemoteMessage msg = mapper.readValue(event.payload, RemoteMessage.class);
                 userId = msg.getUserId();
                 messageId = msg.getMessageId();
@@ -122,20 +126,20 @@ public class KibanaExporter implements Runnable {
                 text = msg.getAssetId();
             }
             break;
-            case "conversation.otr-message-add.image-preview":
-            case "conversation.otr-message-add.video-preview":
-            case "conversation.otr-message-add.file-preview":
-            case "conversation.otr-message-add.audio-preview":
-            case "conversation.otr-message-add.call":
-            case "conversation.otr-message-add.delete-text":
-            case "conversation.otr-message-add.reaction":
+            case CONVERSATION_OTR_MESSAGE_ADD_CALL:
+            case CONVERSATION_OTR_MESSAGE_ADD_REACTION:
+            case CONVERSATION_OTR_MESSAGE_ADD_VIDEO_PREVIEW:
+            case CONVERSATION_OTR_MESSAGE_ADD_AUDIO_PREVIEW:
+            case CONVERSATION_OTR_MESSAGE_ADD_FILE_PREVIEW:
+            case CONVERSATION_OTR_MESSAGE_ADD_IMAGE_PREVIEW:
+            case CONVERSATION_OTR_MESSAGE_ADD_DELETE_TEXT:
                 return null;
             default:
                 Logger.warning("Kibana exporter: Unknown type: %s", event.type);
                 return null;
         }
 
-        Kibana ret = new Kibana();
+        Log.Kibana ret = new Log.Kibana();
         ret.id = event.eventId;
         ret.type = event.type;
         ret.messageID = messageId;
@@ -172,23 +176,6 @@ public class KibanaExporter implements Runnable {
         SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date ret = parser.parse(date);
         return ret.getTime();
-    }
-
-    static class Kibana {
-        public UUID id;
-        public String type;
-        public UUID conversationID;
-        public String conversationName;
-        public List<String> participants;
-        public Long sent;
-        public String sender;
-        public UUID messageID;
-        public String text;
-        public UUID from;
-    }
-
-    static class _Log {
-        public Kibana securehold;
     }
 
     static class _Conversation {

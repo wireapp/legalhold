@@ -30,102 +30,137 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onNewConversation(WireClient client, SystemMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.id;
+        UUID convId = msg.convId;
         UUID userId = client.getId();
         String type = msg.type;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
+    }
+
+    @Override
+    public void onConversationRename(WireClient client, SystemMessage msg) {
+        UUID eventId = msg.id;
+        UUID convId = msg.convId;
+        UUID userId = client.getId();
+        String type = Const.CONVERSATION_RENAME;
+
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
     }
 
     @Override
     public void onMemberJoin(WireClient client, SystemMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.id;
+        UUID convId = msg.convId;
         UUID userId = client.getId();
         String type = msg.type;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
     }
 
     @Override
     public void onMemberLeave(WireClient client, SystemMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.id;
+        UUID convId = msg.convId;
         UUID userId = client.getId();
         String type = msg.type;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
     }
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT;
 
-        UUID eventId = persist(convId, userId, type, msg);
-
-        kibana(eventId, type, msg, client);
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
     }
 
     @Override
     public void onText(WireClient client, EphemeralTextMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
+    }
+
+    @Override
+    public void onEditText(WireClient client, EditedTextMessage msg) {
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
+        UUID userId = client.getId();
+        String type = Const.CONVERSATION_OTR_MESSAGE_ADD_EDIT_TEXT;
+
+        persist(eventId, convId, userId, type, msg);
+        kibana(type, msg, client);
     }
 
     @Override
     public void onPhotoPreview(WireClient client, PhotoPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_IMAGE_PREVIEW;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
 
         assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
     public void onFilePreview(WireClient client, FilePreviewMessage msg) {
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_FILE_PREVIEW;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
 
         assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
     public void onAudioPreview(WireClient client, AudioPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_AUDIO_PREVIEW;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
 
         assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
     public void onVideoPreview(WireClient client, VideoPreviewMessage msg) {
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_VIDEO_PREVIEW;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
 
         assetsDAO.insert(msg.getMessageId(), msg.getMimeType());
     }
 
     @Override
     public void onAssetData(WireClient client, RemoteMessage msg) {
+        UUID eventId = msg.getEventId();
         UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_ASSET_DATA;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
 
         try {
             final byte[] assetData = client.downloadAsset(msg.getAssetId(), msg.getAssetToken(), msg.getSha256(), msg.getOtrKey());
@@ -136,47 +171,32 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     @Override
-    public void onEditText(WireClient client, EditedTextMessage msg) {
-        UUID convId = client.getConversationId();
-        UUID userId = client.getId();
-        String type = Const.CONVERSATION_OTR_MESSAGE_ADD_EDIT_TEXT;
-
-        persist(convId, userId, type, msg);
-    }
-
-    @Override
-    public void onConversationRename(WireClient client, SystemMessage msg) {
-        UUID convId = client.getConversationId();
-        UUID userId = client.getId();
-        String type = Const.CONVERSATION_RENAME;
-
-        persist(convId, userId, type, msg);
-    }
-
-    @Override
     public void onDelete(WireClient client, DeletedTextMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_DELETE_TEXT;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
     }
 
     @Override
     public void onCalling(WireClient client, CallingMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_CALL;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
     }
 
     public void onReaction(WireClient client, ReactionMessage msg) {
-        UUID convId = client.getConversationId();
+        UUID eventId = msg.getEventId();
+        UUID convId = msg.getConversationId();
         UUID userId = client.getId();
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_REACTION;
 
-        persist(convId, userId, type, msg);
+        persist(eventId, convId, userId, type, msg);
     }
 
     @Override
@@ -189,28 +209,23 @@ public class MessageHandler extends MessageHandlerBase {
 
     }
 
-    private UUID persist(UUID convId, UUID userId, String type, Object msg)
-            throws RuntimeException {
-        final UUID id = UUID.randomUUID();
-
+    private void persist(UUID eventId, UUID convId, UUID userId, String type, Object msg) {
         try {
             String payload = mapper.writeValueAsString(msg);
-            eventsDAO.insert(id, convId, userId, type, payload);
+            eventsDAO.insert(eventId, convId, userId, type, payload);
         } catch (Exception e) {
             Logger.exception(e, "%s: conv: %s, user: %s, id: %s, e: %s",
                     type,
                     convId,
                     userId,
-                    id);
-            throw new RuntimeException(e);
+                    eventId);
         }
-        return id;
     }
 
-    void kibana(UUID id, String type, TextMessage msg, WireClient client) {
+    void kibana(String type, TextMessage msg, WireClient client) {
         try {
             Log.Kibana kibana = new Log.Kibana();
-            kibana.id = id;
+            kibana.id = msg.getEventId();
             kibana.type = type;
             kibana.messageID = msg.getMessageId();
             kibana.conversationID = msg.getConversationId();
@@ -231,7 +246,34 @@ public class MessageHandler extends MessageHandlerBase {
             log.securehold = kibana;
             System.out.println(mapper.writeValueAsString(log));
         } catch (Exception e) {
-            Logger.exception(e, "MessageHandler:kibana: evt: %s", id);
+            Logger.exception(e, "MessageHandler:kibana: evt: %s", msg.getEventId());
+        }
+    }
+
+    void kibana(String type, SystemMessage msg, WireClient client) {
+        try {
+            Log.Kibana kibana = new Log.Kibana();
+            kibana.id = msg.id;
+            kibana.type = type;
+            kibana.messageID = msg.id; //todo fix xenon to extract the messageId from payload.data.id
+            kibana.conversationID = msg.convId;
+            kibana.from = msg.from;
+            kibana.sent = date(msg.time);
+
+            kibana.sender = client.getUser(msg.from).handle;
+
+            Conversation conversation = client.getConversation();
+            kibana.conversationName = conversation.name;
+
+            for (Member m : conversation.members) {
+                kibana.participants.add(client.getUser(m.id).handle);
+            }
+
+            Log log = new Log();
+            log.securehold = kibana;
+            System.out.println(mapper.writeValueAsString(log));
+        } catch (Exception e) {
+            Logger.exception(e, "MessageHandler:kibana: evt: %s", msg.id);
         }
     }
 }

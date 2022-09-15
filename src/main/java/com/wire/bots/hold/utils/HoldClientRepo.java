@@ -27,7 +27,7 @@ public class HoldClientRepo {
     public WireClient getClient(UUID userId, String deviceId, UUID convId) throws CryptoException {
         Crypto crypto = cf.create(userId);
         final LHAccess single = jdbi.onDemand(AccessDAO.class).get(userId);
-        final API api = new API(httpClient, convId, single.token);
+        final API api = new LegalHoldAPI(httpClient, convId, single.token);
         return new HoldWireClient(userId, deviceId, convId, crypto, api);
     }
 }

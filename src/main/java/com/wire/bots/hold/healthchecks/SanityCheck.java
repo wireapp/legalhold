@@ -23,6 +23,10 @@ public class SanityCheck extends HealthCheck {
     protected Result check() {
         try {
             LHAccess single = accessDAO.getSingle();
+            if (single == null) {
+                return Result.healthy("No records in the database");
+            }
+
             API api = new API(client, null, single.token);
 
             String created = single.created;
@@ -47,7 +51,7 @@ public class SanityCheck extends HealthCheck {
 
             return Result.healthy();
         } catch (Exception e) {
-            Logger.exception("SanityCheck failed.", e);
+            Logger.exception(e,"SanityCheck failed.");
             return Result.unhealthy(e.getMessage());
         } finally {
             Logger.debug("Finished SanityCheck");

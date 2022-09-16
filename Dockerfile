@@ -35,5 +35,5 @@ ARG release_version=development
 ENV RELEASE_FILE_PATH=/opt/hold/release.txt
 RUN echo $release_version > $RELEASE_FILE_PATH
 
-EXPOSE  8080 8081 8082
+EXPOSE  8080 8081
 ENTRYPOINT ["java", "-jar", "hold.jar", "server", "/opt/hold/hold.yaml"]

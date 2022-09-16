@@ -25,17 +25,26 @@ docker run \
 --name secure-hold --rm quay.io/wire/legalhold:1.0.4
 ``` 
 
-## Endpoints visible to Wire Server
+## Outbound traffic
+GET https://prod-nginz-https.wire.com/notifications
+GET https://prod-nginz-https.wire.com/legalhold/conversations
+GET https://prod-nginz-https.wire.com/users
+
+## Endpoints that need to be accessible from Wire Server
 - POST    /initiate
 - POST    /confirm
 - POST    /remove
 
-## Endpoints visible to Audit
+## Endpoints visible internally (port 8080)
+- GET     /metrics
 - POST    /authorize
 - GET     /index.html 
 - GET     /devices.html 
 - GET     /conv/{conversationId} 
-- GET     /events/{conversationId} 
+- GET     /events/{conversationId}
+- GET     /status (com.wire.bots.hold.monitoring.StatusResource)
+- GET     /swagger (io.federecio.dropwizard.swagger.SwaggerResource)
+- GET     /swagger.{type:json|yaml} (io.swagger.jaxrs.listing.ApiListingResource)
 
 ## Database format (Events table)
   EventId	| Type	| Time	| Payload

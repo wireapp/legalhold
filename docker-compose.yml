@@ -6,11 +6,10 @@ services:
       dockerfile: Dockerfile
       args:
         - release_version=docker-compose
-    image: eu.gcr.io/wire-bot/legal-hold
+    image: https://quay.io/repository/wire/legalhold
     ports:
       - 8080:8080
       - 8081:8081
-      - 8082:8082
     environment:
       # put here the token used for testing
       - SERVICE_TOKEN=some-service-token-from-BE

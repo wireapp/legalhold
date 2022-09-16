@@ -18,7 +18,6 @@
 package com.wire.bots.hold;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.servlets.MetricsServlet;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -51,6 +50,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
 
 import javax.ws.rs.client.Client;
 import java.util.concurrent.TimeUnit;

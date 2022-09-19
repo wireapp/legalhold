@@ -26,9 +26,9 @@ docker run \
 ``` 
 
 ## Outbound traffic
-GET https://prod-nginz-https.wire.com/notifications
-GET https://prod-nginz-https.wire.com/legalhold/conversations
-GET https://prod-nginz-https.wire.com/users
+- GET https://prod-nginz-https.wire.com/notifications
+- GET https://prod-nginz-https.wire.com/legalhold/conversations
+- GET https://prod-nginz-https.wire.com/users
 
 ## Endpoints that need to be accessible from Wire Server
 - POST    /initiate

@@ -25,6 +25,11 @@ docker run \
 --name secure-hold --rm quay.io/wire/legalhold:1.0.4
 ``` 
 
+## Docker Compose
+```
+docker compose up --build app
+```
+
 ## Outbound traffic
 GET https://prod-nginz-https.wire.com/notifications
 GET https://prod-nginz-https.wire.com/legalhold/conversations

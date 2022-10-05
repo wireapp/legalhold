@@ -69,8 +69,7 @@
         <dependency>
             <groupId>com.github.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
-            <!-- this specific commit works, the latest release does not -->
-            <version>1532b0c531</version>
+            <version>72e8441e4a</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

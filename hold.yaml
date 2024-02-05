@@ -44,10 +44,10 @@ jerseyClient:
   retries: 3
   userAgent: legalhold
   tls:
-    protocol: TLSv1.2
+    protocol: TLSv1.3
     provider: SunJSSE
     supportedProtocols:
-      - TLSv1.1
+      - TLSv1.3
       - TLSv1.2
 
 sleep: ${DELAY:-60s}

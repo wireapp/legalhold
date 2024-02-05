@@ -138,11 +138,6 @@ public class Service extends Application<Config> {
                 .build()
                 .scheduleWithFixedDelay(notificationProcessor, 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
 
-//        environment.lifecycle()
-//                .scheduledExecutorService("exporter")
-//                .build()
-//                .scheduleWithFixedDelay(kibanaExporter, 5, config.sleep.toSeconds(), TimeUnit.SECONDS);
-
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");

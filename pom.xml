@@ -6,7 +6,7 @@
 
     <groupId>com.wire.bots</groupId>
     <artifactId>hold</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.7</version>
 
     <name>Legal Hold</name>
     <description>Legal Hold Service For Wire</description>

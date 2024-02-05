@@ -42,7 +42,7 @@ jerseyClient:
   connectionRequestTimeout: 40s
   keepAlive: 0ms
   retries: 3
-  userAgent: legalhold
+  userAgent: legalhold/1.0.7
   tls:
     protocol: TLSv1.3
     provider: SunJSSE

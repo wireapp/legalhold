@@ -3,19 +3,14 @@ package com.wire.bots.hold;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.hold.model.Log;
 import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.WireClient;
-import com.wire.xenon.backend.models.Conversation;
-import com.wire.xenon.backend.models.Member;
 import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.UUID;
-
-import static com.wire.bots.hold.KibanaExporter.date;
 
 public class MessageHandler extends MessageHandlerBase {
     private final EventsDAO eventsDAO;
@@ -36,7 +31,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = msg.type;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -47,7 +41,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = Const.CONVERSATION_RENAME;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -58,7 +51,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = msg.type;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -69,7 +61,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = msg.type;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -80,7 +71,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -91,7 +81,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_NEW_TEXT;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -102,7 +91,6 @@ public class MessageHandler extends MessageHandlerBase {
         String type = Const.CONVERSATION_OTR_MESSAGE_ADD_EDIT_TEXT;
 
         persist(eventId, convId, userId, type, msg);
-        kibana(type, msg, client);
     }
 
     @Override
@@ -219,61 +207,6 @@ public class MessageHandler extends MessageHandlerBase {
                     convId,
                     userId,
                     eventId);
-        }
-    }
-
-    void kibana(String type, TextMessage msg, WireClient client) {
-        try {
-            Log.Kibana kibana = new Log.Kibana();
-            kibana.id = msg.getEventId();
-            kibana.type = type;
-            kibana.messageID = msg.getMessageId();
-            kibana.conversationID = msg.getConversationId();
-            kibana.from = msg.getUserId();
-            kibana.sent = date(msg.getTime());
-            kibana.text = msg.getText();
-
-            kibana.sender = client.getUser(msg.getUserId()).handle;
-
-            Conversation conversation = client.getConversation();
-            kibana.conversationName = conversation.name;
-
-            for (Member m : conversation.members) {
-                kibana.participants.add(client.getUser(m.id).handle);
-            }
-
-            Log log = new Log();
-            log.securehold = kibana;
-            System.out.println(mapper.writeValueAsString(log));
-        } catch (Exception e) {
-            Logger.exception(e, "MessageHandler:kibana: evt: %s", msg.getEventId());
-        }
-    }
-
-    void kibana(String type, SystemMessage msg, WireClient client) {
-        try {
-            Log.Kibana kibana = new Log.Kibana();
-            kibana.id = msg.id;
-            kibana.type = type;
-            kibana.messageID = msg.id; //todo fix xenon to extract the messageId from payload.data.id
-            kibana.conversationID = msg.convId;
-            kibana.from = msg.from;
-            kibana.sent = date(msg.time);
-
-            kibana.sender = client.getUser(msg.from).handle;
-
-            Conversation conversation = client.getConversation();
-            kibana.conversationName = conversation.name;
-
-            for (Member m : conversation.members) {
-                kibana.participants.add(client.getUser(m.id).handle);
-            }
-
-            Log log = new Log();
-            log.securehold = kibana;
-            System.out.println(mapper.writeValueAsString(log));
-        } catch (Exception e) {
-            Logger.exception(e, "MessageHandler:kibana: evt: %s", msg.id);
         }
     }
 }

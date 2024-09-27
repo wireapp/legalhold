@@ -79,7 +79,7 @@ public class NotificationProcessor implements Runnable {
 
             NotificationList notificationList = retrieveNotifications(device);
 
-            process(userId, device.clientId, notificationList);
+            process(userId, notificationList);
 
         } catch (AuthException e) {
             accessDAO.disable(userId);
@@ -93,15 +93,19 @@ public class NotificationProcessor implements Runnable {
         return token == null ? null : String.format("Bearer %s", token);
     }
 
-    private void process(UUID userId, String clientId, NotificationList notificationList) {
+    private void process(UUID userId, NotificationList notificationList) {
 
         for (Notification notif : notificationList.notifications) {
             for (Payload payload : notif.payload) {
-                if (!process(userId, clientId, payload, notif.id)) {
+                if (!process(userId, payload, notif.id)) {
                     Logger.error("Failed to process: user: %s, notif: %s", userId, notif.id);
                     //return;
                 } else {
-                    Logger.debug("Processed: `%s` conv: %s, user: %s:%s, notifId: %s", payload.type, payload.convId, userId, clientId, notif.id);
+                    Logger.debug("Processed: `%s` conv: %s, user: %s, notifId: %s",
+                            payload.type,
+                            payload.convId,
+                            userId,
+                            notif.id);
                 }
             }
 
@@ -109,10 +113,13 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private boolean process(UUID userId, String clientId, Payload payload, UUID id) {
+    private boolean process(UUID userId, Payload payload, UUID id) {
         trace(payload);
 
-        Logger.debug("Payload: %s %s:%s, from: %s", payload.type, userId, clientId, payload.from);
+        Logger.debug("Payload: %s %s, from: %s",
+                payload.type,
+                userId,
+                payload.from);
 
         if (payload.from == null || payload.data == null) return true;
 
@@ -136,6 +143,7 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
+    //TODO remove this and use retrieveNotifications provided by Helium
     private NotificationList retrieveNotifications(LHAccess access) throws HttpException {
         Response response = api.path("notifications").queryParam("client", access.clientId).queryParam("since", access.last).queryParam("size", 100).request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, bearer(access.token)).get();
 

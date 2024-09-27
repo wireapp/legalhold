@@ -43,21 +43,6 @@ public interface EventsDAO {
     @RegisterColumnMapper(_EventsResultSetMapper.class)
     List<Event> listConversations();
 
-    @SqlQuery("SELECT DISTINCT conversationId, time FROM Events WHERE exported = 'FALSE'")
-    @RegisterColumnMapper(_EventsResultSetMapper.class)
-    List<Event> getUnexportedConvs();
-
-    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND exported = 'FALSE' ORDER BY time ASC")
-    @RegisterColumnMapper(EventsResultSetMapper.class)
-    List<Event> listAllUnxported(@Bind("conversationId") UUID conversationId);
-
-    @SqlQuery("SELECT * FROM Events WHERE exported = 'FALSE' LIMIT 1000")
-    @RegisterColumnMapper(EventsResultSetMapper.class)
-    List<Event> listAllUnxported();
-
-    @SqlUpdate("UPDATE Events SET exported = 'TRUE' WHERE eventId = :eventId")
-    int markExported(@Bind("eventId") UUID eventId);
-
     @SqlUpdate("DELETE FROM Events WHERE eventId = :eventId")
     int delete(@Bind("eventId") UUID eventId);
 

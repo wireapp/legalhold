@@ -56,6 +56,6 @@ apiHost: ${WIRE_API_HOST:-https://prod-nginz-https.wire.com}
 
 database:
   driverClass: ${DB_DRIVER:-org.postgresql.Driver}
-  url: ${DB_URL:-jdbc:postgresql://localhost/legalhold}
-  user: ${DB_USER:-}
-  password: ${DB_PASSWORD:-}
+  url: ${DB_URL:-jdbc:postgresql://localhost/hold}
+  user: ${DB_USER:-hold}
+  password: ${DB_PASSWORD:-hold}

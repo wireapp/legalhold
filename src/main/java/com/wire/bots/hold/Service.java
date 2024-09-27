@@ -27,7 +27,6 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
 import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
-import com.wire.bots.hold.tasks.ExportTask;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
 import com.wire.xenon.Const;
@@ -131,7 +130,6 @@ public class Service extends Application<Config> {
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
-       // final KibanaExporter kibanaExporter = new KibanaExporter(jdbi, httpClient);
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
@@ -141,8 +139,6 @@ public class Service extends Application<Config> {
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
-
-        environment.admin().addTask(new ExportTask(jdbi, httpClient, environment.lifecycle()));
     }
 
     public Config getConfig() {

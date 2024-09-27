@@ -70,10 +70,8 @@ public class DatabaseTest {
 
         assert textMessage.getMessageId().equals(message.getMessageId());
 
-        List<Event> events = eventsDAO.listAllUnxported(convId);
+        List<Event> events = eventsDAO.listAll(convId);
         assert events.size() == 2;
-
-        List<Event> events1 = eventsDAO.listAllUnxported();
     }
 
     @Test

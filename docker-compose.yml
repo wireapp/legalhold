@@ -20,9 +20,6 @@ services:
       - DB_PASSWORD=hold
     depends_on:
       - db
-      - elasticsearch
-      - kibana
-      - filebeat
 
   db:
     image: postgres:13
@@ -35,34 +32,6 @@ services:
       - 5432:5432
     volumes:
       - hold-db:/var/lib/postgresql/data/
-
-  elasticsearch:
-    container_name: lh-elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
-    environment:
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-      - "discovery.type=single-node"
-    ports:
-      - 9200:9200
-
-  kibana:
-    container_name: lh-kibana
-    image: docker.elastic.co/kibana/kibana:7.11.0
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    ports:
-      - 5601:5601
-
-  filebeat:
-    image: "docker.elastic.co/beats/filebeat:7.2.0"
-    user: root
-    volumes:
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker:/var/lib/docker:ro
-      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   hold-db:

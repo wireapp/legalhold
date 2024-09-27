@@ -4,14 +4,12 @@ import com.wire.helium.API;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.WireClientBase;
 import com.wire.xenon.assets.IAsset;
-import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.models.AssetKey;
 import com.wire.xenon.models.otr.PreKey;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
 public class HoldWireClient extends WireClientBase implements WireClient {
@@ -20,7 +18,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     private final UUID convId;
     private final String deviceId;
 
-    HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto, API api) {
+    public HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto, API api) {
         super(api, crypto, null);
         this.userId = userId;
         this.convId = convId;

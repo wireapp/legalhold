@@ -103,7 +103,7 @@ public class NotificationProcessor implements Runnable {
                 } else {
                     Logger.debug("Processed: `%s` conv: %s, user: %s, notifId: %s",
                             payload.type,
-                            payload.convId,
+                            payload.conversation,
                             userId,
                             notif.id);
                 }

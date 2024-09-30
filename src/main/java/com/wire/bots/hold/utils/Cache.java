@@ -2,6 +2,7 @@ package com.wire.bots.hold.utils;
 
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.helium.API;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
@@ -12,9 +13,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
+    // TODO(WPB-11287): Add default domain here
     private static final ConcurrentHashMap<UUID, File> assets = new ConcurrentHashMap<>();//<messageId, File>
-    private static final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();//<userId, User>
-    private static final ConcurrentHashMap<UUID, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
+    private static final ConcurrentHashMap<QualifiedId, User> users = new ConcurrentHashMap<>();//<userId, User>
+    private static final ConcurrentHashMap<QualifiedId, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
     private final API api;
     private final AssetsDAO assetsDAO;
 
@@ -54,7 +56,8 @@ public class Cache {
         return file;
     }
 
-    public User getUser(UUID userId) {
+    public User getUser(QualifiedId userId) {
+        // TODO(WPB-11287): Fetch first in map then check API
         return users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);

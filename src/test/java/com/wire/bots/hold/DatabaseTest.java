@@ -8,6 +8,7 @@ import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.models.TextMessage;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
@@ -48,20 +49,20 @@ public class DatabaseTest {
         final String type = "conversation.otr-message-add.new-text";
         final UUID eventId = UUID.randomUUID();
         final UUID messageId = UUID.randomUUID();
-        final UUID convId = UUID.randomUUID();
+        final QualifiedId convId = new QualifiedId(UUID.randomUUID(), null);
         final String clientId = UUID.randomUUID().toString();
-        final UUID userId = UUID.randomUUID();
+        final QualifiedId userId  = new QualifiedId(UUID.randomUUID(), null);
         final String time = new Date().toString();
         final TextMessage textMessage = new TextMessage(eventId, messageId, convId, clientId, userId, time);
-        textMessage.addMention(UUID.randomUUID().toString(), 0, 5);
+        textMessage.addMention(new QualifiedId(UUID.randomUUID(), null), 0, 5);
         textMessage.setText("Some text");
 
         String payload = mapper.writeValueAsString(textMessage);
 
-        int insert = eventsDAO.insert(eventId, convId, userId, type, payload);
+        int insert = eventsDAO.insert(eventId, convId.id, userId.id, type, payload);
         assert insert == 1;
 
-        insert = eventsDAO.insert(UUID.randomUUID(), convId, userId, type, payload);
+        insert = eventsDAO.insert(UUID.randomUUID(), convId.id, userId.id, type, payload);
         assert insert == 1;
 
         final Event event = eventsDAO.get(eventId);
@@ -70,7 +71,7 @@ public class DatabaseTest {
 
         assert textMessage.getMessageId().equals(message.getMessageId());
 
-        List<Event> events = eventsDAO.listAll(convId);
+        List<Event> events = eventsDAO.listAll(convId.id);
         assert events.size() == 2;
     }
 
@@ -86,9 +87,9 @@ public class DatabaseTest {
         assetsDAO.insert(messageId, image);
 
         final AssetsDAO.Asset asset = assetsDAO.get(messageId);
-        final boolean deepEquals = Objects.deepEquals(image, asset.data);
-        final boolean equals = Objects.equals(messageId, asset.messageId);
-        final boolean equals1 = Objects.equals(mimetype, asset.mimeType);
+        assert Objects.deepEquals(image, asset.data);
+        assert Objects.equals(messageId, asset.messageId);
+        assert Objects.equals(mimetype, asset.mimeType);
     }
 
     @Test
@@ -105,11 +106,14 @@ public class DatabaseTest {
         accessDAO.update(userId, token, cookie2);
 
         final LHAccess lhAccess = accessDAO.get(userId);
+        assert lhAccess != null;
+        assert lhAccess.userId.equals(userId);
 
         accessDAO.disable(userId);
 
         final int insert2 = accessDAO.insert(userId, clientId, cookie);
         final LHAccess lhAccess2 = accessDAO.get(userId);
-
+        assert lhAccess2 != null;
+        assert lhAccess2.created.equals(lhAccess.created);
     }
 }

@@ -20,7 +20,7 @@ public class HoldMessageResource extends MessageResourceBase {
     }
 
     protected WireClient getWireClient(UUID userId, Payload payload) throws CryptoException {
-        return repo.getClient(userId, payload.data.recipient, payload.convId);
+        return repo.getClient(userId, payload.data.recipient, payload.conversation);
     }
 
     public boolean onNewMessage(UUID userId, UUID id, Payload payload) {

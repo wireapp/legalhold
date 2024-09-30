@@ -29,7 +29,9 @@ import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
+import com.wire.helium.LoginClient;
 import com.wire.xenon.Const;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
 import com.wire.xenon.factories.CryptoFactory;
@@ -44,12 +46,12 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
 import org.flywaydb.core.Flyway;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.exporter.MetricsServlet;
 
 import javax.ws.rs.client.Client;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 public class Service extends Application<Config> {
     public static Service instance;
     public static MetricRegistry metrics;
+    public static String API_DOMAIN;
     protected Config config;
     protected Environment environment;
     protected Jdbi jdbi;
@@ -128,6 +131,8 @@ public class Service extends Application<Config> {
         environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
+        final LoginClient loginClient = new LoginClient(httpClient);
+
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
 
@@ -139,6 +144,10 @@ public class Service extends Application<Config> {
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
+
+        // todo here
+        // String res = loginClient.getBackendConfiguration();
+        // handle res ^
     }
 
     public Config getConfig() {
@@ -177,6 +186,9 @@ public class Service extends Application<Config> {
     }
 
     public CryptoFactory getCryptoFactory(Jdbi jdbi) {
-        return (botId) -> new CryptoDatabase(botId, new JdbiStorage(jdbi));
+        return (botId) -> new CryptoDatabase(
+                new QualifiedId(botId, null), // TODO(WPB-11287): Change null to default domain
+                new JdbiStorage(jdbi)
+        );
     }
 }

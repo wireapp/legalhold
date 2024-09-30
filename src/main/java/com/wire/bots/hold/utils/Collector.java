@@ -1,5 +1,6 @@
 package com.wire.bots.hold.utils;
 
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.models.OriginMessage;
 import com.wire.xenon.models.TextMessage;
@@ -25,7 +26,7 @@ public class Collector {
         message.text = Helper.markdown2Html(event.getText(), true);
         message.time = toTime(event.getTime());
 
-        UUID senderId = event.getUserId();
+        QualifiedId senderId = event.getUserId();
         String dateTime = event.getTime();
 
         User user = cache.getUser(senderId);
@@ -48,7 +49,7 @@ public class Collector {
                 message.text = Helper.markdown2Html(url, false);
             }
 
-            UUID senderId = event.getUserId();
+            QualifiedId senderId = event.getUserId();
             User user = cache.getUser(senderId);
 
             Sender sender = sender(user, message);
@@ -78,7 +79,7 @@ public class Collector {
     private Sender system(Message message, String type) {
         Sender sender = new Sender();
         sender.system = "system";
-        sender.senderId = UUID.randomUUID();
+        sender.senderId = new QualifiedId(UUID.randomUUID(), null); // TODO(WPB-11287): Change null to default domain
         sender.avatar = systemIcon(type);
         sender.messages.add(message);
         return sender;
@@ -212,7 +213,7 @@ public class Collector {
     }
 
     public static class Sender {
-        UUID senderId;
+        QualifiedId senderId;
         String avatar;
         String name;
         String accent;

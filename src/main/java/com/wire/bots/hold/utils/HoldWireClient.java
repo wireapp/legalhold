@@ -4,6 +4,7 @@ import com.wire.helium.API;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.WireClientBase;
 import com.wire.xenon.assets.IAsset;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.models.AssetKey;
@@ -15,10 +16,10 @@ import java.util.UUID;
 public class HoldWireClient extends WireClientBase implements WireClient {
 
     private final UUID userId;
-    private final UUID convId;
+    private final QualifiedId convId;
     private final String deviceId;
 
-    public HoldWireClient(UUID userId, String deviceId, UUID convId, Crypto crypto, API api) {
+    HoldWireClient(UUID userId, String deviceId, QualifiedId convId, Crypto crypto, API api) {
         super(api, crypto, null);
         this.userId = userId;
         this.convId = convId;
@@ -36,7 +37,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public UUID getConversationId() {
+    public QualifiedId getConversationId() {
         return convId;
     }
 
@@ -48,7 +49,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public void acceptConnection(UUID user) {
+    public void acceptConnection(QualifiedId user) {
 
     }
 
@@ -63,7 +64,7 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     }
 
     @Override
-    public byte[] downloadProfilePicture(String assetKey) {
+    public byte[] downloadProfilePicture(String assetKey, String domain) {
         return new byte[0];
     }
 

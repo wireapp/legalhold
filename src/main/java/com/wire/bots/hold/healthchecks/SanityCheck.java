@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.helium.API;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
@@ -35,7 +36,10 @@ public class SanityCheck extends HealthCheck {
             while (!accessList.isEmpty()) {
                 Logger.info("SanityCheck: checking %d devices, created: %s", accessList.size(), created);
                 for (LHAccess access : accessList) {
-                    boolean hasDevice = api.hasDevice(access.userId, access.clientId);
+                    boolean hasDevice = api.hasDevice(
+                        new QualifiedId(access.userId, null), // TODO(WPB-11287): Change null to default domain
+                        access.clientId
+                    );
 
                     if (!access.enabled && hasDevice)
                         return Result.unhealthy("User %s is NOT tracked in LH", access.userId);

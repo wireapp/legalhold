@@ -67,6 +67,8 @@ public class ConversationResource {
         try {
             List<Event> events = eventsDAO.listAllAsc(conversationId);
 
+            // TODO(WPB-11287) Verify default domain
+
             testAPI();
 
             Cache cache = new Cache(api, assetsDAO);

@@ -33,9 +33,13 @@ public class ConfirmResource {
             @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
     public Response confirm(@ApiParam @Valid @NotNull ConfirmPayload payload) {
         try {
-            int insert = accessDAO.insert(payload.userId,
-                    payload.clientId,
-                    payload.refreshToken);
+            int insert = accessDAO.insert(
+                // TODO(WPB-11287): Add new column in DB for domain
+                // TODO(WPB-11287): + Use default domain for v0
+                payload.userId,
+                payload.clientId,
+                payload.refreshToken
+            );
 
             if (0 == insert) {
                 Logger.error("ConfirmResource: Failed to insert Access %s:%s",

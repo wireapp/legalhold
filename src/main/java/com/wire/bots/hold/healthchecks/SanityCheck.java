@@ -3,8 +3,11 @@ package com.wire.bots.hold.healthchecks;
 import com.codahale.metrics.health.HealthCheck;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.utils.Cache;
 import com.wire.helium.API;
+import com.wire.helium.models.BackendConfiguration;
 import com.wire.xenon.backend.models.QualifiedId;
+import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
@@ -30,14 +33,18 @@ public class SanityCheck extends HealthCheck {
 
             API api = new API(client, null, single.token);
 
+            fetchAndStoreApiVersion(api);
+
             String created = single.created;
             List<LHAccess> accessList = accessDAO.list(100, created);
 
             while (!accessList.isEmpty()) {
                 Logger.info("SanityCheck: checking %d devices, created: %s", accessList.size(), created);
                 for (LHAccess access : accessList) {
+                    // TODO(WPB-11287): Use user domain if exists, otherwise default
+                    // TODO: String domain = (access.domain != null) ? access.domain : Cache.DEFAULT_DOMAIN;
                     boolean hasDevice = api.hasDevice(
-                        new QualifiedId(access.userId, null), // TODO(WPB-11287): Change null to default domain
+                        new QualifiedId(access.userId, Cache.getDefaultDomain()), // TODO(WPB-11287): Change null to default domain
                         access.clientId
                     );
 
@@ -59,6 +66,18 @@ public class SanityCheck extends HealthCheck {
             return Result.unhealthy(e.getMessage());
         } finally {
             Logger.debug("Finished SanityCheck");
+        }
+    }
+
+    private void fetchAndStoreApiVersion(API api) {
+        if (Cache.getDefaultDomain() != null) { return; }
+
+        try {
+            BackendConfiguration apiVersionResponse = api.getBackendConfiguration();
+
+            Cache.setDefaultDomain(apiVersionResponse.domain);
+        } catch (HttpException exception) {
+            Logger.exception(exception, "Service.getApiVersion, exception: %s", exception.getMessage());
         }
     }
 }

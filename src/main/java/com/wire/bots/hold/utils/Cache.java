@@ -13,16 +13,27 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
-    // TODO(WPB-11287): Add default domain here
-    private static final ConcurrentHashMap<UUID, File> assets = new ConcurrentHashMap<>();//<messageId, File>
-    private static final ConcurrentHashMap<QualifiedId, User> users = new ConcurrentHashMap<>();//<userId, User>
-    private static final ConcurrentHashMap<QualifiedId, File> profiles = new ConcurrentHashMap<>();//<userId, Picture>
+    private static String DEFAULT_DOMAIN = null;
+
+    private static final ConcurrentHashMap<UUID, File> assets = new ConcurrentHashMap<>(); // <messageId, File>
+    private static final ConcurrentHashMap<QualifiedId, User> users = new ConcurrentHashMap<>(); // <QualifiedId, User>
+    private static final ConcurrentHashMap<QualifiedId, File> profiles = new ConcurrentHashMap<>(); // <QualifiedId, Picture>
     private final API api;
     private final AssetsDAO assetsDAO;
 
     public Cache(API api, AssetsDAO assetsDAO) {
         this.api = api;
         this.assetsDAO = assetsDAO;
+    }
+
+    public static void setDefaultDomain(String domain) {
+        if (DEFAULT_DOMAIN == null) {
+            DEFAULT_DOMAIN = domain;
+        }
+    }
+
+    public static String getDefaultDomain() {
+        return DEFAULT_DOMAIN;
     }
 
     @Nullable
@@ -57,7 +68,6 @@ public class Cache {
     }
 
     public User getUser(QualifiedId userId) {
-        // TODO(WPB-11287): Fetch first in map then check API
         return users.computeIfAbsent(userId, k -> {
             try {
                 return api.getUser(userId);

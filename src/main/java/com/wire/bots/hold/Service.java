@@ -27,14 +27,18 @@ import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
 import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
+import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
 import com.wire.helium.LoginClient;
+import com.wire.helium.models.BackendConfiguration;
 import com.wire.xenon.Const;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
+import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.factories.CryptoFactory;
+import com.wire.xenon.tools.Logger;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -131,10 +135,9 @@ public class Service extends Application<Config> {
         environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
-        final LoginClient loginClient = new LoginClient(httpClient);
 
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
-        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
+        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource);
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
@@ -144,10 +147,6 @@ public class Service extends Application<Config> {
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
-
-        // todo here
-        // String res = loginClient.getBackendConfiguration();
-        // handle res ^
     }
 
     public Config getConfig() {

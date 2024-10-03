@@ -19,22 +19,30 @@ package com.wire.bots.hold;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
-import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
 import com.wire.bots.hold.monitoring.StatusResource;
-import com.wire.bots.hold.resource.*;
+import com.wire.bots.hold.resource.v0.audit.*;
+import com.wire.bots.hold.resource.v0.backend.ConfirmResourceV0;
+import com.wire.bots.hold.resource.v0.backend.InitiateResourceV0;
+import com.wire.bots.hold.resource.v0.backend.RemoveResourceV0;
+import com.wire.bots.hold.resource.v1.backend.ConfirmResourceV1;
+import com.wire.bots.hold.resource.v1.backend.InitiateResourceV1;
+import com.wire.bots.hold.resource.v1.backend.RemoveResourceV1;
+import com.wire.bots.hold.service.DeviceManagementService;
+import com.wire.bots.hold.utils.CryptoDatabaseFactory;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
 import com.wire.helium.LoginClient;
 import com.wire.xenon.Const;
 import com.wire.xenon.backend.models.QualifiedId;
+import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
-import com.wire.xenon.factories.CryptoFactory;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -54,6 +62,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.ws.rs.client.Client;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class Service extends Application<Config> {
@@ -105,19 +114,24 @@ public class Service extends Application<Config> {
         final Client httpClient = createHttpClient(config, environment);
         jdbi = buildJdbi(config.database, environment);
 
-        final CryptoFactory cf = getCryptoFactory(jdbi);
+        final CryptoDatabaseFactory cf = getCryptoFactory(jdbi);
 
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
+
+        final DeviceManagementService deviceManagementService = new DeviceManagementService(accessDAO, cf);
 
         // Monitoring resources
         addResource(new StatusResource());
         addResource(new RequestMdcFactoryFilter());
 
         // Used by Wire Server
-        addResource(new InitiateResource(cf));
-        addResource(new ConfirmResource(accessDAO));
-        addResource(new RemoveResource(accessDAO, cf));
+        addResource(new InitiateResourceV0(deviceManagementService));
+        addResource(new InitiateResourceV1(deviceManagementService));
+        addResource(new ConfirmResourceV0(deviceManagementService));
+        addResource(new ConfirmResourceV1(deviceManagementService));
+        addResource(new RemoveResourceV0(deviceManagementService));
+        addResource(new RemoveResourceV1(deviceManagementService));
 
         // Used by Audit
         addResource(new AuthorizeResource());
@@ -185,10 +199,25 @@ public class Service extends Application<Config> {
         flyway.migrate();
     }
 
-    public CryptoFactory getCryptoFactory(Jdbi jdbi) {
-        return (botId) -> new CryptoDatabase(
-                new QualifiedId(botId, null), // TODO(WPB-11287): Change null to default domain
-                new JdbiStorage(jdbi)
-        );
+    public CryptoDatabaseFactory getCryptoFactory(Jdbi jdbi) {
+        return new CryptoDatabaseFactory() {
+            @Override
+            public Crypto create(UUID botId) throws CryptoException {
+                // Note: the name botId is incorrect as in LegalHold we are creating crypto box based on users
+                //  but in the Xenon library used by bots and LegalHold, this param was called botId
+                return new CryptoDatabase(
+                    new QualifiedId(botId, null),
+                    new JdbiStorage(jdbi)
+                );
+            }
+
+            @Override
+            public Crypto create(QualifiedId userId) throws CryptoException {
+                return new CryptoDatabase(
+                    userId,
+                    new JdbiStorage(jdbi)
+                );
+            }
+        };
     }
 }

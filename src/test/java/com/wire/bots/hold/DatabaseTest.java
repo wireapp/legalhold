@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
-import com.wire.bots.hold.model.Config;
-import com.wire.bots.hold.model.Event;
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.Event;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.models.TextMessage;
 import io.dropwizard.testing.ConfigOverride;
@@ -18,7 +17,6 @@ import org.junit.Test;
 
 import java.util.*;
 
-//@Ignore("integration test, needs DB")
 public class DatabaseTest {
     private static final DropwizardTestSupport<Config> SUPPORT = new DropwizardTestSupport<>(
             Service.class, "hold.yaml",

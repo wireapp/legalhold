@@ -1,4 +1,4 @@
-package com.wire.bots.hold.model;
+package com.wire.bots.hold.model.database;
 
 import java.util.UUID;
 

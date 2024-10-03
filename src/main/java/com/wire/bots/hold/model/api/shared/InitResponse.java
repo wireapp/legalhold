@@ -1,4 +1,4 @@
-package com.wire.bots.hold.model;
+package com.wire.bots.hold.model.api.shared;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,6 +1,6 @@
 package com.wire.bots.hold.DAO;
 
-import com.wire.bots.hold.model.Event;
+import com.wire.bots.hold.model.database.Event;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.jdbi.v3.sqlobject.config.RegisterColumnMapper;

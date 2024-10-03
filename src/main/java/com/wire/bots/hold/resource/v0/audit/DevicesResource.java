@@ -1,11 +1,11 @@
-package com.wire.bots.hold.resource;
+package com.wire.bots.hold.resource.v0.audit;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.factories.CryptoFactory;
 import com.wire.xenon.tools.Logger;

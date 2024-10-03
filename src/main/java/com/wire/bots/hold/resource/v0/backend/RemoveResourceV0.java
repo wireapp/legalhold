@@ -1,10 +1,9 @@
-package com.wire.bots.hold.resource;
+package com.wire.bots.hold.resource.v0.backend;
 
-import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
-import com.wire.bots.hold.model.InitPayload;
-import com.wire.xenon.crypto.Crypto;
-import com.wire.xenon.factories.CryptoFactory;
+import com.wire.bots.hold.model.api.v0.InitPayloadV0;
+import com.wire.bots.hold.service.DeviceManagementService;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
@@ -18,13 +17,11 @@ import javax.ws.rs.core.Response;
 @Api
 @Path("/remove")
 @Produces(MediaType.APPLICATION_JSON)
-public class RemoveResource {
-    private final CryptoFactory cf;
-    private final AccessDAO accessDAO;
+public class RemoveResourceV0 {
+    private final DeviceManagementService deviceManagementService;
 
-    public RemoveResource(AccessDAO accessDAO, CryptoFactory cf) {
-        this.accessDAO = accessDAO;
-        this.cf = cf;
+    public RemoveResourceV0(DeviceManagementService deviceManagementService) {
+        this.deviceManagementService = deviceManagementService;
     }
 
     @POST
@@ -34,24 +31,18 @@ public class RemoveResource {
             @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
             @ApiResponse(code = 500, message = "Something went wrong"),
             @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
-    public Response remove(@ApiParam @Valid InitPayload payload) {
+    public Response remove(@ApiParam @Valid InitPayloadV0 payload) {
         try {
-            try (Crypto crypto = cf.create(payload.userId)) {
-                crypto.purge();
-            }
-
-            int removeAccess = accessDAO.disable(payload.userId);
-
-            Logger.info("RemoveResource: team: %s, user: %s, removed: %s",
-                    payload.teamId,
-                    payload.userId,
-                    removeAccess);
+            deviceManagementService.removeDevice(
+                new QualifiedId(payload.userId, null), //TODO Probably a good place to put the DEFAULT_DOMAIN
+                payload.teamId
+            );
 
             return Response.
                     ok().
                     build();
         } catch (Exception e) {
-            Logger.exception(e, "RemoveResource.remove: %s", e.getMessage());
+            Logger.exception(e, "RemoveResourceV0 error %s", e.getMessage());
             return Response
                     .ok(e)
                     .status(500)

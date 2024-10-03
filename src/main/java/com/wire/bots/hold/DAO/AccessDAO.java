@@ -1,6 +1,6 @@
 package com.wire.bots.hold.DAO;
 
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.LHAccess;
 import org.jdbi.v3.sqlobject.config.RegisterColumnMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;

@@ -55,6 +55,8 @@ import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.ws.rs.client.Client;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class Service extends Application<Config> {
@@ -92,7 +94,7 @@ public class Service extends Application<Config> {
     }
 
     @Override
-    public void run(Config config, Environment environment) {
+    public void run(Config config, Environment environment) throws ExecutionException, InterruptedException {
         this.config = config;
         this.environment = environment;
         Service.metrics = environment.metrics();
@@ -129,16 +131,36 @@ public class Service extends Application<Config> {
 
         addResource(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);
 
-        environment
-            .lifecycle()
-            .executorService("fallback_domain_fetcher")
-            .build()
-            .execute(
+//        environment
+//            .lifecycle()
+//            .executorService("fallback_domain_fetcher")
+//            .build()
+//            .submit(
+//                new FallbackDomainFetcher(
+//                    new LoginClient(httpClient),
+//                    metadataDAO
+//                )
+//            );
+
+        Runnable run = new Runnable() {
+            @Override
+            public void run(){
                 new FallbackDomainFetcher(
                     new LoginClient(httpClient),
                     metadataDAO
-                )
+                ).run();
+            }
+        };
+
+        final Future<?> fallbackDomainFetcher = environment
+            .lifecycle()
+            .executorService("fallback_domain_fetcher")
+            .build()
+            .submit(
+                run
             );
+
+        fallbackDomainFetcher.get();
 
         environment.healthChecks().register(
             "SanityCheck",

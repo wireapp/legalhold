@@ -21,24 +21,21 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
 import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
-import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
 import com.wire.helium.LoginClient;
-import com.wire.helium.models.BackendConfiguration;
 import com.wire.xenon.Const;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
-import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.factories.CryptoFactory;
-import com.wire.xenon.tools.Logger;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.client.JerseyClientBuilder;
@@ -63,7 +60,6 @@ import java.util.concurrent.TimeUnit;
 public class Service extends Application<Config> {
     public static Service instance;
     public static MetricRegistry metrics;
-    public static String API_DOMAIN;
     protected Config config;
     protected Environment environment;
     protected Jdbi jdbi;
@@ -113,6 +109,7 @@ public class Service extends Application<Config> {
 
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
+        final MetadataDAO metadataDAO = jdbi.onDemand(MetadataDAO.class);
 
         // Monitoring resources
         addResource(new StatusResource());
@@ -132,7 +129,21 @@ public class Service extends Application<Config> {
 
         addResource(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);
 
-        environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
+        environment
+            .lifecycle()
+            .executorService("fallback_domain_fetcher")
+            .build()
+            .execute(
+                new FallbackDomainFetcher(
+                    new LoginClient(httpClient),
+                    metadataDAO
+                )
+            );
+
+        environment.healthChecks().register(
+            "SanityCheck",
+            new SanityCheck(accessDAO, httpClient)
+        );
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
 

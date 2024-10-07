@@ -33,22 +33,4 @@ public class TestCache extends Cache {
 
         return dummyUser;
     }
-
-    @Test
-    public void verifyDefaultDomainIsSetCorrectly() {
-        String firstDomain = Cache.getDefaultDomain();
-        assert firstDomain == null;
-
-        Cache.setDefaultDomain("dummy_domain");
-        String secondDomain = Cache.getDefaultDomain();
-
-        assert secondDomain != null;
-        assert secondDomain.equals("dummy_domain");
-
-        Cache.setDefaultDomain("dummy_domain_3");
-        String thirdDomain = Cache.getDefaultDomain();
-
-        assert thirdDomain != null;
-        assert thirdDomain.equals("dummy_domain");
-    }
 }

@@ -56,7 +56,6 @@ public class NotificationProcessor implements Runnable {
         UUID userId = device.userId;
 
         try {
-            // todo get exception
             final API api = new API(client, null, device.token);
 
             Logger.debug("`GET /notifications`: user: %s, last: %s", userId, device.last);
@@ -86,6 +85,8 @@ public class NotificationProcessor implements Runnable {
         } catch (AuthException e) {
             accessDAO.disable(userId);
             Logger.info("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
+        } catch (HttpException e) {
+            Logger.exception(e, "NotificationProcessor: Couldn't retrieve notifications, error: %s", e.getMessage());
         } catch (Exception e) {
             Logger.exception(e, "NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e.getMessage());
         }

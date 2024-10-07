@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
-    private static String DEFAULT_DOMAIN = null;
+    private static String FALLBACK_DOMAIN = null;
 
     private static final ConcurrentHashMap<UUID, File> assets = new ConcurrentHashMap<>(); // <messageId, File>
     private static final ConcurrentHashMap<QualifiedId, User> users = new ConcurrentHashMap<>(); // <QualifiedId, User>
@@ -26,14 +26,12 @@ public class Cache {
         this.assetsDAO = assetsDAO;
     }
 
-    public static void setDefaultDomain(String domain) {
-        if (DEFAULT_DOMAIN == null) {
-            DEFAULT_DOMAIN = domain;
-        }
+    public static void setFallbackDomain(String domain) {
+            FALLBACK_DOMAIN = domain;
     }
 
-    public static String getDefaultDomain() {
-        return DEFAULT_DOMAIN;
+    public static String getFallbackDomain() {
+        return FALLBACK_DOMAIN;
     }
 
     @Nullable

@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.model.Config;
 import com.wire.bots.hold.model.Event;
 import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.Metadata;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.models.TextMessage;
 import io.dropwizard.testing.ConfigOverride;
@@ -28,6 +30,7 @@ public class DatabaseTest {
     private static AssetsDAO assetsDAO;
     private static EventsDAO eventsDAO;
     private static AccessDAO accessDAO;
+    private static MetadataDAO metadataDAO;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -37,6 +40,7 @@ public class DatabaseTest {
         eventsDAO = app.getJdbi().onDemand(EventsDAO.class);
         assetsDAO = app.getJdbi().onDemand(AssetsDAO.class);
         accessDAO = app.getJdbi().onDemand(AccessDAO.class);
+        metadataDAO = app.getJdbi().onDemand(MetadataDAO.class);
     }
 
     @AfterClass
@@ -115,5 +119,19 @@ public class DatabaseTest {
         final LHAccess lhAccess2 = accessDAO.get(userId);
         assert lhAccess2 != null;
         assert lhAccess2.created.equals(lhAccess.created);
+    }
+
+    @Test
+    public void metadataTests() {
+        String dummyKey = MetadataDAO.FALLBACK_DOMAIN_KEY + UUID.randomUUID();
+
+        Metadata nullMetadata = metadataDAO.get(dummyKey);
+        assert nullMetadata == null;
+
+        int insert = metadataDAO.insert(dummyKey, "dummy_domain");
+        Metadata metadata =  metadataDAO.get(dummyKey);
+
+        assert metadata != null;
+        assert metadata.value.equals("dummy_domain");
     }
 }

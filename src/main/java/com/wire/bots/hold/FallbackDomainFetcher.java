@@ -19,6 +19,12 @@ public class FallbackDomainFetcher implements Runnable {
      *     Fetches from API and compares against database value (if any), then inserts into database and updates cache value.
      *     If value received from the API is different from what is saved in the database, a [RuntimeException] is thrown.
      * </p>
+     * <p>
+     *     This fallback domain is necessary for LegalHold to work with Federation (as it needs id@domain) and not just the ID anymore.
+     *     In case there is a mismatch we are throwing a RuntimeException so it stops the execution of this app, so in an event
+     *     of already having a defined default domain saved in the database and this app restarts with a different domain
+     *     we don't get mismatching domains.
+     * </p>
      * @param loginClient [{@link LoginClient}] as API to get backend configuration containing default domain.
      * @param metadataDAO [{@link MetadataDAO}] as DAO to get/insert default domain to database.
      *
@@ -41,9 +47,12 @@ public class FallbackDomainFetcher implements Runnable {
                 metadataDAO.insert(MetadataDAO.FALLBACK_DOMAIN_KEY, apiVersionResponse.domain);
                 Cache.setFallbackDomain(apiVersionResponse.domain);
             } else {
+                System.out.println("EEEEEEEE -> " + apiVersionResponse.domain);
                 if (metadata.value.equals(apiVersionResponse.domain)) {
+                    System.out.println("EEEEEEEE -> p1");
                     Cache.setFallbackDomain(apiVersionResponse.domain);
                 } else {
+                    System.out.println("EEEEEEEE -> p2");
                     String formattedExceptionMessage = String.format(
                         "Database already has a default domain as %s and instead we got %s from the Backend API.",
                         metadata.value,

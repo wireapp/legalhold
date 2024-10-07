@@ -1,4 +1,4 @@
 CREATE TABLE Metadata (
-    key VARCHAR NOT NULL UNIQUE,
-    value VARCHAR NOT NULL
+    key VARCHAR(255) PRIMARY KEY,
+    value VARCHAR(255) NOT NULL
 );

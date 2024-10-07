@@ -18,6 +18,7 @@ import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.helium.API;
 import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.Member;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.SystemMessage;
 import com.wire.xenon.models.*;
 import com.wire.xenon.tools.Logger;
@@ -65,6 +66,8 @@ public class ConversationResource {
                          @ApiParam @QueryParam("html") boolean isHtml) {
         try {
             List<Event> events = eventsDAO.listAllAsc(conversationId);
+
+            // TODO(WPB-11287) Verify default domain
 
             testAPI();
 
@@ -229,7 +232,7 @@ public class ConversationResource {
     private void onMember(Collector collector, Event event, String label) {
         try {
             SystemMessage msg = mapper.readValue(event.payload, SystemMessage.class);
-            for (UUID userId : msg.users) {
+            for (QualifiedId userId : msg.users) {
                 String format = String.format("**%s** %s **%s**",
                         getUserName(msg.from),
                         label,
@@ -297,8 +300,9 @@ public class ConversationResource {
 
     private String formatConversation(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
+        QualifiedId creatorId = new QualifiedId(conversation.creator, null); // TODO(WPB-11287): Change null to default domain
         sb.append(String.format("**%s** created conversation **%s** with: \n",
-                getUserName(conversation.creator),
+                getUserName(creatorId),
                 conversation.name));
         for (Member member : conversation.members) {
             sb.append(String.format("- **%s** \n", getUserName(member.id)));
@@ -316,7 +320,7 @@ public class ConversationResource {
     }
 
     @Nullable
-    private String getUserName(UUID userId) {
+    private String getUserName(QualifiedId userId) {
         Cache cache = new Cache(api, assetsDAO);
         return cache.getUser(userId).name;
     }

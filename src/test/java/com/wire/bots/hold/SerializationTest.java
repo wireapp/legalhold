@@ -1,13 +1,13 @@
 package com.wire.bots.hold;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wire.xenon.models.ImageMessage;
+import com.wire.xenon.models.PhotoPreviewMessage;
 import com.wire.xenon.models.TextMessage;
 import org.junit.Test;
 
 import java.io.IOException;
 
-public class Serialization {
+public class SerializationTest {
     @Test
     public void imageMessage() throws IOException {
         String payload = "{" +
@@ -28,7 +28,7 @@ public class Serialization {
                 "\"tag\":null" +
                 "}";
         ObjectMapper mapper = new ObjectMapper();
-        ImageMessage message = mapper.readValue(payload, ImageMessage.class);
+        PhotoPreviewMessage message = mapper.readValue(payload, PhotoPreviewMessage.class);
     }
 
     @Test

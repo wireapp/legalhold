@@ -2,6 +2,7 @@ package com.wire.bots.hold.utils;
 
 import com.wire.helium.API;
 import com.wire.xenon.backend.models.Asset;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.exceptions.HttpException;
 import org.commonmark.Extension;
@@ -28,7 +29,7 @@ class Helper {
 
         for (Asset asset : user.assets) {
             if (asset.size.equals("preview")) {
-                byte[] profile = api.downloadAsset(asset.key, null);
+                byte[] profile = api.downloadAsset(asset.key, user.id.domain, null);
                 save(profile, file);
                 break;
             }
@@ -54,8 +55,8 @@ class Helper {
         return split.length == 1 ? split[0] : split[1];
     }
 
-    static String avatarFile(UUID senderId) {
-        return String.format("avatars/%s.png", senderId);
+    static String avatarFile(QualifiedId senderId) {
+        return String.format("avatars/%s.png", senderId.id);
     }
 
     static String markdown2Html(String text, Boolean escape) {

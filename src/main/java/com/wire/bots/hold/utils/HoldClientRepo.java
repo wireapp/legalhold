@@ -5,6 +5,7 @@ import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.LHAccess;
 import com.wire.helium.API;
 import com.wire.xenon.WireClient;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.factories.CryptoFactory;
 import org.jdbi.v3.core.Jdbi;
@@ -24,10 +25,10 @@ public class HoldClientRepo {
         this.httpClient = httpClient;
     }
 
-    public WireClient getClient(UUID userId, String deviceId, UUID convId) throws CryptoException {
+    public WireClient getClient(UUID userId, String deviceId, QualifiedId conversationId) throws CryptoException {
         Crypto crypto = cf.create(userId);
         final LHAccess single = jdbi.onDemand(AccessDAO.class).get(userId);
-        final API api = new API(httpClient, convId, single.token);
-        return new HoldWireClient(userId, deviceId, convId, crypto, api);
+        final API api = new API(httpClient, conversationId, single.token);
+        return new HoldWireClient(userId, deviceId, conversationId, crypto, api);
     }
 }

@@ -21,6 +21,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.model.Config;
@@ -29,7 +30,9 @@ import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.*;
 import com.wire.bots.hold.utils.HoldClientRepo;
 import com.wire.bots.hold.utils.ImagesBundle;
+import com.wire.helium.LoginClient;
 import com.wire.xenon.Const;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.CryptoDatabase;
 import com.wire.xenon.crypto.storage.JdbiStorage;
 import com.wire.xenon.factories.CryptoFactory;
@@ -44,14 +47,16 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
 import org.flywaydb.core.Flyway;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.exporter.MetricsServlet;
 
 import javax.ws.rs.client.Client;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class Service extends Application<Config> {
@@ -89,7 +94,7 @@ public class Service extends Application<Config> {
     }
 
     @Override
-    public void run(Config config, Environment environment) {
+    public void run(Config config, Environment environment) throws ExecutionException, InterruptedException {
         this.config = config;
         this.environment = environment;
         Service.metrics = environment.metrics();
@@ -106,6 +111,7 @@ public class Service extends Application<Config> {
 
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
+        final MetadataDAO metadataDAO = jdbi.onDemand(MetadataDAO.class);
 
         // Monitoring resources
         addResource(new StatusResource());
@@ -125,11 +131,35 @@ public class Service extends Application<Config> {
 
         addResource(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);
 
-        environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
+        Runnable run = new Runnable() {
+            @Override
+            public void run(){
+                new FallbackDomainFetcher(
+                    new LoginClient(httpClient),
+                    metadataDAO
+                ).run();
+            }
+        };
+
+        final Future<?> fallbackDomainFetcher = environment
+            .lifecycle()
+            .executorService("fallback_domain_fetcher")
+            .build()
+            .submit(
+                run
+            );
+
+        fallbackDomainFetcher.get();
+
+        environment.healthChecks().register(
+            "SanityCheck",
+            new SanityCheck(accessDAO, httpClient)
+        );
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
+
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
-        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
+        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource);
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
@@ -177,6 +207,9 @@ public class Service extends Application<Config> {
     }
 
     public CryptoFactory getCryptoFactory(Jdbi jdbi) {
-        return (botId) -> new CryptoDatabase(botId, new JdbiStorage(jdbi));
+        return (botId) -> new CryptoDatabase(
+                new QualifiedId(botId, null), // TODO(WPB-11287): Change null to default domain
+                new JdbiStorage(jdbi)
+        );
     }
 }

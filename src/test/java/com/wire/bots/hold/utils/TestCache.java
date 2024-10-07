@@ -1,11 +1,11 @@
 package com.wire.bots.hold.utils;
 
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.UUID;
-
-import static com.wire.bots.hold.Consts.dejan;
 
 public class TestCache extends Cache {
     public TestCache() {
@@ -24,11 +24,13 @@ public class TestCache extends Cache {
     }
 
     @Override
-    public User getUser(UUID userId) {
-        User user = new User();
-        user.id = userId;
-        user.name = userId.equals(dejan) ? "Dejan" : "Lipis";
-        user.accent = userId.equals(dejan) ? 3 : 5;
-        return user;
+    public User getUser(QualifiedId userId) {
+        User dummyUser = new User();
+
+        dummyUser.id = userId;
+        dummyUser.name = userId.toString();
+        dummyUser.accent = 3;
+
+        return dummyUser;
     }
 }

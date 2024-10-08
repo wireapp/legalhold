@@ -2,7 +2,6 @@ package com.wire.bots.hold.utils;
 
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
-import org.junit.Test;
 
 import java.io.File;
 import java.util.UUID;

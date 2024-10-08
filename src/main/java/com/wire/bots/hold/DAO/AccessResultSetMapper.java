@@ -1,6 +1,6 @@
 package com.wire.bots.hold.DAO;
 
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.LHAccess;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

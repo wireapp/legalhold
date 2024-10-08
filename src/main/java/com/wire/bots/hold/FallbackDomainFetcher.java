@@ -8,6 +8,8 @@ import com.wire.helium.models.BackendConfiguration;
 import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
 
+import javax.ws.rs.ProcessingException;
+
 public class FallbackDomainFetcher implements Runnable {
 
     private final LoginClient loginClient;
@@ -47,12 +49,9 @@ public class FallbackDomainFetcher implements Runnable {
                 metadataDAO.insert(MetadataDAO.FALLBACK_DOMAIN_KEY, apiVersionResponse.domain);
                 Cache.setFallbackDomain(apiVersionResponse.domain);
             } else {
-                System.out.println("EEEEEEEE -> " + apiVersionResponse.domain);
                 if (metadata.value.equals(apiVersionResponse.domain)) {
-                    System.out.println("EEEEEEEE -> p1");
                     Cache.setFallbackDomain(apiVersionResponse.domain);
                 } else {
-                    System.out.println("EEEEEEEE -> p2");
                     String formattedExceptionMessage = String.format(
                         "Database already has a default domain as %s and instead we got %s from the Backend API.",
                         metadata.value,
@@ -63,6 +62,8 @@ public class FallbackDomainFetcher implements Runnable {
             }
         } catch (HttpException exception) {
             Logger.exception(exception, "FallbackDomainFetcher.run, exception: %s", exception.getMessage());
+        } catch (ProcessingException pexception) {
+            Logger.info("FallbackDomainFetcher.run, ignoring test exceptions");
         }
     }
 }

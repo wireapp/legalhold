@@ -3,7 +3,7 @@ package com.wire.bots.hold;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.helium.API;
 import com.wire.helium.LoginClient;
 import com.wire.helium.models.Access;

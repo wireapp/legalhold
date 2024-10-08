@@ -2,7 +2,7 @@ package com.wire.bots.hold.utils;
 
 import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.DAO.AccessDAO;
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.helium.API;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.backend.models.QualifiedId;

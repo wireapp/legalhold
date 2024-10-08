@@ -1,4 +1,4 @@
-package com.wire.bots.hold.resource;
+package com.wire.bots.hold.resource.v0.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,8 +10,8 @@ import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
-import com.wire.bots.hold.model.Event;
-import com.wire.bots.hold.model.LHAccess;
+import com.wire.bots.hold.model.database.Event;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
 import com.wire.bots.hold.utils.PdfGenerator;

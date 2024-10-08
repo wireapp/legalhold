@@ -1,4 +1,4 @@
-package com.wire.bots.hold.resource;
+package com.wire.bots.hold.resource.v0.audit;
 
 import com.wire.bots.hold.Service;
 import com.wire.xenon.backend.models.ErrorMessage;

@@ -18,6 +18,7 @@
 
 package com.wire.bots.hold.monitoring;
 
+import com.wire.bots.hold.model.api.shared.ApiVersionResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -26,16 +27,19 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Api
-@Path("/status")
-@Produces(MediaType.TEXT_PLAIN)
-public class StatusResource {
+@Path("/api-version")
+@Produces(MediaType.APPLICATION_JSON)
+public class ApiVersionResource {
     @GET
-    @ApiOperation(value = "Status")
-    public Response statusEmpty() {
+    @ApiOperation(value = "Api version")
+    public Response apiVersion() {
+        ApiVersionResponse response = new ApiVersionResponse(List.of(0,1));
+
         return Response
-            .ok()
+            .ok(response)
             .build();
     }
 }

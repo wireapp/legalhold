@@ -35,7 +35,7 @@ public class StatusResource {
     @ApiOperation(value = "Status")
     public Response statusEmpty() {
         return Response
-                .ok()
-                .build();
+            .ok()
+            .build();
     }
 }

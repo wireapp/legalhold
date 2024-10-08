@@ -22,6 +22,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
+import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
@@ -63,12 +64,13 @@ import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.ws.rs.client.Client;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class Service extends Application<Config> {
     public static Service instance;
     public static MetricRegistry metrics;
-    public static String API_DOMAIN;
     protected Config config;
     protected Environment environment;
     protected Jdbi jdbi;
@@ -101,7 +103,7 @@ public class Service extends Application<Config> {
     }
 
     @Override
-    public void run(Config config, Environment environment) {
+    public void run(Config config, Environment environment) throws ExecutionException, InterruptedException {
         this.config = config;
         this.environment = environment;
         Service.metrics = environment.metrics();
@@ -118,6 +120,7 @@ public class Service extends Application<Config> {
 
         final AccessDAO accessDAO = jdbi.onDemand(AccessDAO.class);
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
+        final MetadataDAO metadataDAO = jdbi.onDemand(MetadataDAO.class);
 
         final DeviceManagementService deviceManagementService = new DeviceManagementService(accessDAO, cf);
 
@@ -142,13 +145,28 @@ public class Service extends Application<Config> {
 
         addResource(ServiceAuthenticationFilter.ServiceAuthenticationFeature.class);
 
-        environment.healthChecks().register("SanityCheck", new SanityCheck(accessDAO, httpClient));
+        final Future<?> fallbackDomainFetcher = environment
+            .lifecycle()
+            .executorService("fallback_domain_fetcher")
+            .build()
+            .submit(
+                new FallbackDomainFetcher(
+                    new LoginClient(httpClient),
+                    metadataDAO
+                )
+            );
+
+        fallbackDomainFetcher.get();
+
+        environment.healthChecks().register(
+            "SanityCheck",
+            new SanityCheck(accessDAO, httpClient)
+        );
 
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
-        final LoginClient loginClient = new LoginClient(httpClient);
 
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
-        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, config, holdMessageResource);
+        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource);
 
         environment.lifecycle()
                 .scheduledExecutorService("notifications")
@@ -158,10 +176,6 @@ public class Service extends Application<Config> {
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
         environment.getApplicationContext().addServlet(MetricsServlet.class, "/metrics");
-
-        // todo here
-        // String res = loginClient.getBackendConfiguration();
-        // handle res ^
     }
 
     public Config getConfig() {

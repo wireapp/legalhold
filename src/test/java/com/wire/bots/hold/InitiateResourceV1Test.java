@@ -22,7 +22,8 @@ public class InitiateResourceV1Test {
     private static final String TOKEN = "dummy";
     private static final DropwizardTestSupport<Config> SUPPORT = new DropwizardTestSupport<>(
         Service.class, "hold.yaml",
-        ConfigOverride.config("token", TOKEN));
+        ConfigOverride.config("token", TOKEN),
+        ConfigOverride.config("apiHost", "dummy"));
     private static Client client;
 
     @BeforeClass

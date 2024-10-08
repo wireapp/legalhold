@@ -29,9 +29,9 @@ public class ConfirmResourceV0 {
     @ServiceAuthorization
     @ApiOperation(value = "Confirm legal hold device")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
-            @ApiResponse(code = 500, message = "Something went wrong"),
-            @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
+        @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
+        @ApiResponse(code = 500, message = "Something went wrong"),
+        @ApiResponse(code = 200, message = "Legal Hold Device enabled")})
     public Response confirm(@ApiParam @Valid @NotNull ConfirmPayloadV0 payload) {
         try {
             deviceManagementService.confirmDevice(
@@ -52,6 +52,4 @@ public class ConfirmResourceV0 {
                 .build();
         }
     }
-
-
 }

@@ -27,9 +27,9 @@ public class RemoveResourceV1 {
     @ServiceAuthorization
     @ApiOperation(value = "Remove legal hold device")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
-            @ApiResponse(code = 500, message = "Something went wrong"),
-            @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
+        @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
+        @ApiResponse(code = 500, message = "Something went wrong"),
+        @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
     public Response remove(@ApiParam @Valid InitPayloadV1 payload) {
         try {
             deviceManagementService.removeDevice(payload.userId, payload.teamId);
@@ -44,6 +44,4 @@ public class RemoveResourceV1 {
                 .build();
         }
     }
-
-
 }

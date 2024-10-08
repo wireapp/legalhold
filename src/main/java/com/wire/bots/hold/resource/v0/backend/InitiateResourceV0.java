@@ -31,9 +31,9 @@ public class InitiateResourceV0 {
     @ServiceAuthorization
     @ApiOperation(value = "Initiate", response = InitResponse.class)
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
-            @ApiResponse(code = 500, message = "Something went wrong"),
-            @ApiResponse(code = 200, message = "CryptoBox initiated")})
+        @ApiResponse(code = 400, message = "Bad request. Invalid Payload"),
+        @ApiResponse(code = 500, message = "Something went wrong"),
+        @ApiResponse(code = 200, message = "CryptoBox initiated")})
     public Response initiate(@ApiParam @Valid @NotNull InitPayloadV0 init) {
         try {
             final InitializedDeviceDTO initializedDeviceDTO =

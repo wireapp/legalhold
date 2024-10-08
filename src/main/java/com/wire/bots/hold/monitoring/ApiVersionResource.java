@@ -39,7 +39,7 @@ public class ApiVersionResource {
         ApiVersionResponse response = new ApiVersionResponse(List.of(0,1));
 
         return Response
-                .ok(response)
-                .build();
+            .ok(response)
+            .build();
     }
 }

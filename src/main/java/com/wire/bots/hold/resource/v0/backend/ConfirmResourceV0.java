@@ -35,7 +35,7 @@ public class ConfirmResourceV0 {
     public Response confirm(@ApiParam @Valid @NotNull ConfirmPayloadV0 payload) {
         try {
             deviceManagementService.confirmDevice(
-                new QualifiedId(payload.userId, null), //TODO Probably a good place to put the DEFAULT_DOMAIN
+                new QualifiedId(payload.userId, null),
                 payload.teamId,
                 payload.clientId,
                 payload.refreshToken

@@ -5,7 +5,6 @@ import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.helium.API;
-import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
@@ -37,10 +36,11 @@ public class SanityCheck extends HealthCheck {
             while (!accessList.isEmpty()) {
                 Logger.info("SanityCheck: checking %d devices, created: %s", accessList.size(), created);
                 for (LHAccess access : accessList) {
-                    // TODO(WPB-11287): Use user domain if exists, otherwise default
-                    // TODO: String domain = (access.domain != null) ? access.domain : Cache.DEFAULT_DOMAIN;
+                    if (access.userId.domain == null) {
+                        access.userId.domain = Cache.getFallbackDomain();
+                    }
                     boolean hasDevice = api.hasDevice(
-                        new QualifiedId(access.userId, Cache.getFallbackDomain()), // TODO(WPB-11287): Change null to default domain
+                        access.userId,
                         access.clientId
                     );
 

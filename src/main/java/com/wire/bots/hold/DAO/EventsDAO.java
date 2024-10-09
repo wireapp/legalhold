@@ -27,13 +27,25 @@ public interface EventsDAO {
     @RegisterColumnMapper(EventsResultSetMapper.class)
     Event get(@Bind("eventId") UUID eventId);
 
-    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId ORDER BY time DESC")
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain is NULL OR conversationDomain = :conversationDomain) ORDER BY time DESC")
     @RegisterColumnMapper(EventsResultSetMapper.class)
-    List<Event> listAll(@Bind("conversationId") UUID conversationId);
+    List<Event> listAllDefaultDomain(@Bind("conversationId") UUID conversationId,
+        @Bind("conversationDomain") String conversationDomain);
 
-    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId ORDER BY time ASC")
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND conversationDomain = :conversationDomain ORDER BY time DESC")
     @RegisterColumnMapper(EventsResultSetMapper.class)
-    List<Event> listAllAsc(@Bind("conversationId") UUID conversationId);
+    List<Event> listAll(@Bind("conversationId") UUID conversationId,
+        @Bind("conversationDomain") String conversationDomain);
+
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain is NULL OR conversationDomain = :conversationDomain) ORDER BY time ASC")
+    @RegisterColumnMapper(EventsResultSetMapper.class)
+    List<Event> listAllDefaultDomainAsc(@Bind("conversationId") UUID conversationId,
+        @Bind("conversationDomain") String conversationDomain);
+
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND conversationDomain = :conversationDomain ORDER BY time ASC")
+    @RegisterColumnMapper(EventsResultSetMapper.class)
+    List<Event> listAllAsc(@Bind("conversationId") UUID conversationId,
+        @Bind("conversationDomain") String conversationDomain);
 
     @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time " +
             "FROM Events " +

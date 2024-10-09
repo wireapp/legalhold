@@ -65,9 +65,8 @@ public class ConversationResource {
     public Response list(@ApiParam @PathParam("conversationId") UUID conversationId,
                          @ApiParam @QueryParam("html") boolean isHtml) {
         try {
-            List<Event> events = eventsDAO.listAllAsc(conversationId);
-
-            // TODO(WPB-11287) Verify default domain
+            //TODO Get DEFAULT_DOMAIN, then fetch events with domain = null and domain = DEFAULT_DOMAIN
+            List<Event> events = eventsDAO.listAllDefaultDomainAsc(conversationId);
 
             testAPI();
 

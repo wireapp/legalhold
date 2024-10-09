@@ -40,8 +40,9 @@ public class EventsResource {
             @ApiResponse(code = 200, message = "Wire events")})
     public Response list(@ApiParam @PathParam("conversationId") UUID conversationId) {
         try {
+            //TODO Get DEFAULT_DOMAIN, then fetch events with domain = null and domain = DEFAULT_DOMAIN
             Model model = new Model();
-            model.events = eventsDAO.listAll(conversationId);
+            model.events = eventsDAO.listAllDefaultDomain(conversationId);
             String html = execute(model);
 
             return Response.

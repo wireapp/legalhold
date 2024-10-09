@@ -74,7 +74,7 @@ public class DatabaseTest {
 
         assert textMessage.getMessageId().equals(message.getMessageId());
 
-        List<Event> events = eventsDAO.listAll(convId.id);
+        List<Event> events = eventsDAO.listAllDefaultDomain(convId.id);
         assert events.size() == 2;
     }
 
@@ -97,14 +97,14 @@ public class DatabaseTest {
 
     @Test
     public void accessTests() {
-        final UUID userId = UUID.randomUUID();
+        final QualifiedId userId = new QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString());
         final String clientId = UUID.randomUUID().toString();
         final String cookie = "cookie";
         final UUID last = UUID.randomUUID();
         final String cookie2 = "cookie2";
         final String token = "token";
 
-        final int insert = accessDAO.insert(userId, clientId, cookie);
+        final int insert = accessDAO.insert(userId.id, userId.domain, clientId, cookie);
         accessDAO.updateLast(userId, last);
         accessDAO.update(userId, token, cookie2);
 

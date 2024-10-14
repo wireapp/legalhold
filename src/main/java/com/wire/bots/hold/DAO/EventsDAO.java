@@ -14,12 +14,14 @@ import java.util.List;
 import java.util.UUID;
 
 public interface EventsDAO {
-    @SqlUpdate("INSERT INTO Events (eventId, conversationId, userId, type, payload, time) " +
-            "VALUES (:eventId, :conversationId, :userId, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
+    @SqlUpdate("INSERT INTO Events (eventId, conversationId, conversationDomain, userId, userDomain, type, payload, time) " +
+            "VALUES (:eventId, :conversationId, :conversationDomain, :userId, :userDomain, :type, to_jsonb(:payload)::json, CURRENT_TIMESTAMP) " +
             "ON CONFLICT (eventId) DO NOTHING")
     int insert(@Bind("eventId") UUID eventId,
                @Bind("conversationId") UUID conversationId,
+               @Bind("conversationDomain") String conversationDomain,
                @Bind("userId") UUID userId,
+               @Bind("userDomain") String userDomain,
                @Bind("type") String type,
                @Bind("payload") String payload);
 
@@ -27,7 +29,7 @@ public interface EventsDAO {
     @RegisterColumnMapper(EventsResultSetMapper.class)
     Event get(@Bind("eventId") UUID eventId);
 
-    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain is NULL OR conversationDomain = :conversationDomain) ORDER BY time DESC")
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain IS NULL OR conversationDomain = :conversationDomain) ORDER BY time DESC")
     @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAllDefaultDomain(@Bind("conversationId") UUID conversationId,
         @Bind("conversationDomain") String conversationDomain);
@@ -37,7 +39,7 @@ public interface EventsDAO {
     List<Event> listAll(@Bind("conversationId") UUID conversationId,
         @Bind("conversationDomain") String conversationDomain);
 
-    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain is NULL OR conversationDomain = :conversationDomain) ORDER BY time ASC")
+    @SqlQuery("SELECT * FROM Events WHERE conversationId = :conversationId AND (conversationDomain IS NULL OR conversationDomain = :conversationDomain) ORDER BY time ASC")
     @RegisterColumnMapper(EventsResultSetMapper.class)
     List<Event> listAllDefaultDomainAsc(@Bind("conversationId") UUID conversationId,
         @Bind("conversationDomain") String conversationDomain);

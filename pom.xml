@@ -6,7 +6,7 @@
 
     <groupId>com.wire.bots</groupId>
     <artifactId>hold</artifactId>
-    <version>1.0.7</version>
+    <version>1.1.0</version>
 
     <name>Legal Hold</name>
     <description>Legal Hold Service For Wire</description>
@@ -26,7 +26,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <dropwizard.version>2.1.2</dropwizard.version>
+        <dropwizard.version>2.1.12</dropwizard.version>
         <openhtml.version>1.0.10</openhtml.version>
         <prometheus.version>0.16.0</prometheus.version>
     </properties>

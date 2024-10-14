@@ -10,6 +10,7 @@ import com.wire.helium.models.Access;
 import com.wire.helium.models.Event;
 import com.wire.helium.models.NotificationList;
 import com.wire.xenon.backend.models.Payload;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.exceptions.AuthException;
 import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
@@ -53,12 +54,8 @@ public class NotificationProcessor implements Runnable {
     }
 
     private void process(LHAccess device) {
-        UUID userId = device.userId;
-
         try {
-            final API api = new API(client, null, device.token);
-
-            Logger.debug("`GET /notifications`: user: %s, last: %s", userId, device.last);
+            Logger.debug("`GET /notifications`: user: %s, last: %s", device.userId, device.last);
 
             String cookieValue = device.cookie;
 
@@ -67,32 +64,33 @@ public class NotificationProcessor implements Runnable {
             Access access = getAccess(cookie);
 
             if (access.getCookie() != null) {
-                Logger.info("Set-Cookie: user: %s", userId);
+                Logger.info("Set-Cookie: user: %s", device.userId);
                 cookieValue = access.getCookie().value;
             }
 
-            accessDAO.update(userId, access.getAccessToken(), cookieValue);
+            accessDAO.update(device.userId.id, device.userId.domain, access.getAccessToken(), cookieValue);
 
             device.token = access.getAccessToken();
 
+            final API api = new API(client, null, device.token);
             NotificationList notificationList = api.retrieveNotifications(
                 device.clientId,
                 device.last,
                 DEFAULT_NOTIFICATION_SIZE
             );
 
-            process(userId, notificationList);
+            process(device.userId, notificationList);
         } catch (AuthException e) {
-            accessDAO.disable(userId);
-            Logger.info("Disabled LH device for user: %s, error: %s", userId, e.getMessage());
+            accessDAO.disable(device.userId.id, device.userId.domain);
+            Logger.exception(e, "NotificationProcessor: Disabled LH device for user: %s, error: %s", device.userId, e.getMessage());
         } catch (HttpException e) {
             Logger.exception(e, "NotificationProcessor: Couldn't retrieve notifications, error: %s", e.getMessage());
         } catch (Exception e) {
-            Logger.exception(e, "NotificationProcessor: user: %s, last: %s, error: %s", userId, device.last, e.getMessage());
+            Logger.exception(e, "NotificationProcessor: user: %s, last: %s, error: %s", device.userId, device.last, e.getMessage());
         }
     }
 
-    private void process(UUID userId, NotificationList notificationList) {
+    private void process(QualifiedId userId, NotificationList notificationList) {
         for (Event event : notificationList.notifications) {
             for (Payload payload : event.payload) {
                 if (!process(userId, payload, event.id)) {
@@ -106,17 +104,14 @@ public class NotificationProcessor implements Runnable {
                 }
             }
 
-            accessDAO.updateLast(userId, event.id);
+            accessDAO.updateLast(userId.id, userId.domain, event.id);
         }
     }
 
-    private boolean process(UUID userId, Payload payload, UUID id) {
+    private boolean process(QualifiedId userId, Payload payload, UUID id) {
         trace(payload);
 
-        Logger.debug("Payload: %s %s, from: %s",
-                payload.type,
-                userId,
-                payload.from);
+        Logger.debug("Payload: %s %s, from: %s", payload.type, userId, payload.from);
 
         if (payload.from == null || payload.data == null) return true;
 

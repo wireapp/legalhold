@@ -52,20 +52,20 @@ public class DatabaseTest {
         final String type = "conversation.otr-message-add.new-text";
         final UUID eventId = UUID.randomUUID();
         final UUID messageId = UUID.randomUUID();
-        final QualifiedId convId = new QualifiedId(UUID.randomUUID(), null);
+        final QualifiedId convId = new QualifiedId(UUID.randomUUID(), "dummy_domain");
         final String clientId = UUID.randomUUID().toString();
-        final QualifiedId userId  = new QualifiedId(UUID.randomUUID(), null);
+        final QualifiedId userId  = new QualifiedId(UUID.randomUUID(), "dummy_domain");
         final String time = new Date().toString();
         final TextMessage textMessage = new TextMessage(eventId, messageId, convId, clientId, userId, time);
-        textMessage.addMention(new QualifiedId(UUID.randomUUID(), null), 0, 5);
+        textMessage.addMention(new QualifiedId(UUID.randomUUID(), "dummy_domain"), 0, 5);
         textMessage.setText("Some text");
 
         String payload = mapper.writeValueAsString(textMessage);
 
-        int insert = eventsDAO.insert(eventId, convId.id, userId.id, type, payload);
+        int insert = eventsDAO.insert(eventId, convId.id, convId.domain, userId.id, userId.domain, type, payload);
         assert insert == 1;
 
-        insert = eventsDAO.insert(UUID.randomUUID(), convId.id, userId.id, type, payload);
+        insert = eventsDAO.insert(UUID.randomUUID(), convId.id, convId.domain, userId.id, userId.domain, type, payload);
         assert insert == 1;
 
         final Event event = eventsDAO.get(eventId);
@@ -74,7 +74,7 @@ public class DatabaseTest {
 
         assert textMessage.getMessageId().equals(message.getMessageId());
 
-        List<Event> events = eventsDAO.listAllDefaultDomain(convId.id);
+        List<Event> events = eventsDAO.listAllDefaultDomain(convId.id, convId.domain);
         assert events.size() == 2;
     }
 
@@ -105,17 +105,17 @@ public class DatabaseTest {
         final String token = "token";
 
         final int insert = accessDAO.insert(userId.id, userId.domain, clientId, cookie);
-        accessDAO.updateLast(userId, last);
-        accessDAO.update(userId, token, cookie2);
+        accessDAO.updateLast(userId.id, userId.domain, last);
+        accessDAO.update(userId.id, userId.domain, token, cookie2);
 
-        final LHAccess lhAccess = accessDAO.get(userId);
+        final LHAccess lhAccess = accessDAO.get(userId.id, userId.domain);
         assert lhAccess != null;
         assert lhAccess.userId.equals(userId);
 
-        accessDAO.disable(userId);
+        accessDAO.disable(userId.id, userId.domain);
 
-        final int insert2 = accessDAO.insert(userId, clientId, cookie);
-        final LHAccess lhAccess2 = accessDAO.get(userId);
+        final int insert2 = accessDAO.insert(userId.id, userId.domain, clientId, cookie);
+        final LHAccess lhAccess2 = accessDAO.get(userId.id, userId.domain);
         assert lhAccess2 != null;
         assert lhAccess2.created.equals(lhAccess.created);
     }

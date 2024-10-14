@@ -91,7 +91,7 @@ public class ConfirmRemoveResourceV1Test {
         assert confirmSecondResponse.getStatus() == HttpStatus.SC_OK;
 
         // Confirm the same device is possible and the latest refresh_token should be persisted
-        final LHAccess lhAccess = accessDAO.get(userId.id);
+        final LHAccess lhAccess = accessDAO.get(userId.id, userId.domain);
         assert lhAccess != null;
         assert lhAccess.cookie.equals(updatedRefreshToken);
         assert !lhAccess.created.equals(lhAccess.updated);
@@ -121,7 +121,7 @@ public class ConfirmRemoveResourceV1Test {
             .post(Entity.entity(confirmPayloadV1, MediaType.APPLICATION_JSON));
     }
 
-    private Response postRemoveV1(InitPayloadV1 initPayloadV1){
+    private Response postRemoveV1(InitPayloadV1 initPayloadV1) {
         return client.target("http://localhost:" + SUPPORT.getLocalPort())
             .path("v1")
             .path("remove")

@@ -6,6 +6,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.database.Event;
+import com.wire.bots.hold.utils.Cache;
 import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.*;
 
@@ -40,18 +41,19 @@ public class EventsResource {
             @ApiResponse(code = 200, message = "Wire events")})
     public Response list(@ApiParam @PathParam("conversationId") UUID conversationId) {
         try {
-            //TODO Get DEFAULT_DOMAIN, then fetch events with domain = null and domain = DEFAULT_DOMAIN
+            // TODO: When the parameters of this resource changes to accept a QualifiedId, then we will need
+            // to verify based on the domain which DAO query to call
             Model model = new Model();
-            model.events = eventsDAO.listAllDefaultDomain(conversationId);
+            model.events = eventsDAO.listAllDefaultDomain(conversationId, Cache.getFallbackDomain());
             String html = execute(model);
 
             return Response.
                     ok(html, MediaType.TEXT_HTML).
                     build();
-        } catch (Exception e) {
-            Logger.exception("EventsResource.list: %s", e, e.getMessage());
+        } catch (Exception exception) {
+            Logger.exception(exception, "EventsResource.list: %s", exception.getMessage());
             return Response
-                    .ok(e.getMessage())
+                    .ok(exception.getMessage())
                     .status(500)
                     .build();
         }

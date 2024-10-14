@@ -1,6 +1,9 @@
 ALTER TABLE Access
 ADD COLUMN userDomain VARCHAR(255) DEFAULT null;
 
+-- Dropping the PRIMARY KEY and adding a UNIQUE constraint with both Id and Domain,
+-- because Postgresql doesn't like a nullable fields being PRIMARY KEY.
+-- (previous tentative: PRIMARY KEY (userId, userDomain)
 ALTER TABLE Access
 DROP CONSTRAINT IF EXISTS access_pkey;
 

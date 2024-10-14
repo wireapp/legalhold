@@ -68,7 +68,7 @@ public class Collector {
 
     private Sender sender(User user, Message message) {
         Sender sender = new Sender();
-        sender.senderId = user.id;
+        sender.senderId = user.id.toString();
         sender.name = user.name;
         sender.accent = toColor(user.accent);
         sender.avatar = getAvatar(user);
@@ -79,7 +79,7 @@ public class Collector {
     private Sender system(Message message, String type) {
         Sender sender = new Sender();
         sender.system = "system";
-        sender.senderId = new QualifiedId(UUID.randomUUID(), null); // TODO(WPB-11287): Change null to default domain
+        sender.senderId = "system";
         sender.avatar = systemIcon(type);
         sender.messages.add(message);
         return sender;
@@ -213,7 +213,7 @@ public class Collector {
     }
 
     public static class Sender {
-        QualifiedId senderId;
+        String senderId;
         String avatar;
         String name;
         String accent;

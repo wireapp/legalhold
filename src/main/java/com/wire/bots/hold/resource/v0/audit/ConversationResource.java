@@ -65,9 +65,9 @@ public class ConversationResource {
     public Response list(@ApiParam @PathParam("conversationId") UUID conversationId,
                          @ApiParam @QueryParam("html") boolean isHtml) {
         try {
-            List<Event> events = eventsDAO.listAllAsc(conversationId);
-
-            // TODO(WPB-11287) Verify default domain
+            // TODO: When the parameters of this resource changes to accept a QualifiedId, then we will need
+            // to verify based on the domain which DAO query to call
+            List<Event> events = eventsDAO.listAllDefaultDomainAsc(conversationId, Cache.getFallbackDomain());
 
             testAPI();
 
@@ -300,7 +300,7 @@ public class ConversationResource {
 
     private String formatConversation(Conversation conversation) {
         StringBuilder sb = new StringBuilder();
-        QualifiedId creatorId = new QualifiedId(conversation.creator, null); // TODO(WPB-11287): Change null to default domain
+        QualifiedId creatorId = new QualifiedId(conversation.creator, Cache.getFallbackDomain());
         sb.append(String.format("**%s** created conversation **%s** with: \n",
                 getUserName(creatorId),
                 conversation.name));

@@ -1,6 +1,7 @@
 package com.wire.bots.hold.DAO;
 
 import com.wire.bots.hold.model.database.LHAccess;
+import com.wire.xenon.backend.models.QualifiedId;
 import org.jdbi.v3.core.mapper.ColumnMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 
@@ -13,7 +14,9 @@ public class AccessResultSetMapper implements ColumnMapper<LHAccess> {
     public LHAccess map(ResultSet rs, int columnNumber, StatementContext ctx) throws SQLException {
         LHAccess LHAccess = new LHAccess();
         LHAccess.last = (UUID) rs.getObject("last");
-        LHAccess.userId = (UUID) rs.getObject("userId");
+        UUID userId = (UUID) rs.getObject("userId");
+        String userDomain = rs.getString("userDomain");
+        LHAccess.userId = new QualifiedId(userId, userDomain);
         LHAccess.clientId = rs.getString("clientId");
         LHAccess.token = rs.getString("token");
         LHAccess.cookie = rs.getString("cookie");

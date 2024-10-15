@@ -67,6 +67,7 @@ public class DeviceManagementService {
      */
     public void confirmDevice(QualifiedId userId, UUID teamId, String clientId, String refreshToken) {
         int insert = accessDAO.insert(userId.id,
+            userId.domain,
             clientId,
             refreshToken);
 
@@ -95,7 +96,7 @@ public class DeviceManagementService {
         try (Crypto crypto = cf.create(userId)) {
             crypto.purge();
 
-            int removeAccess = accessDAO.disable(userId.id);
+            int removeAccess = accessDAO.disable(userId.id, userId.domain);
 
             Logger.info(
                 "RemoveResource: team: %s, user: %s, removed: %s",

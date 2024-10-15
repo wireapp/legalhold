@@ -28,7 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Api
-@Path("/status")
+@Path("/{parameter: status|v1/status}")
 @Produces(MediaType.TEXT_PLAIN)
 public class StatusResource {
     @GET

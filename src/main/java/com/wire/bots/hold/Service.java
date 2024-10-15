@@ -25,6 +25,7 @@ import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.filters.ServiceAuthenticationFilter;
 import com.wire.bots.hold.healthchecks.SanityCheck;
+import com.wire.bots.hold.monitoring.ApiVersionResource;
 import com.wire.bots.hold.monitoring.RequestMdcFactoryFilter;
 import com.wire.bots.hold.monitoring.StatusResource;
 import com.wire.bots.hold.resource.v0.audit.*;
@@ -126,6 +127,7 @@ public class Service extends Application<Config> {
 
         // Monitoring resources
         addResource(new StatusResource());
+        addResource(new ApiVersionResource());
         addResource(new RequestMdcFactoryFilter());
 
         // Used by Wire Server

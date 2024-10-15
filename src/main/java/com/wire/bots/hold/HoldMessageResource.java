@@ -6,6 +6,7 @@ import com.wire.xenon.MessageHandlerBase;
 import com.wire.xenon.MessageResourceBase;
 import com.wire.xenon.WireClient;
 import com.wire.xenon.backend.models.Payload;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.exceptions.MissingStateException;
 import com.wire.xenon.tools.Logger;
 
@@ -19,12 +20,11 @@ public class HoldMessageResource extends MessageResourceBase {
         this.repo = repo;
     }
 
-    protected WireClient getWireClient(UUID userId, Payload payload) throws CryptoException {
+    protected WireClient getWireClient(QualifiedId userId, Payload payload) throws CryptoException {
         return repo.getClient(userId, payload.data.recipient, payload.conversation);
     }
 
-    public boolean onNewMessage(UUID userId, UUID id, Payload payload) {
-
+    public boolean onNewMessage(QualifiedId userId, UUID id, Payload payload) {
         try (WireClient client = getWireClient(userId, payload)) {
             handleMessage(id, payload, client);
         } catch (CryptoException | MissingStateException e) {

@@ -34,7 +34,7 @@ public class RemoveResourceV0 {
     public Response remove(@ApiParam @Valid InitPayloadV0 payload) {
         try {
             deviceManagementService.removeDevice(
-                new QualifiedId(payload.userId, null), //TODO Probably a good place to put the DEFAULT_DOMAIN
+                new QualifiedId(payload.userId, null),
                 payload.teamId
             );
 

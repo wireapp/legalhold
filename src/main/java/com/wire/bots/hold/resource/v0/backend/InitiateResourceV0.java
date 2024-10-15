@@ -38,7 +38,7 @@ public class InitiateResourceV0 {
         try {
             final InitializedDeviceDTO initializedDeviceDTO =
                 deviceManagementService.initiateLegalHoldDevice(
-                    new QualifiedId(init.userId, null), //TODO Probably a good place to put the DEFAULT_DOMAIN
+                    new QualifiedId(init.userId, null),
                     init.teamId
                 );
 

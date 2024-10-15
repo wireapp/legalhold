@@ -10,33 +10,42 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AccessDAO {
-    @SqlUpdate("INSERT INTO Access (userId, clientId, cookie, updated, created, enabled) " +
-            "VALUES (:userId, :clientId, :cookie, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1) " +
-            "ON CONFLICT (userId) DO UPDATE SET cookie = EXCLUDED.cookie, clientId = EXCLUDED.clientId, " +
+    @SqlUpdate("INSERT INTO Access (userId, userDomain, clientId, cookie, updated, created, enabled) " +
+            "VALUES (:userId, :userDomain, :clientId, :cookie, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1) " +
+            "ON CONFLICT (userId, userDomain) DO UPDATE SET cookie = EXCLUDED.cookie, clientId = EXCLUDED.clientId, " +
             "updated = EXCLUDED.updated, enabled = EXCLUDED.enabled")
     int insert(@Bind("userId") UUID userId,
+               @Bind("userDomain") String userDomain,
                @Bind("clientId") String clientId,
                @Bind("cookie") String cookie);
 
-    @SqlUpdate("UPDATE Access SET enabled = 0, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
-    int disable(@Bind("userId") UUID userId);
+    @SqlUpdate("UPDATE Access SET enabled = 0, updated = CURRENT_TIMESTAMP WHERE userId = :userId " +
+        "AND (( :userDomain IS NULL AND userDomain IS null ) or ( :userDomain IS NOT NULL AND userDomain = :userDomain ))")
+    int disable(@Bind("userId") UUID userId,
+        @Bind("userDomain") String userDomain);
 
-    @SqlUpdate("UPDATE Access SET token = :token, cookie = :cookie, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
+    @SqlUpdate("UPDATE Access SET token = :token, cookie = :cookie, updated = CURRENT_TIMESTAMP WHERE userId = :userId " +
+        "AND (( :userDomain IS NULL AND userDomain IS null ) OR ( :userDomain IS NOT NULL AND userDomain = :userDomain ))")
     int update(@Bind("userId") UUID userId,
-               @Bind("token") String token,
-               @Bind("cookie") String cookie);
+        @Bind("userDomain") String userDomain,
+        @Bind("token") String token,
+        @Bind("cookie") String cookie);
 
-    @SqlUpdate("UPDATE Access SET last = :last, updated = CURRENT_TIMESTAMP WHERE userId = :userId")
+    @SqlUpdate("UPDATE Access SET last = :last, updated = CURRENT_TIMESTAMP WHERE userId = :userId AND (( :userDomain IS NULL AND userDomain IS null ) " +
+        "OR ( :userDomain IS NOT NULL AND userDomain = :userDomain ))")
     int updateLast(@Bind("userId") UUID userId,
-                   @Bind("last") UUID last);
+        @Bind("userDomain") String userDomain,
+        @Bind("last") UUID last);
 
     @SqlQuery("SELECT * FROM Access WHERE token IS NOT NULL AND enabled = 1 ORDER BY created DESC LIMIT 1")
     @RegisterColumnMapper(AccessResultSetMapper.class)
     LHAccess getSingle();
 
-    @SqlQuery("SELECT * FROM Access WHERE userId = :userId")
+    @SqlQuery("SELECT * FROM Access WHERE userId = :userId AND (( :userDomain IS NULL AND userDomain is null ) " +
+        "or ( :userDomain is NOT NULL AND userDomain = :userDomain ))")
     @RegisterColumnMapper(AccessResultSetMapper.class)
-    LHAccess get(@Bind("userId") UUID userId);
+    LHAccess get(@Bind("userId") UUID userId,
+         @Bind("userDomain") String userDomain);
 
     @SqlQuery("SELECT * FROM Access WHERE enabled = 1 ORDER BY created DESC")
     @RegisterColumnMapper(AccessResultSetMapper.class)

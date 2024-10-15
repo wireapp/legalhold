@@ -6,8 +6,9 @@ import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.database.LHAccess;
+import com.wire.bots.hold.utils.CryptoDatabaseFactory;
+import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.Crypto;
-import com.wire.xenon.factories.CryptoFactory;
 import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -32,10 +33,10 @@ import static com.wire.bots.hold.utils.Tools.hexify;
 @Produces(MediaType.TEXT_HTML)
 public class DevicesResource {
     private final static MustacheFactory mf = new DefaultMustacheFactory();
-    private final CryptoFactory cryptoFactory;
+    private final CryptoDatabaseFactory cryptoFactory;
     private final AccessDAO accessDAO;
 
-    public DevicesResource(AccessDAO accessDAO, CryptoFactory cryptoFactory) {
+    public DevicesResource(AccessDAO accessDAO, CryptoDatabaseFactory cryptoFactory) {
         this.cryptoFactory = cryptoFactory;
         this.accessDAO = accessDAO;
     }
@@ -95,7 +96,7 @@ public class DevicesResource {
 
     static class Legal {
         UUID last;
-        UUID userId;
+        QualifiedId userId;
         String clientId;
         String fingerprint;
         String updated;

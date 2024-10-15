@@ -22,7 +22,9 @@ public class EventsResultSetMapper implements ColumnMapper<Event> {
         Event event = new Event();
         event.eventId = (UUID) rs.getObject("eventId");
         event.conversationId = getUuid(rs, "conversationId");
+        event.conversationDomain = rs.getString("conversationDomain");
         event.userId = getUuid(rs, "userId");
+        event.userDomain = rs.getString("userDomain");
         event.time = rs.getString("time");
         event.type = rs.getString("type");
         event.payload = getPayload(rs);

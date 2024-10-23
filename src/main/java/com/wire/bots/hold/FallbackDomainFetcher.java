@@ -62,7 +62,7 @@ public class FallbackDomainFetcher implements Runnable {
             }
         } catch (HttpException exception) {
             Logger.exception(exception, "FallbackDomainFetcher.run, exception: %s", exception.getMessage());
-        } catch (ProcessingException pexception) {
+        } catch (ProcessingException exception) {
             Logger.info("FallbackDomainFetcher.run, ignoring test exceptions");
         }
     }

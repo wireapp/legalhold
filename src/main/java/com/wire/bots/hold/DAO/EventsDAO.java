@@ -49,7 +49,7 @@ public interface EventsDAO {
     List<Event> listAllAsc(@Bind("conversationId") UUID conversationId,
         @Bind("conversationDomain") String conversationDomain);
 
-    @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time " +
+    @SqlQuery("SELECT DISTINCT conversationId, conversationDomain, MAX(time) AS time " +
             "FROM Events " +
             "GROUP BY conversationId " +
             "ORDER BY MAX(time) DESC, conversationId " +

@@ -1,12 +1,10 @@
 package com.wire.bots.hold.resource.v0.audit;
 
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
+import com.wire.bots.hold.utils.HtmlGenerator;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.tools.Logger;
@@ -20,9 +18,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -32,7 +27,6 @@ import static com.wire.bots.hold.utils.Tools.hexify;
 @Path("/devices.html")
 @Produces(MediaType.TEXT_HTML)
 public class DevicesResource {
-    private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final CryptoDatabaseFactory cryptoFactory;
     private final AccessDAO accessDAO;
 
@@ -67,7 +61,7 @@ public class DevicesResource {
 
             Model model = new Model();
             model.legals = legals;
-            String html = execute(model);
+            String html = HtmlGenerator.execute(model, HtmlGenerator.TemplateType.DEVICES);
 
             return Response.
                     ok(html, MediaType.TEXT_HTML).
@@ -78,19 +72,6 @@ public class DevicesResource {
                     .ok(e.getMessage())
                     .status(500)
                     .build();
-        }
-    }
-
-    private Mustache compileTemplate() {
-        String path = "templates/devices.html";
-        return mf.compile(path);
-    }
-
-    private String execute(Object model) throws IOException {
-        Mustache mustache = compileTemplate();
-        try (StringWriter sw = new StringWriter()) {
-            mustache.execute(new PrintWriter(sw), model).flush();
-            return sw.toString();
         }
     }
 

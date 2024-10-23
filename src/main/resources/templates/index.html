@@ -30,10 +30,10 @@
       {{#events}}
       <tr>
         <td>
-          <a href="/events/{{ conversationId }}">{{ conversationId }}</a>
+          <a href="/events/{{ conversationId }}/{{ conversationDomain }}">{{ conversationId }}_{{ conversationDomain }}</a>
         </td>
-        <td><a href="/conv/{{ conversationId }}">PDF</a></td>
-        <td><a href="/conv/{{ conversationId }}?html=true">HTML</a></td>
+        <td><a href="/conv/{{ conversationId }}/{{ conversationDomain }}">PDF</a></td>
+        <td><a href="/conv/{{ conversationId }}/{{ conversationDomain }}?html=true">HTML</a></td>
         <td>{{ time }}</td>
       </tr>
       {{/events}}

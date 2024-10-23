@@ -3,6 +3,7 @@ package com.wire.bots.hold.resource.v0.audit;
 import com.wire.bots.hold.DAO.EventsDAO;
 import com.wire.bots.hold.filters.ServiceAuthorization;
 import com.wire.bots.hold.model.EventModel;
+import com.wire.bots.hold.model.database.Event;
 import com.wire.bots.hold.utils.HtmlGenerator;
 import com.wire.xenon.tools.Logger;
 import io.swagger.annotations.Api;
@@ -36,6 +37,11 @@ public class IndexResource {
         try {
             EventModel model = new EventModel();
             model.events = eventsDAO.listConversations();
+            System.out.println("--- AAA");
+            for (Event e : model.events) {
+                System.out.println(e.conversationId + " _ " + e.conversationDomain);
+            }
+            System.out.println("--- BBB");
             String html = HtmlGenerator.execute(model, HtmlGenerator.TemplateType.INDEX);
 
             return Response.

@@ -49,9 +49,9 @@ public interface EventsDAO {
     List<Event> listAllAsc(@Bind("conversationId") UUID conversationId,
         @Bind("conversationDomain") String conversationDomain);
 
-    @SqlQuery("SELECT DISTINCT conversationId, MAX(time) AS time " +
+    @SqlQuery("SELECT DISTINCT conversationId, conversationDomain, MAX(time) AS time " +
             "FROM Events " +
-            "GROUP BY conversationId " +
+            "GROUP BY conversationId, conversationDomain " +
             "ORDER BY MAX(time) DESC, conversationId " +
             "LIMIT 400")
     @RegisterColumnMapper(_EventsResultSetMapper.class)
@@ -67,6 +67,7 @@ public interface EventsDAO {
             Object conversationId = rs.getObject("conversationId");
             if (conversationId != null)
                 event.conversationId = (UUID) conversationId;
+            event.conversationDomain = rs.getString("conversationDomain");
             event.time = rs.getString("time");
 
             return event;

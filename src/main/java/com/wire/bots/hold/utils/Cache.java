@@ -53,6 +53,11 @@ public class Cache {
     public File getProfileImage(User user) {
         File file = profiles.computeIfAbsent(user.id, k -> {
             try {
+                // TODO: Remove condition for null as String when new Xenon version is released
+                if (user.id.domain == null || user.id.domain.equals("null") || user.id.domain.isEmpty()) {
+                    user.id.domain = FALLBACK_DOMAIN;
+                }
+
                 return Helper.getProfile(api, user);
             } catch (Exception e) {
                 Logger.exception(e, "Cache.getProfileImage: userId: %s, ex: %s", user.id, e.getMessage());
@@ -68,10 +73,18 @@ public class Cache {
     public User getUser(QualifiedId userId) {
         return users.computeIfAbsent(userId, k -> {
             try {
+                // TODO: Remove condition for null as String when new Xenon version is released
+                if (userId.domain == null || userId.domain.equals("null") || userId.domain.isEmpty()) {
+                    userId.domain = FALLBACK_DOMAIN;
+                }
+
                 return api.getUser(userId);
             } catch (HttpException e) {
                 Logger.exception(e, "Cache.getUser: userId: %s, ex: %s", userId, e.getMessage());
-                throw new RuntimeException(e);
+                User user = new User();
+                user.id = userId;
+                user.name = userId.toString();
+                return user;
             }
         });
     }

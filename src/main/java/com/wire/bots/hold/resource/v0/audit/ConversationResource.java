@@ -3,9 +3,6 @@ package com.wire.bots.hold.resource.v0.audit;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.AssetsDAO;
 import com.wire.bots.hold.DAO.EventsDAO;
@@ -14,6 +11,7 @@ import com.wire.bots.hold.model.database.Event;
 import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.Collector;
+import com.wire.bots.hold.utils.HtmlGenerator;
 import com.wire.bots.hold.utils.PdfGenerator;
 import com.wire.helium.API;
 import com.wire.xenon.backend.models.Conversation;
@@ -31,16 +29,13 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.UUID;
 
 @Api
-@Path("/conv/{conversationId}")
+@Path("/conv/{conversationId}{noop: (/)?}{conversationDomain:([^/]+?)?}")
 @Produces("application/pdf")
 public class ConversationResource {
-    private final static MustacheFactory mf = new DefaultMustacheFactory();
     private final EventsDAO eventsDAO;
     private final AccessDAO accessDAO;
     private final AssetsDAO assetsDAO;
@@ -61,13 +56,22 @@ public class ConversationResource {
     @ApiOperation(value = "Render Wire events for this conversation")
     @ApiResponses(value = {
             @ApiResponse(code = 500, message = "Something went wrong"),
-            @ApiResponse(code = 200, message = "Wire events")})
-    public Response list(@ApiParam @PathParam("conversationId") UUID conversationId,
-                         @ApiParam @QueryParam("html") boolean isHtml) {
+            @ApiResponse(code = 200, message = "Wire events")}
+    )
+    public Response list(
+        @ApiParam @PathParam("conversationId") UUID conversationId,
+        @ApiParam @PathParam("conversationDomain") String conversationDomain,
+        @ApiParam @QueryParam("html") boolean isHtml
+    ) {
         try {
-            // TODO: When the parameters of this resource changes to accept a QualifiedId, then we will need
-            // to verify based on the domain which DAO query to call
-            List<Event> events = eventsDAO.listAllDefaultDomainAsc(conversationId, Cache.getFallbackDomain());
+            boolean isValidDomain = conversationDomain != null && !conversationDomain.isEmpty();
+            List<Event> events;
+
+            if (isValidDomain && !conversationDomain.equals(Cache.getFallbackDomain())) {
+                events = eventsDAO.listAllAsc(conversationId, conversationDomain);
+            } else {
+                events = eventsDAO.listAllDefaultDomainAsc(conversationId, Cache.getFallbackDomain());
+            }
 
             testAPI();
 
@@ -127,7 +131,7 @@ public class ConversationResource {
             }
 
             Collector.Conversation conversation = collector.getConversation();
-            String html = execute(conversation);
+            String html = HtmlGenerator.execute(conversation, HtmlGenerator.TemplateType.CONVERSATION);
 
             if (isHtml)
                 return Response.
@@ -323,19 +327,6 @@ public class ConversationResource {
     private String getUserName(QualifiedId userId) {
         Cache cache = new Cache(api, assetsDAO);
         return cache.getUser(userId).name;
-    }
-
-    private Mustache compileTemplate() {
-        String path = "templates/conversation.html";
-        return mf.compile(path);
-    }
-
-    private String execute(Object model) throws IOException {
-        Mustache mustache = compileTemplate();
-        try (StringWriter sw = new StringWriter()) {
-            mustache.execute(new PrintWriter(sw), model).flush();
-            return sw.toString();
-        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

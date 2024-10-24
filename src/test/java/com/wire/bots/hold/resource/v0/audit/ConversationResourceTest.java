@@ -165,8 +165,6 @@ public class ConversationResourceTest {
             extraParameters = extraParameters + "/" + conversationDomain;
         }
 
-        System.out.println("extraParams : " + extraParameters);
-
         return client
             .target("http://localhost:" + SUPPORT.getLocalPort())
             .path("conv")

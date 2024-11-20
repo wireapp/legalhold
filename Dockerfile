@@ -1,4 +1,4 @@
-FROM maven:3-openjdk-11 AS build
+FROM maven:3-openjdk-17 AS build
 LABEL description="Wire Legal Hold"
 LABEL project="wire-bots:legal-hold"
 

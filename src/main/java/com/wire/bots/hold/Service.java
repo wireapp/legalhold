@@ -123,7 +123,12 @@ public class Service extends Application<Config> {
         final EventsDAO eventsDAO = jdbi.onDemand(EventsDAO.class);
         final MetadataDAO metadataDAO = jdbi.onDemand(MetadataDAO.class);
 
-        final DeviceManagementService deviceManagementService = new DeviceManagementService(accessDAO, cf);
+        final DeviceManagementService deviceManagementService = new DeviceManagementService(
+            accessDAO,
+            cf,
+            httpClient,
+            config.coreCryptoPassword
+        );
 
         // Monitoring resources
         addResource(new StatusResource());
@@ -165,7 +170,7 @@ public class Service extends Application<Config> {
             new SanityCheck(accessDAO, httpClient)
         );
 
-        final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient);
+        final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient, config.coreCryptoPassword);
 
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
         final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource);

@@ -4,24 +4,39 @@ import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.dto.InitializedDeviceDTO;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
+
+import com.wire.helium.API;
+import com.wire.xenon.WireClientBase;
+import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.Crypto;
+import com.wire.xenon.crypto.mls.CryptoMlsClient;
 import com.wire.xenon.models.otr.PreKey;
 import com.wire.xenon.tools.Logger;
 
+import javax.ws.rs.client.Client;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static com.wire.bots.hold.utils.Tools.hexify;
 
 public class DeviceManagementService {
     private final CryptoDatabaseFactory cf;
     private final AccessDAO accessDAO;
+    private final Client client;
+    private final String coreCryptoPassword;
 
-    public DeviceManagementService(AccessDAO accessDAO, CryptoDatabaseFactory cf) {
+    public DeviceManagementService(AccessDAO accessDAO, CryptoDatabaseFactory cf, Client client, String coreCryptoPassword) {
         this.accessDAO = accessDAO;
         this.cf = cf;
+        this.client = client;
+        this.coreCryptoPassword = coreCryptoPassword;
     }
 
     /**
@@ -55,8 +70,15 @@ public class DeviceManagementService {
     }
 
     /**
-     * Confirm a user's device under legal hold.
-     *
+     * <p>Confirm a user's device under legal hold.</p>
+     * <p>
+     *     If MLS is enabled, then we initialize CryptoMlsClient and WireClientBase, then fetch and upload in parallel:
+     *      - PublicKeys
+     *      - KeyPackages
+     *      - MLS Conversations
+     *     Then join those filtered MLS conversations.
+     *     In case any of those parallel work fails, then an exception will be thrown all the way up.
+     * </p>
      * <p>
      *     Stores the refreshToken in order to fetch user notifications while under legal hold
      * </p>
@@ -64,8 +86,59 @@ public class DeviceManagementService {
      * @param teamId user's own team
      * @param clientId user's device
      * @param refreshToken token used to get expiring api tokens
+     * @throws RuntimeException when any of the (parallel or not) MLS tasks fails. Or if inserting refreshToken to Database fails.
      */
-    public void confirmDevice(QualifiedId userId, UUID teamId, String clientId, String refreshToken) {
+    public void confirmDevice(QualifiedId userId, UUID teamId, String clientId, String refreshToken) throws RuntimeException {
+        API api = new API(client, null, refreshToken);
+        if (api.isMlsEnabled()) {
+            try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+                // CryptoMlsClient will be closed from `try` with resource so there is no issue passing
+                // Crypto as null, as we will not be calling wireClientBase.close()
+                WireClientBase wireClientBase = new WireClientBase(api, null, cryptoMlsClient, null);
+
+                CompletableFuture<Void> mlsPublicKeyFuture = CompletableFuture.supplyAsync(() -> {
+                    wireClientBase.updateClientWithMlsPublicKey();
+                    return null;
+                });
+                CompletableFuture<Void> mlsKeyPackagesFuture = CompletableFuture.supplyAsync(() -> {
+                    wireClientBase.uploadMlsKeyPackages(100);
+                    return null;
+                });
+                CompletableFuture<List<Conversation>> conversationsFuture = CompletableFuture.supplyAsync(() ->
+                    api.getUserConversations()
+                   .stream()
+                   .filter(c -> c.protocol == Conversation.Protocol.MLS)
+                   .collect(Collectors.toList()));
+
+                CompletableFuture<Void> combinedFutures = CompletableFuture.allOf(
+                    mlsPublicKeyFuture,
+                    mlsKeyPackagesFuture,
+                    conversationsFuture
+                ).handle((success, throwable) -> {
+                    if (throwable != null) {
+                        if (throwable instanceof CompletionException) {
+                            throw new RuntimeException(throwable.getCause().getMessage());
+                        } else {
+                            throw new RuntimeException(throwable.getMessage());
+                        }
+                    }
+
+                    return success;
+                });
+
+                combinedFutures.get();
+
+                for (Conversation conversation : conversationsFuture.get()) {
+                    wireClientBase.joinMlsConversation(conversation.id, conversation.mlsGroupId);
+                }
+            } catch (ExecutionException exception) {
+                throw new RuntimeException(exception.getCause().getMessage());
+            } catch (Exception exception) {
+                throw new RuntimeException(exception.getMessage());
+            }
+        }
+
+        // Proteus
         int insert = accessDAO.insert(userId.id,
             userId.domain,
             clientId,

@@ -53,8 +53,7 @@ public class Cache {
     public File getProfileImage(User user) {
         File file = profiles.computeIfAbsent(user.id, k -> {
             try {
-                // TODO: Remove condition for null as String when new Xenon version is released
-                if (user.id.domain == null || user.id.domain.equals("null") || user.id.domain.isEmpty()) {
+                if (user.id.domain == null || user.id.domain.isEmpty()) {
                     user.id.domain = FALLBACK_DOMAIN;
                 }
 
@@ -73,8 +72,7 @@ public class Cache {
     public User getUser(QualifiedId userId) {
         return users.computeIfAbsent(userId, k -> {
             try {
-                // TODO: Remove condition for null as String when new Xenon version is released
-                if (userId.domain == null || userId.domain.equals("null") || userId.domain.isEmpty()) {
+                if (userId.domain == null || userId.domain.isEmpty()) {
                     userId.domain = FALLBACK_DOMAIN;
                 }
 

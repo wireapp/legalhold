@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 import static com.wire.bots.hold.utils.Tools.hexify;
 
 public class DeviceManagementService {
+    private static final int KEY_PACKAGE_AMOUNT = 100;
+
     private final CryptoDatabaseFactory cf;
     private final AccessDAO accessDAO;
     private final Client client;
@@ -101,7 +103,7 @@ public class DeviceManagementService {
                     return null;
                 });
                 CompletableFuture<Void> mlsKeyPackagesFuture = CompletableFuture.supplyAsync(() -> {
-                    wireClientBase.uploadMlsKeyPackages(100);
+                    wireClientBase.uploadMlsKeyPackages(KEY_PACKAGE_AMOUNT);
                     return null;
                 });
                 CompletableFuture<List<Conversation>> conversationsFuture = CompletableFuture.supplyAsync(() ->
@@ -114,16 +116,12 @@ public class DeviceManagementService {
                     mlsPublicKeyFuture,
                     mlsKeyPackagesFuture,
                     conversationsFuture
-                ).handle((success, throwable) -> {
-                    if (throwable != null) {
-                        if (throwable instanceof CompletionException) {
-                            throw new RuntimeException(throwable.getCause().getMessage());
-                        } else {
-                            throw new RuntimeException(throwable.getMessage());
-                        }
+                ).exceptionally(throwable -> {
+                    if (throwable instanceof CompletionException) {
+                        throw new RuntimeException(throwable.getCause().getMessage());
+                    } else {
+                        throw new RuntimeException(throwable.getMessage());
                     }
-
-                    return success;
                 });
 
                 combinedFutures.get();
@@ -132,9 +130,9 @@ public class DeviceManagementService {
                     wireClientBase.joinMlsConversation(conversation.id, conversation.mlsGroupId);
                 }
             } catch (ExecutionException exception) {
-                throw new RuntimeException(exception.getCause().getMessage());
-            } catch (Exception exception) {
-                throw new RuntimeException(exception.getMessage());
+                throw new RuntimeException("ExecutionException: " + exception.getCause().getMessage());
+            } catch (InterruptedException exception) {
+                throw new RuntimeException("InterruptedException: " + exception.getMessage());
             }
         }
 

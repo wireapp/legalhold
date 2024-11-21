@@ -101,11 +101,7 @@ public class DeviceManagementServiceTest {
             .willReturn(okJson(disabledMlsFeatureConfigJsonResponse)));
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
@@ -164,11 +160,7 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
@@ -194,7 +186,7 @@ public class DeviceManagementServiceTest {
             deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
-            assert exception.getMessage().equals("{\"error\":\"error from clients/" + clientId + "\"}");
+            assert exception.getMessage().equals("ExecutionException: {\"error\":\"error from clients/" + clientId + "\"}");
         }
 
         // then
@@ -223,7 +215,7 @@ public class DeviceManagementServiceTest {
             deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
-            assert exception.getMessage().equals("{\"error\":\"error from mls/key-packages/self/" + clientId + "\"}");
+            assert exception.getMessage().equals("ExecutionException: {\"error\":\"error from mls/key-packages/self/" + clientId + "\"}");
         }
 
         // then
@@ -258,11 +250,7 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
@@ -301,11 +289,7 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
@@ -344,11 +328,7 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
@@ -384,8 +364,8 @@ public class DeviceManagementServiceTest {
         try {
             deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
         } catch (Exception exception) {
+            // then
             assert exception.getMessage().equals("{\"error\":\"error from conversations/" + conversationId.domain + "/" + conversationId.id + "/groupinfo\"}");
-
         }
     }
 
@@ -423,6 +403,7 @@ public class DeviceManagementServiceTest {
         try {
             deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
         } catch (Exception exception) {
+            // then
             assert exception.getMessage().equals("{\"error\":\"error from mls/commit-bundles\"}");
         }
     }
@@ -466,11 +447,7 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
 
         // when
-        try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
-        } catch (Exception exception) {
-            // Do nothing
-        }
+        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(

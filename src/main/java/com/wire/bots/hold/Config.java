@@ -46,6 +46,9 @@ public class Config extends Configuration {
     @Valid
     private _JerseyClientConfiguration jerseyClient = new _JerseyClientConfiguration();
 
+    @JsonProperty
+    public String coreCryptoPassword;
+
     @JsonProperty("jerseyClient")
     public JerseyClientConfiguration getJerseyClient() {
         return jerseyClient;

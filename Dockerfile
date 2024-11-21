@@ -1,4 +1,4 @@
-FROM maven:3-openjdk-11 AS build
+FROM maven:3-openjdk-17 AS build
 LABEL description="Wire Legal Hold"
 LABEL project="wire-bots:legal-hold"
 
@@ -13,7 +13,7 @@ COPY . ./
 RUN mvn -Dmaven.test.skip=true package
 
 # runtime stage
-FROM wirebot/runtime:1.3.0
+FROM wirebot/runtime:1.4.0
 
 RUN mkdir /opt/hold
 RUN mkdir /opt/hold/images

@@ -7,6 +7,7 @@ import com.wire.xenon.assets.IAsset;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.backend.models.User;
 import com.wire.xenon.crypto.Crypto;
+import com.wire.xenon.crypto.mls.CryptoMlsClient;
 import com.wire.xenon.models.AssetKey;
 import com.wire.xenon.models.otr.PreKey;
 
@@ -19,8 +20,8 @@ public class HoldWireClient extends WireClientBase implements WireClient {
     private final QualifiedId conversationId;
     private final String deviceId;
 
-    HoldWireClient(QualifiedId userId, String deviceId, QualifiedId convId, Crypto crypto, API api) {
-        super(api, crypto, null);
+    HoldWireClient(QualifiedId userId, String deviceId, QualifiedId convId, CryptoMlsClient cryptoMlsClient, Crypto crypto, API api) {
+        super(api, crypto, cryptoMlsClient,  null);
 
         User user =  new User();
         user.id = userId;

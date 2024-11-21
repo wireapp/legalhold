@@ -42,7 +42,7 @@ jerseyClient:
   connectionRequestTimeout: 40s
   keepAlive: 0ms
   retries: 3
-  userAgent: legalhold/1.0.7
+  userAgent: legalhold/1.1.0
   tls:
     protocol: TLSv1.3
     provider: SunJSSE
@@ -53,6 +53,7 @@ jerseyClient:
 sleep: ${DELAY:-60s}
 token: ${SERVICE_TOKEN:-dummy}
 apiHost: ${WIRE_API_HOST:-https://prod-nginz-https.wire.com}
+coreCryptoPassword: ${CORE_CRYPTO_PASSWORD}
 
 database:
   driverClass: ${DB_DRIVER:-org.postgresql.Driver}

@@ -308,7 +308,7 @@ public class ConversationResource {
         sb.append(String.format("**%s** created conversation **%s** with: \n",
                 getUserName(creatorId),
                 conversation.name));
-        for (Member member : conversation.members) {
+        for (Member member : conversation.members.others) {
             sb.append(String.format("- **%s** \n", getUserName(member.id)));
         }
         return sb.toString();

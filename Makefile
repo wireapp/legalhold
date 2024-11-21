@@ -1,6 +1,9 @@
 db:
 	docker-compose up -d db
 
+stop-db:
+	docker-compose stop db
+
 docker-build:
 	docker build -t eu.gcr.io/wire-bot/legal-hold .
 

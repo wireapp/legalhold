@@ -9,7 +9,7 @@ COPY pom.xml ./
 RUN mvn verify --fail-never -U
 
 # build
-COPY . ./
+COPY src/ src/
 RUN mvn -Dmaven.test.skip=true package
 
 # runtime stage

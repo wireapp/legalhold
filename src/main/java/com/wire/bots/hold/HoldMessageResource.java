@@ -20,13 +20,13 @@ public class HoldMessageResource extends MessageResourceBase {
         this.repo = repo;
     }
 
-    protected WireClient getWireClient(QualifiedId userId, Payload payload) throws CryptoException {
-        return repo.getClient(userId, payload.data.recipient, payload.conversation);
+    protected WireClient getWireClient(QualifiedId userId, String clientId, Payload payload) throws CryptoException {
+        return repo.getClient(userId, clientId, payload.conversation);
     }
 
-    public boolean onNewMessage(QualifiedId userId, UUID id, Payload payload) {
-        try (WireClient client = getWireClient(userId, payload)) {
-            handleMessage(id, payload, client);
+    public boolean onNewMessage(QualifiedId userId, String clientId, UUID eventId, Payload payload) {
+        try (WireClient client = getWireClient(userId, clientId, payload)) {
+            handleMessage(eventId, payload, client);
         } catch (CryptoException | MissingStateException e) {
             Logger.exception(e, "newMessage: %s", userId);
             return false;

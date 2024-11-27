@@ -79,7 +79,7 @@ public class NotificationProcessor implements Runnable {
                 DEFAULT_NOTIFICATION_SIZE
             );
 
-            process(device.userId, notificationList);
+            process(device.userId, device.clientId, notificationList);
         } catch (AuthException e) {
             accessDAO.disable(device.userId.id, device.userId.domain);
             Logger.exception(e, "NotificationProcessor: Disabled LH device for user: %s, error: %s", device.userId, e.getMessage());
@@ -90,17 +90,18 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private void process(QualifiedId userId, NotificationList notificationList) {
+    private void process(QualifiedId userId, String clientId, NotificationList notificationList) {
         for (Event event : notificationList.notifications) {
             for (Payload payload : event.payload) {
-                if (!process(userId, payload, event.id)) {
-                    Logger.error("Failed to process: user: %s, event: %s", userId, event.id);
-                } else {
-                    Logger.debug("Processed: `%s` conv: %s, user: %s, eventId: %s",
+                if (process(userId, clientId, payload, event.id)) {
+                    Logger.debug("Processed: `%s` conv: %s, user: %s, client:%s, eventId: %s",
                             payload.type,
                             payload.conversation,
                             userId,
+                            clientId,
                             event.id);
+                } else {
+                    Logger.error("Failed to process: user: %s, client:%s, event: %s", userId, clientId, event.id);
                 }
             }
 
@@ -108,17 +109,17 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private boolean process(QualifiedId userId, Payload payload, UUID id) {
+    private boolean process(QualifiedId userId, String clientId, Payload payload, UUID eventId) {
         trace(payload);
 
-        Logger.debug("Payload: %s %s, from: %s", payload.type, userId, payload.from);
+        Logger.info("Payload: %s %s, from: %s", payload.type, userId, payload.from);
 
         if (payload.from == null || payload.data == null) return true;
 
-        final boolean wasMessageSent = messageResource.onNewMessage(userId, id, payload);
+        final boolean wasMessageSent = messageResource.onNewMessage(userId, clientId, eventId, payload);
 
         if (!wasMessageSent) {
-            Logger.error("process: `%s` user: %s, from: %s:%s, error: %s", payload.type, userId, payload.from, payload.data.sender);
+            Logger.error("Failed to process: %s user: %s, from: %s:", payload.type, userId, payload.from);
         }
 
         return wasMessageSent;

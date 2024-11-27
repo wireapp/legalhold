@@ -143,7 +143,7 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             final byte[] assetData = client.downloadAsset(
                 msg.getAssetId(),
-                msg.getUserId().domain,
+                msg.getAssetDomain(),
                 msg.getAssetToken(),
                 msg.getSha256(),
                 msg.getOtrKey()

@@ -2,6 +2,7 @@ package com.wire.bots.hold.service;
 
 import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.DAO.AccessDAO;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.model.dto.InitializedDeviceDTO;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
 
@@ -164,6 +165,18 @@ public class DeviceManagementService {
      * @throws CryptoException
      */
     public void removeDevice(QualifiedId userId, UUID teamId) throws IOException, CryptoException {
+        // MLS
+        LHAccess userAccess = accessDAO.get(userId.id, userId.domain);
+        if (userAccess != null) {
+            API api = new API(client, null, userAccess.token);
+            if (api.isMlsEnabled()) {
+                try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(userAccess.clientId, coreCryptoPassword)) {
+                    cryptoMlsClient.wipe();
+                }
+            }
+        }
+
+        // Proteus
         try (Crypto crypto = cf.create(userId)) {
             crypto.purge();
 

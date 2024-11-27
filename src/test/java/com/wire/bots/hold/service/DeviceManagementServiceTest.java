@@ -5,10 +5,12 @@ import com.wire.bots.hold.Config;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.Service;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
 import com.wire.bots.hold.utils.HttpTestUtils;
 import com.wire.xenon.backend.models.QualifiedId;
+import com.wire.xenon.crypto.mls.CryptoMlsClient;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import org.junit.*;
@@ -18,6 +20,9 @@ import javax.ws.rs.client.Client;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -33,12 +38,8 @@ public class DeviceManagementServiceTest {
         ConfigOverride.config("token", TOKEN),
         ConfigOverride.config("apiHost", API_HOST));
     private static Client client;
-
     private static final WireMockServer wireMockServer = new WireMockServer(8090);
-
-    private CryptoDatabaseFactory cryptoFactory;
     private AccessDAO accessDAO;
-    private String coreCryptoPassword;
     private DeviceManagementService deviceManagementService;
 
     // Consts
@@ -46,6 +47,7 @@ public class DeviceManagementServiceTest {
     private static final UUID teamId = UUID.randomUUID();
     private static final String clientId = UUID.randomUUID().toString();
     private static final String refreshToken = UUID.randomUUID().toString();
+    private static final String coreCryptoPassword = "secr3t";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -69,9 +71,8 @@ public class DeviceManagementServiceTest {
         stubFor(get(urlEqualTo("/api-version"))
             .willReturn(okJson(apiVersionV6)));
 
-        cryptoFactory = mock(CryptoDatabaseFactory.class);
+        CryptoDatabaseFactory cryptoFactory = mock(CryptoDatabaseFactory.class);
         accessDAO = mock(AccessDAO.class);
-        coreCryptoPassword = "secr3t";
 
         deviceManagementService = new DeviceManagementService(
             accessDAO,
@@ -456,6 +457,94 @@ public class DeviceManagementServiceTest {
             clientId,
             refreshToken
         );
+    }
+
+    @Test
+    public void givenUnknownUser_whenRemovingDevice_thenNoMlsCallsAreMade() {
+        // given
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(null);
+
+        // when
+        try {
+            deviceManagementService.removeDevice(userId, teamId);
+        } catch (Exception exception) {
+            assert exception instanceof NullPointerException;
+            assert exception.getMessage().equals("Cannot invoke \"com.wire.xenon.crypto.Crypto.purge()\" because \"crypto\" is null");
+        }
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+    }
+
+    @Test
+    public void givenKnownUser_whenRemovingDeviceAndMlsIsDisabled_thenNoWipeIsCalled() {
+        // given
+        Path path = Paths.get("mls/" + clientId);
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+            assert cryptoMlsClient != null;
+            assert Files.exists(path);
+        }
+
+        LHAccess lhAccess = new LHAccess();
+        lhAccess.last = UUID.randomUUID();
+        lhAccess.userId = new QualifiedId(userId.id, userId.domain);
+        lhAccess.clientId = clientId;
+        lhAccess.token = refreshToken;
+        lhAccess.cookie = "cookie";
+        lhAccess.enabled = true;
+
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
+        stubFor(get(urlEqualTo("/v6/feature-configs"))
+            .willReturn(okJson(disabledMlsFeatureConfigJsonResponse)));
+
+        // when
+        try {
+            deviceManagementService.removeDevice(userId, teamId);
+        } catch (Exception exception) {
+            assert exception instanceof NullPointerException;
+            assert exception.getMessage().equals("Cannot invoke \"com.wire.xenon.crypto.Crypto.purge()\" because \"crypto\" is null");
+        }
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+        assert Files.exists(path);
+    }
+
+    @Test
+    public void givenKnownUser_whenRemovingDeviceAndMlsIsEnabled_thenWipeIsCalled() {
+        // given
+        stubFor(get(urlEqualTo("/v6/feature-configs"))
+            .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
+        stubFor(get(urlEqualTo("/v6/mls/public-keys"))
+            .willReturn(okJson(mlsPublicKeysSuccessResponse)));
+
+        Path path = Paths.get("mls/" + clientId);
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+            assert cryptoMlsClient != null;
+            assert Files.exists(path);
+        }
+
+        LHAccess lhAccess = new LHAccess();
+        lhAccess.last = UUID.randomUUID();
+        lhAccess.userId = new QualifiedId(userId.id, userId.domain);
+        lhAccess.clientId = clientId;
+        lhAccess.token = refreshToken;
+        lhAccess.cookie = "cookie";
+        lhAccess.enabled = true;
+
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
+
+        // when
+        try {
+            deviceManagementService.removeDevice(userId, teamId);
+        } catch (Exception exception) {
+            assert exception instanceof NullPointerException;
+            assert exception.getMessage().equals("Cannot invoke \"com.wire.xenon.crypto.Crypto.purge()\" because \"crypto\" is null");
+        }
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+        assert Files.notExists(path);
     }
 
     private static final String enabledMlsFeatureConfigJsonResponse = """

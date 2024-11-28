@@ -1,14 +1,22 @@
 package com.wire.bots.hold.service;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.wire.bots.cryptobox.CryptoException;
 import com.wire.bots.hold.Config;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.DAO.MetadataDAO;
 import com.wire.bots.hold.Service;
+import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.utils.Cache;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
 import com.wire.bots.hold.utils.HttpTestUtils;
 import com.wire.xenon.backend.models.QualifiedId;
+import com.wire.xenon.crypto.Crypto;
+import com.wire.xenon.crypto.mls.CryptoMlsClient;
+import com.wire.xenon.models.otr.Missing;
+import com.wire.xenon.models.otr.PreKey;
+import com.wire.xenon.models.otr.PreKeys;
+import com.wire.xenon.models.otr.Recipients;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import org.junit.*;
@@ -18,6 +26,10 @@ import javax.ws.rs.client.Client;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -33,12 +45,9 @@ public class DeviceManagementServiceTest {
         ConfigOverride.config("token", TOKEN),
         ConfigOverride.config("apiHost", API_HOST));
     private static Client client;
-
     private static final WireMockServer wireMockServer = new WireMockServer(8090);
-
-    private CryptoDatabaseFactory cryptoFactory;
     private AccessDAO accessDAO;
-    private String coreCryptoPassword;
+    private CryptoDatabaseFactory cryptoFactory;
     private DeviceManagementService deviceManagementService;
 
     // Consts
@@ -46,6 +55,7 @@ public class DeviceManagementServiceTest {
     private static final UUID teamId = UUID.randomUUID();
     private static final String clientId = UUID.randomUUID().toString();
     private static final String refreshToken = UUID.randomUUID().toString();
+    private static final String coreCryptoPassword = "secr3t";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -62,7 +72,7 @@ public class DeviceManagementServiceTest {
     }
 
     @Before
-    public void before() {
+    public void before() throws CryptoException {
         wireMockServer.start();
         configureFor("localhost", 8090);
 
@@ -70,8 +80,8 @@ public class DeviceManagementServiceTest {
             .willReturn(okJson(apiVersionV6)));
 
         cryptoFactory = mock(CryptoDatabaseFactory.class);
+        when(cryptoFactory.create(userId)).thenReturn(mockedCrypto);
         accessDAO = mock(AccessDAO.class);
-        coreCryptoPassword = "secr3t";
 
         deviceManagementService = new DeviceManagementService(
             accessDAO,
@@ -457,6 +467,131 @@ public class DeviceManagementServiceTest {
             refreshToken
         );
     }
+
+    @Test
+    public void givenUnknownUser_whenRemovingDevice_thenNoMlsCallsAreMade() throws IOException, CryptoException {
+        // given
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(null);
+
+        // when
+        deviceManagementService.removeDevice(userId, teamId);
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+    }
+
+    @Test
+    public void givenKnownUser_whenRemovingDeviceAndMlsIsDisabled_thenNoWipeIsCalled() throws IOException, CryptoException {
+        // given
+        Path path = Paths.get("mls/" + clientId);
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+            assert cryptoMlsClient != null;
+            assert Files.exists(path);
+        }
+
+        LHAccess lhAccess = new LHAccess();
+        lhAccess.last = UUID.randomUUID();
+        lhAccess.userId = new QualifiedId(userId.id, userId.domain);
+        lhAccess.clientId = clientId;
+        lhAccess.token = refreshToken;
+        lhAccess.cookie = "cookie";
+        lhAccess.enabled = true;
+
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
+        stubFor(get(urlEqualTo("/v6/feature-configs"))
+            .willReturn(okJson(disabledMlsFeatureConfigJsonResponse)));
+
+        // when
+        deviceManagementService.removeDevice(userId, teamId);
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+        assert Files.exists(path);
+    }
+
+    @Test
+    public void givenKnownUser_whenRemovingDeviceAndMlsIsEnabled_thenWipeIsCalled() throws IOException, CryptoException {
+        // given
+        stubFor(get(urlEqualTo("/v6/feature-configs"))
+            .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
+        stubFor(get(urlEqualTo("/v6/mls/public-keys"))
+            .willReturn(okJson(mlsPublicKeysSuccessResponse)));
+
+        Path path = Paths.get("mls/" + clientId);
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+            assert cryptoMlsClient != null;
+            assert Files.exists(path);
+        }
+
+        LHAccess lhAccess = new LHAccess();
+        lhAccess.last = UUID.randomUUID();
+        lhAccess.userId = new QualifiedId(userId.id, userId.domain);
+        lhAccess.clientId = clientId;
+        lhAccess.token = refreshToken;
+        lhAccess.cookie = "cookie";
+        lhAccess.enabled = true;
+
+        when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
+
+        // when
+        deviceManagementService.removeDevice(userId, teamId);
+
+        // then
+        verify(accessDAO, times(1)).get(userId.id, userId.domain);
+        assert Files.notExists(path);
+    }
+
+    Crypto mockedCrypto = new Crypto() {
+        @Override
+        public byte[] getIdentity() throws CryptoException {
+            return new byte[0];
+        }
+
+        @Override
+        public byte[] getLocalFingerprint() throws CryptoException {
+            return new byte[0];
+        }
+
+        @Override
+        public PreKey newLastPreKey() throws CryptoException {
+            return null;
+        }
+
+        @Override
+        public ArrayList<PreKey> newPreKeys(int from, int count) throws CryptoException {
+            return null;
+        }
+
+        @Override
+        public Recipients encrypt(PreKeys preKeys, byte[] content) throws CryptoException {
+            return null;
+        }
+
+        @Override
+        public Recipients encrypt(Missing missing, byte[] content) throws CryptoException {
+            return null;
+        }
+
+        @Override
+        public String decrypt(QualifiedId userId, String clientId, String cypher) throws CryptoException {
+            return "";
+        }
+
+        @Override
+        public boolean isClosed() {
+            return false;
+        }
+
+        @Override
+        public void purge() throws IOException {
+
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+    };
 
     private static final String enabledMlsFeatureConfigJsonResponse = """
         {

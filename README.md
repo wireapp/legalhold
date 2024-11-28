@@ -3,6 +3,7 @@ This is Legal Hold Service for Wire.
 ## Environment variables
 - SERVICE_TOKEN: <mandatory>. Must be set to some random value (at least 16 alphanumeric chars)
 - WIRE_API_HOST: <optional>. Your Wire Backend host. Default: https://prod-nginz-https.wire.com
+- CORE_CRYPTO_PASSWORD: <mandatory>. Your MLS folder password
 - DB_DRIVER: <optional>. Default: org.postgresql.Driver
 - DB_URL: <optional>. Default: jdbc:postgresql://localhost/legalhold
 - DB_USER: <optional>
@@ -21,6 +22,7 @@ docker run \
 -e DB_USER='admin' \
 -e DB_PASSWORD='s3cret' \
 -e SERVICE_TOKEN='secr3t' \
+-e CORE_CRYPTO_PASSWORD='secr3t' \
 -p 80:8080 \
 --name secure-hold --rm quay.io/wire/legalhold:1.0.4
 ``` 

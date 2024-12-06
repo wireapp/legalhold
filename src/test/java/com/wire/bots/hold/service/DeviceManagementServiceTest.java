@@ -22,7 +22,6 @@ import io.dropwizard.testing.DropwizardTestSupport;
 import org.junit.*;
 
 import javax.ws.rs.client.Client;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +32,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
 public class DeviceManagementServiceTest {
@@ -47,7 +47,6 @@ public class DeviceManagementServiceTest {
     private static Client client;
     private static final WireMockServer wireMockServer = new WireMockServer(8090);
     private AccessDAO accessDAO;
-    private CryptoDatabaseFactory cryptoFactory;
     private DeviceManagementService deviceManagementService;
 
     // Consts
@@ -79,7 +78,7 @@ public class DeviceManagementServiceTest {
         stubFor(get(urlEqualTo("/api-version"))
             .willReturn(okJson(apiVersionV6)));
 
-        cryptoFactory = mock(CryptoDatabaseFactory.class);
+        CryptoDatabaseFactory cryptoFactory = mock(CryptoDatabaseFactory.class);
         when(cryptoFactory.create(userId)).thenReturn(mockedCrypto);
         accessDAO = mock(AccessDAO.class);
 
@@ -109,6 +108,8 @@ public class DeviceManagementServiceTest {
         ).thenReturn(1);
         stubFor(get(urlEqualTo("/v6/feature-configs"))
             .willReturn(okJson(disabledMlsFeatureConfigJsonResponse)));
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
 
         // when
         deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
@@ -188,6 +189,8 @@ public class DeviceManagementServiceTest {
             .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
         stubFor(get(urlEqualTo("/v6/mls/public-keys"))
             .willReturn(okJson(mlsPublicKeysSuccessResponse)));
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
         stubFor(put(urlEqualTo("/v6/clients/" + clientId))
             .willReturn(jsonResponse("{\"error\":\"error from clients/" + clientId + "\"}", 400)));
 
@@ -196,7 +199,7 @@ public class DeviceManagementServiceTest {
             deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
-            assert exception.getMessage().equals("ExecutionException: {\"error\":\"error from clients/" + clientId + "\"}");
+            assert exception.getMessage().equals("{\"error\":\"error from clients/" + clientId + "\"}");
         }
 
         // then
@@ -355,6 +358,8 @@ public class DeviceManagementServiceTest {
         QualifiedId conversationId = new QualifiedId(UUID.randomUUID(), MetadataDAO.FALLBACK_DOMAIN_KEY);
         String clientId = UUID.randomUUID().toString();
 
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
         stubFor(get(urlEqualTo("/v6/feature-configs"))
             .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
         stubFor(get(urlEqualTo("/v6/mls/public-keys"))
@@ -385,6 +390,8 @@ public class DeviceManagementServiceTest {
         QualifiedId conversationId = new QualifiedId(UUID.randomUUID(), MetadataDAO.FALLBACK_DOMAIN_KEY);
         String clientId = UUID.randomUUID().toString();
 
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
         stubFor(get(urlEqualTo("/v6/feature-configs"))
             .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
         stubFor(get(urlEqualTo("/v6/mls/public-keys"))
@@ -425,6 +432,8 @@ public class DeviceManagementServiceTest {
 
         stubFor(get(urlEqualTo("/v6/feature-configs"))
             .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
         stubFor(get(urlEqualTo("/v6/mls/public-keys"))
             .willReturn(okJson(mlsPublicKeysSuccessResponse)));
         stubFor(put(urlEqualTo("/v6/clients/" + clientId))
@@ -484,7 +493,7 @@ public class DeviceManagementServiceTest {
     public void givenKnownUser_whenRemovingDeviceAndMlsIsDisabled_thenNoWipeIsCalled() throws IOException, CryptoException {
         // given
         Path path = Paths.get("mls/" + clientId);
-        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
             assert cryptoMlsClient != null;
             assert Files.exists(path);
         }
@@ -518,7 +527,7 @@ public class DeviceManagementServiceTest {
             .willReturn(okJson(mlsPublicKeysSuccessResponse)));
 
         Path path = Paths.get("mls/" + clientId);
-        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
             assert cryptoMlsClient != null;
             assert Files.exists(path);
         }
@@ -633,6 +642,15 @@ public class DeviceManagementServiceTest {
           "domain": "example.com",
           "federation": false,
           "supported": [6]
+        }
+    """;
+
+    private static final String accessResponse = """
+        {
+          "access_token": "string",
+          "expires_in": 0,
+          "token_type": "Bearer",
+          "user": "99db9768-04e3-4b5d-9268-831b6a25c4ab"
         }
     """;
 

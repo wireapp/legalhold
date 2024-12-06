@@ -32,7 +32,7 @@ public class HoldClientRepo {
         final API api = new API(httpClient, conversationId, single.token);
 
         // for receiving notifications
-        final CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(deviceId, coreCryptoPassword);
+        final CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(deviceId, userId, coreCryptoPassword);
         return new HoldWireClient(userId, deviceId, conversationId, cryptoMlsClient, crypto, api);
     }
 }

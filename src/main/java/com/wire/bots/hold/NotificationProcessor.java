@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.database.LHAccess;
+import com.wire.bots.hold.utils.LoginClientExtension;
 import com.wire.helium.API;
-import com.wire.helium.LoginClient;
 import com.wire.helium.models.Access;
 import com.wire.helium.models.Event;
 import com.wire.helium.models.NotificationList;
@@ -16,7 +16,6 @@ import com.wire.xenon.exceptions.HttpException;
 import com.wire.xenon.tools.Logger;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Cookie;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -48,31 +47,14 @@ public class NotificationProcessor implements Runnable {
         }
     }
 
-    private Access getAccess(Cookie cookie) throws HttpException {
-        LoginClient loginClient = new LoginClient(client);
-        return loginClient.renewAccessToken(cookie);
-    }
-
     private void process(LHAccess device) {
         try {
             Logger.debug("`GET /notifications`: user: %s, last: %s", device.userId, device.last);
 
-            String cookieValue = device.cookie;
+            final Access access = LoginClientExtension.refreshToken(client, device.clientId, device.cookie);
+            accessDAO.update(device.userId.id, device.userId.domain, access.getAccessToken(), access.getCookie().value);
 
-            Cookie cookie = new Cookie("zuid", device.cookie);
-
-            Access access = getAccess(cookie);
-
-            if (access.getCookie() != null) {
-                Logger.info("Set-Cookie: user: %s", device.userId);
-                cookieValue = access.getCookie().value;
-            }
-
-            accessDAO.update(device.userId.id, device.userId.domain, access.getAccessToken(), cookieValue);
-
-            device.token = access.getAccessToken();
-
-            final API api = new API(client, null, device.token);
+            final API api = new API(client, null, access.getAccessToken());
             NotificationList notificationList = api.retrieveNotifications(
                 device.clientId,
                 device.last,

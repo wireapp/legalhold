@@ -5,8 +5,9 @@ import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.database.LHAccess;
 import com.wire.bots.hold.model.dto.InitializedDeviceDTO;
 import com.wire.bots.hold.utils.CryptoDatabaseFactory;
-
+import com.wire.bots.hold.utils.LoginClientExtension;
 import com.wire.helium.API;
+import com.wire.helium.models.Access;
 import com.wire.xenon.WireClientBase;
 import com.wire.xenon.backend.models.Conversation;
 import com.wire.xenon.backend.models.QualifiedId;
@@ -92,17 +93,17 @@ public class DeviceManagementService {
      * @throws RuntimeException when any of the (parallel or not) MLS tasks fails. Or if inserting refreshToken to Database fails.
      */
     public void confirmDevice(QualifiedId userId, UUID teamId, String clientId, String refreshToken) throws RuntimeException {
-        API api = new API(client, null, refreshToken);
+        final Access access = LoginClientExtension.refreshToken(client, clientId, refreshToken);
+        API api = new API(client, null, access.accessToken);
+
         if (api.isMlsEnabled()) {
-            try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, coreCryptoPassword)) {
+            try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
                 // CryptoMlsClient will be closed from `try` with resource so there is no issue passing
                 // Crypto as null, as we will not be calling wireClientBase.close()
                 WireClientBase wireClientBase = new WireClientBase(api, null, cryptoMlsClient, null);
 
-                CompletableFuture<Void> mlsPublicKeyFuture = CompletableFuture.supplyAsync(() -> {
-                    wireClientBase.updateClientWithMlsPublicKey();
-                    return null;
-                });
+                wireClientBase.updateClientWithMlsPublicKey();
+
                 CompletableFuture<Void> mlsKeyPackagesFuture = CompletableFuture.supplyAsync(() -> {
                     wireClientBase.uploadMlsKeyPackages(KEY_PACKAGE_AMOUNT);
                     return null;
@@ -114,7 +115,6 @@ public class DeviceManagementService {
                    .collect(Collectors.toList()));
 
                 CompletableFuture<Void> combinedFutures = CompletableFuture.allOf(
-                    mlsPublicKeyFuture,
                     mlsKeyPackagesFuture,
                     conversationsFuture
                 ).exceptionally(throwable -> {
@@ -127,7 +127,10 @@ public class DeviceManagementService {
 
                 combinedFutures.get();
 
-                for (Conversation conversation : conversationsFuture.get()) {
+                final List<Conversation> mlsConversations = conversationsFuture.get();
+                Logger.info("Joining %d MLS conversations", mlsConversations.size());
+                for (Conversation conversation : mlsConversations) {
+                    Logger.info("Conversation ID: %s, Name: %s, GroupId: %s", conversation.id, conversation.name, conversation.mlsGroupId);
                     wireClientBase.joinMlsConversation(conversation.id, conversation.mlsGroupId);
                 }
             } catch (ExecutionException exception) {
@@ -141,7 +144,7 @@ public class DeviceManagementService {
         int insert = accessDAO.insert(userId.id,
             userId.domain,
             clientId,
-            refreshToken);
+            access.getCookie().value);
 
         if (0 == insert) {
             Logger.error("ConfirmResource: Failed to insert Access %s:%s",
@@ -170,7 +173,7 @@ public class DeviceManagementService {
         if (userAccess != null) {
             API api = new API(client, null, userAccess.token);
             if (api.isMlsEnabled()) {
-                try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(userAccess.clientId, coreCryptoPassword)) {
+                try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(userAccess.clientId, userId, coreCryptoPassword)) {
                     cryptoMlsClient.wipe();
                 }
             }

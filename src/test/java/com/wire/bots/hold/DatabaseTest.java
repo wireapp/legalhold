@@ -19,6 +19,8 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static com.wire.bots.hold.utils.Constant.DEFAULT_CIPHERSUITE_IDENTIFIER;
+
 public class DatabaseTest {
     private static final DropwizardTestSupport<Config> SUPPORT = new DropwizardTestSupport<>(
         Service.class, "hold.yaml",
@@ -104,7 +106,7 @@ public class DatabaseTest {
         final String cookie2 = "cookie2";
         final String token = "token";
 
-        final int insert = accessDAO.insert(userId.id, userId.domain, clientId, cookie);
+        final int insert = accessDAO.insert(userId.id, userId.domain, clientId, cookie, false, null);
         accessDAO.updateLast(userId.id, userId.domain, last);
         accessDAO.update(userId.id, userId.domain, token, cookie2);
 
@@ -114,10 +116,12 @@ public class DatabaseTest {
 
         accessDAO.disable(userId.id, userId.domain);
 
-        final int insert2 = accessDAO.insert(userId.id, userId.domain, clientId, cookie);
+        final int insert2 = accessDAO.insert(userId.id, userId.domain, clientId, cookie, true, DEFAULT_CIPHERSUITE_IDENTIFIER);
         final LHAccess lhAccess2 = accessDAO.get(userId.id, userId.domain);
         assert lhAccess2 != null;
         assert lhAccess2.created.equals(lhAccess.created);
+        assert lhAccess2.mlsClientCreated;
+        assert lhAccess2.mlsCiphersuite.equals(DEFAULT_CIPHERSUITE_IDENTIFIER);
     }
 
     @Test

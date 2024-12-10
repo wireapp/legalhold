@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wire.bots.hold.DAO.AccessDAO;
 import com.wire.bots.hold.model.database.LHAccess;
+import com.wire.bots.hold.service.DeviceManagementService;
 import com.wire.bots.hold.utils.LoginClientExtension;
 import com.wire.helium.API;
 import com.wire.helium.models.Access;
@@ -26,11 +27,18 @@ public class NotificationProcessor implements Runnable {
     private final Client client;
     private final AccessDAO accessDAO;
     private final HoldMessageResource messageResource;
+    private final DeviceManagementService deviceManagementService;
 
-    NotificationProcessor(Client client, AccessDAO accessDAO, HoldMessageResource messageResource) {
+    NotificationProcessor(
+        Client client,
+        AccessDAO accessDAO,
+        HoldMessageResource messageResource,
+        DeviceManagementService deviceManagementService)
+    {
         this.client = client;
         this.accessDAO = accessDAO;
         this.messageResource = messageResource;
+        this.deviceManagementService = deviceManagementService;
     }
 
     @Override
@@ -53,8 +61,12 @@ public class NotificationProcessor implements Runnable {
 
             final Access access = LoginClientExtension.refreshToken(client, device.clientId, device.cookie);
             accessDAO.update(device.userId.id, device.userId.domain, access.getAccessToken(), access.getCookie().value);
-
             final API api = new API(client, null, access.getAccessToken());
+
+            if (!device.mlsClientCreated) {
+                deviceManagementService.configureMlsClient(device.userId, device.clientId, access.getCookie().value, api);
+            }
+
             NotificationList notificationList = api.retrieveNotifications(
                 device.clientId,
                 device.last,

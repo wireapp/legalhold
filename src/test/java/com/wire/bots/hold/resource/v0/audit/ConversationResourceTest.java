@@ -16,7 +16,10 @@ import com.wire.xenon.models.TextMessage;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import org.apache.http.HttpStatus;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.HttpHeaders;
@@ -27,6 +30,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import static com.wire.bots.hold.utils.Constant.DEFAULT_CIPHERSUITE_IDENTIFIER;
 
 public class ConversationResourceTest {
     private static final String TOKEN = "dummy_token";
@@ -182,7 +187,9 @@ public class ConversationResourceTest {
             userId.id,
             userId.domain,
             USER_CLIENT_ID,
-            USER_COOKIE
+            USER_COOKIE,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
         accessDAO.update(
             userId.id,

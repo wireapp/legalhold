@@ -1,0 +1,5 @@
+ALTER TABLE Access
+ADD COLUMN mlsClientCreated BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE Access
+ADD COLUMN mlsCiphersuite SMALLINT DEFAULT null;

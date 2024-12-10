@@ -34,8 +34,7 @@ public class RemoveResourceV0 {
     public Response remove(@ApiParam @Valid InitPayloadV0 payload) {
         try {
             deviceManagementService.removeDevice(
-                new QualifiedId(payload.userId, null),
-                payload.teamId
+                new QualifiedId(payload.userId, null)
             );
 
             return Response.

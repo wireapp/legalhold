@@ -10,14 +10,16 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AccessDAO {
-    @SqlUpdate("INSERT INTO Access (userId, userDomain, clientId, cookie, updated, created, enabled) " +
-            "VALUES (:userId, :userDomain, :clientId, :cookie, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1) " +
+    @SqlUpdate("INSERT INTO Access (userId, userDomain, clientId, cookie, mlsClientCreated, mlsCiphersuite, updated, created, enabled) " +
+            "VALUES (:userId, :userDomain, :clientId, :cookie, :mlsClientCreated, :mlsCiphersuite, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1) " +
             "ON CONFLICT (userId, userDomain) DO UPDATE SET cookie = EXCLUDED.cookie, clientId = EXCLUDED.clientId, " +
-            "updated = EXCLUDED.updated, enabled = EXCLUDED.enabled")
+            "updated = EXCLUDED.updated, enabled = EXCLUDED.enabled, mlsClientCreated = EXCLUDED.mlsClientCreated, mlsCiphersuite = EXCLUDED.mlsCiphersuite")
     int insert(@Bind("userId") UUID userId,
                @Bind("userDomain") String userDomain,
                @Bind("clientId") String clientId,
-               @Bind("cookie") String cookie);
+               @Bind("cookie") String cookie,
+               @Bind("mlsClientCreated") Boolean mlsClientCreated,
+               @Bind("mlsCiphersuite") Integer mlsCiphersuite);
 
     @SqlUpdate("UPDATE Access SET enabled = 0, updated = CURRENT_TIMESTAMP WHERE userId = :userId " +
         "AND (( :userDomain IS NULL AND userDomain IS null ) or ( :userDomain IS NOT NULL AND userDomain = :userDomain ))")

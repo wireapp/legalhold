@@ -10,6 +10,8 @@ public class LHAccess {
     public String clientId;
     public String token;
     public String cookie;
+    public boolean mlsClientCreated;
+    public Integer mlsCiphersuite;
     public String updated;
     public String created;
     public boolean enabled;

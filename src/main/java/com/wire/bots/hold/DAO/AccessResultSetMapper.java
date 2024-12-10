@@ -20,6 +20,8 @@ public class AccessResultSetMapper implements ColumnMapper<LHAccess> {
         LHAccess.clientId = rs.getString("clientId");
         LHAccess.token = rs.getString("token");
         LHAccess.cookie = rs.getString("cookie");
+        LHAccess.mlsClientCreated = rs.getBoolean("mlsClientCreated");
+        LHAccess.mlsCiphersuite = rs.getInt("mlsCiphersuite");
         LHAccess.updated = rs.getString("updated");
         LHAccess.created = rs.getString("created");
         LHAccess.enabled = rs.getInt("enabled") == 1;

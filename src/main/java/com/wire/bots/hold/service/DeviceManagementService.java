@@ -91,6 +91,7 @@ public class DeviceManagementService {
             storeProteusOnlyDevice(userId, clientId, access.getCookie().value);
         }
     }
+
     /**
      * Confirm a user's device under legal hold. Client authentication is done beforehand
      * <p>

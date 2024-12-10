@@ -10,6 +10,7 @@ import com.wire.helium.API;
 import com.wire.helium.models.Access;
 import com.wire.xenon.WireClientBase;
 import com.wire.xenon.backend.models.Conversation;
+import com.wire.xenon.backend.models.FeatureConfig;
 import com.wire.xenon.backend.models.QualifiedId;
 import com.wire.xenon.crypto.Crypto;
 import com.wire.xenon.crypto.mls.CryptoMlsClient;
@@ -74,7 +75,25 @@ public class DeviceManagementService {
     }
 
     /**
-     * <p>Confirm a user's device under legal hold.</p>
+     * Confirm a user's device under legal hold. Client authentication performed using refreshToken.
+     * @param userId user setup to be put under legal hold
+     * @param clientId user's device
+     * @param refreshToken cookie token from the database, used to get new access token and cookie
+     * @throws RuntimeException when any of the (parallel or not) MLS tasks fails. Or if inserting refreshToken to Database fails.
+     */
+    public void confirmDevice(QualifiedId userId, String clientId, String refreshToken) throws RuntimeException {
+        final Access access = LoginClientExtension.refreshToken(client, clientId, refreshToken);
+        API api = new API(client, null, access.accessToken);
+        boolean mlsClientCreated = configureMlsClient(userId, clientId, access.getCookie().value, api);
+
+        if (!mlsClientCreated) {
+            // If MLS client was added storing the client with MLS data is done already, else store only Proteus data
+            storeProteusOnlyDevice(userId, clientId, access.getCookie().value);
+        }
+    }
+
+    /**
+     * Confirm a user's device under legal hold. Client authentication is done beforehand
      * <p>
      *     If MLS is enabled, then we initialize CryptoMlsClient and WireClientBase, then fetch and upload in parallel:
      *      - PublicKeys
@@ -87,17 +106,18 @@ public class DeviceManagementService {
      *     Stores the refreshToken in order to fetch user notifications while under legal hold
      * </p>
      * @param userId user setup to be put under legal hold
-     * @param teamId user's own team
      * @param clientId user's device
-     * @param refreshToken token used to get expiring api tokens
+     * @param cookie new cookie token used to get access tokens
+     * @param api object to interact with Wire API, setup for the client with a valid access token
      * @throws RuntimeException when any of the (parallel or not) MLS tasks fails. Or if inserting refreshToken to Database fails.
+     * @return true if MLS client was added, false otherwise
      */
-    public void confirmDevice(QualifiedId userId, UUID teamId, String clientId, String refreshToken) throws RuntimeException {
-        final Access access = LoginClientExtension.refreshToken(client, clientId, refreshToken);
-        API api = new API(client, null, access.accessToken);
+    public boolean configureMlsClient(QualifiedId userId, String clientId, String cookie, API api) throws RuntimeException {
+        final FeatureConfig mlsConfig = api.getFeatureConfig();
 
-        if (api.isMlsEnabled()) {
-            try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
+        if (mlsConfig.mls.isMlsStatusEnabled()) {
+            Logger.info("MLS is enabled for user %s, configuring client and joining conversations", userId);
+            try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, mlsConfig.mls.config.defaultCipherSuite, coreCryptoPassword)) {
                 // CryptoMlsClient will be closed from `try` with resource so there is no issue passing
                 // Crypto as null, as we will not be calling wireClientBase.close()
                 WireClientBase wireClientBase = new WireClientBase(api, null, cryptoMlsClient, null);
@@ -133,47 +153,54 @@ public class DeviceManagementService {
                     Logger.info("Conversation ID: %s, Name: %s, GroupId: %s", conversation.id, conversation.name, conversation.mlsGroupId);
                     wireClientBase.joinMlsConversation(conversation.id, conversation.mlsGroupId);
                 }
+                storeProteusAndMlsDevice(userId, clientId, cookie, mlsConfig.mls.config.defaultCipherSuite);
+                return true;
             } catch (ExecutionException exception) {
                 throw new RuntimeException("ExecutionException: " + exception.getCause().getMessage());
             } catch (InterruptedException exception) {
                 throw new RuntimeException("InterruptedException: " + exception.getMessage());
             }
         }
+        return false;
+    }
 
-        // Proteus
+    private void storeProteusAndMlsDevice(QualifiedId userId, String clientId, String cookie, Integer mlsCiphersuite) {
+        storeDevice(userId, clientId, cookie, true, mlsCiphersuite);
+    }
+
+    private void storeProteusOnlyDevice(QualifiedId userId, String clientId, String cookie) {
+        storeDevice(userId, clientId, cookie, false, null);
+    }
+
+    private void storeDevice(QualifiedId userId, String clientId, String cookie, Boolean mlsClientAdded, Integer mlsCiphersuite) {
         int insert = accessDAO.insert(userId.id,
             userId.domain,
             clientId,
-            access.getCookie().value);
+            cookie,
+            mlsClientAdded,
+            mlsCiphersuite);
 
         if (0 == insert) {
-            Logger.error("ConfirmResource: Failed to insert Access %s:%s",
-                userId,
-                clientId);
-
+            Logger.error("ConfirmResource: Failed to insert Access %s:%s", userId, clientId);
             throw new RuntimeException("Cannot insert new device");
         }
 
-        Logger.info("ConfirmResource: team: %s, user:%s, client: %s",
-            teamId,
-            userId,
-            clientId);
+        Logger.info("ConfirmResource: user:%s, client: %s", userId, clientId);
     }
 
     /**
      * Remove a user from legal hold.
+     * <p>Before soft-deleting on the database, cleans up Proteus data and MLS data if it was ever created</p>
      * @param userId user setup to be put under legal hold
-     * @param teamId user's own team
      * @throws IOException
      * @throws CryptoException
      */
-    public void removeDevice(QualifiedId userId, UUID teamId) throws IOException, CryptoException {
+    public void removeDevice(QualifiedId userId) throws IOException, CryptoException {
         // MLS
         LHAccess userAccess = accessDAO.get(userId.id, userId.domain);
         if (userAccess != null) {
-            API api = new API(client, null, userAccess.token);
-            if (api.isMlsEnabled()) {
-                try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(userAccess.clientId, userId, coreCryptoPassword)) {
+            if (userAccess.mlsClientCreated) {
+                try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(userAccess.clientId, userId, userAccess.mlsCiphersuite, coreCryptoPassword)) {
                     cryptoMlsClient.wipe();
                 }
             }
@@ -182,18 +209,12 @@ public class DeviceManagementService {
         // Proteus
         try (Crypto crypto = cf.create(userId)) {
             crypto.purge();
-
-            int removeAccess = accessDAO.disable(userId.id, userId.domain);
-
-            Logger.info(
-                "RemoveResource: team: %s, user: %s, removed: %s",
-                teamId,
-                userId,
-                removeAccess
-            );
         } catch (Exception e) {
             Logger.exception(e, "RemoveLegalHoldDevice: %s", e.getMessage());
             throw e;
         }
+
+        int removeAccess = accessDAO.disable(userId.id, userId.domain);
+        Logger.info("RemoveResource: user: %s, removed: %s", userId, removeAccess);
     }
 }

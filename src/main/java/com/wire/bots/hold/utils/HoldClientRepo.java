@@ -31,8 +31,8 @@ public class HoldClientRepo {
         final LHAccess single = jdbi.onDemand(AccessDAO.class).get(userId.id, userId.domain);
         final API api = new API(httpClient, conversationId, single.token);
 
-        // for receiving notifications
-        final CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(deviceId, userId, coreCryptoPassword);
+        // Create MLS client only if device was already initialized for MLS
+        final CryptoMlsClient cryptoMlsClient = single.mlsClientCreated ? new CryptoMlsClient(deviceId, userId, single.mlsCiphersuite, coreCryptoPassword) : null;
         return new HoldWireClient(userId, deviceId, conversationId, cryptoMlsClient, crypto, api);
     }
 }

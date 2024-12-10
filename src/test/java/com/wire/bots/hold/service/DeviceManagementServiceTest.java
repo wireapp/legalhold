@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.wire.bots.hold.utils.Constant.DEFAULT_CIPHERSUITE_IDENTIFIER;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
 
@@ -51,7 +52,6 @@ public class DeviceManagementServiceTest {
 
     // Consts
     private static final QualifiedId userId = new QualifiedId(UUID.randomUUID(), MetadataDAO.FALLBACK_DOMAIN_KEY);
-    private static final UUID teamId = UUID.randomUUID();
     private static final String clientId = UUID.randomUUID().toString();
     private static final String refreshToken = UUID.randomUUID().toString();
     private static final String coreCryptoPassword = "secr3t";
@@ -103,7 +103,9 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                false,
+                null
             )
         ).thenReturn(1);
         stubFor(get(urlEqualTo("/v6/feature-configs"))
@@ -112,14 +114,16 @@ public class DeviceManagementServiceTest {
             .willReturn(okJson(accessResponse)));
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            false,
+            null
         );
     }
 
@@ -131,7 +135,9 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                false,
+                null
             )
         ).thenReturn(0);
         stubFor(get(urlEqualTo("/v6/feature-configs"))
@@ -139,7 +145,7 @@ public class DeviceManagementServiceTest {
 
         // when
         try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+            deviceManagementService.confirmDevice(userId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
             assert exception.getMessage().equals("Cannot insert new device");
@@ -150,7 +156,9 @@ public class DeviceManagementServiceTest {
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            false,
+            null
         );
     }
 
@@ -166,19 +174,23 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                false,
+                null
             )
         ).thenReturn(1);
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            false,
+            null
         );
     }
 
@@ -196,7 +208,7 @@ public class DeviceManagementServiceTest {
 
         // when
         try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+            deviceManagementService.confirmDevice(userId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
             assert exception.getMessage().equals("{\"error\":\"error from clients/" + clientId + "\"}");
@@ -207,7 +219,9 @@ public class DeviceManagementServiceTest {
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -225,7 +239,7 @@ public class DeviceManagementServiceTest {
 
         // when
         try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+            deviceManagementService.confirmDevice(userId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
             assert exception.getMessage().equals("ExecutionException: {\"error\":\"error from mls/key-packages/self/" + clientId + "\"}");
@@ -236,7 +250,9 @@ public class DeviceManagementServiceTest {
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -258,19 +274,23 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                true,
+                DEFAULT_CIPHERSUITE_IDENTIFIER
             )
         ).thenReturn(1);
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -297,19 +317,23 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                true,
+                DEFAULT_CIPHERSUITE_IDENTIFIER
             )
         ).thenReturn(1);
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -336,19 +360,23 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                true,
+                DEFAULT_CIPHERSUITE_IDENTIFIER
             )
         ).thenReturn(1);
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -377,7 +405,7 @@ public class DeviceManagementServiceTest {
 
         // when
         try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+            deviceManagementService.confirmDevice(userId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
             assert exception.getMessage().equals("{\"error\":\"error from conversations/" + conversationId.domain + "/" + conversationId.id + "/groupinfo\"}");
@@ -418,7 +446,7 @@ public class DeviceManagementServiceTest {
 
         // when
         try {
-            deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+            deviceManagementService.confirmDevice(userId, clientId, refreshToken);
         } catch (Exception exception) {
             // then
             assert exception.getMessage().equals("{\"error\":\"error from mls/commit-bundles\"}");
@@ -461,19 +489,23 @@ public class DeviceManagementServiceTest {
                 userId.id,
                 userId.domain,
                 clientId,
-                refreshToken
+                refreshToken,
+                true,
+                DEFAULT_CIPHERSUITE_IDENTIFIER
             )
         ).thenReturn(1);
 
         // when
-        deviceManagementService.confirmDevice(userId, teamId, clientId, refreshToken);
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
 
         // then
         verify(accessDAO, times(1)).insert(
             userId.id,
             userId.domain,
             clientId,
-            refreshToken
+            refreshToken,
+            true,
+            DEFAULT_CIPHERSUITE_IDENTIFIER
         );
     }
 
@@ -483,17 +515,17 @@ public class DeviceManagementServiceTest {
         when(accessDAO.get(userId.id, userId.domain)).thenReturn(null);
 
         // when
-        deviceManagementService.removeDevice(userId, teamId);
+        deviceManagementService.removeDevice(userId);
 
         // then
         verify(accessDAO, times(1)).get(userId.id, userId.domain);
     }
 
     @Test
-    public void givenKnownUser_whenRemovingDeviceAndMlsIsDisabled_thenNoWipeIsCalled() throws IOException, CryptoException {
+    public void givenKnownUser_whenRemovingDeviceAndMlsIsDisabled_thenWipeIsCalled() throws IOException, CryptoException {
         // given
         Path path = Paths.get("mls/" + clientId);
-        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
+        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, DEFAULT_CIPHERSUITE_IDENTIFIER, coreCryptoPassword)) {
             assert cryptoMlsClient != null;
             assert Files.exists(path);
         }
@@ -504,33 +536,25 @@ public class DeviceManagementServiceTest {
         lhAccess.clientId = clientId;
         lhAccess.token = refreshToken;
         lhAccess.cookie = "cookie";
+        lhAccess.mlsClientCreated = true;
+        lhAccess.mlsCiphersuite = DEFAULT_CIPHERSUITE_IDENTIFIER;
         lhAccess.enabled = true;
 
         when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
-        stubFor(get(urlEqualTo("/v6/feature-configs"))
-            .willReturn(okJson(disabledMlsFeatureConfigJsonResponse)));
 
         // when
-        deviceManagementService.removeDevice(userId, teamId);
+        deviceManagementService.removeDevice(userId);
 
         // then
         verify(accessDAO, times(1)).get(userId.id, userId.domain);
-        assert Files.exists(path);
+        assert Files.notExists(path);
     }
 
     @Test
-    public void givenKnownUser_whenRemovingDeviceAndMlsIsEnabled_thenWipeIsCalled() throws IOException, CryptoException {
-        // given
-        stubFor(get(urlEqualTo("/v6/feature-configs"))
-            .willReturn(okJson(enabledMlsFeatureConfigJsonResponse)));
-        stubFor(get(urlEqualTo("/v6/mls/public-keys"))
-            .willReturn(okJson(mlsPublicKeysSuccessResponse)));
-
+    public void givenKnownUser_whenRemovingDeviceAndMlsWasNotCreated_thenNoMlsFilesExist() throws IOException, CryptoException {
+        String clientId = UUID.randomUUID().toString();
         Path path = Paths.get("mls/" + clientId);
-        try (CryptoMlsClient cryptoMlsClient = new CryptoMlsClient(clientId, userId, coreCryptoPassword)) {
-            assert cryptoMlsClient != null;
-            assert Files.exists(path);
-        }
+        assert Files.notExists(path);
 
         LHAccess lhAccess = new LHAccess();
         lhAccess.last = UUID.randomUUID();
@@ -538,12 +562,14 @@ public class DeviceManagementServiceTest {
         lhAccess.clientId = clientId;
         lhAccess.token = refreshToken;
         lhAccess.cookie = "cookie";
+        lhAccess.mlsClientCreated = false;
+        lhAccess.mlsCiphersuite = null;
         lhAccess.enabled = true;
 
         when(accessDAO.get(userId.id, userId.domain)).thenReturn(lhAccess);
 
         // when
-        deviceManagementService.removeDevice(userId, teamId);
+        deviceManagementService.removeDevice(userId);
 
         // then
         verify(accessDAO, times(1)).get(userId.id, userId.domain);
@@ -606,8 +632,8 @@ public class DeviceManagementServiceTest {
         {
             "mls": {
                 "config": {
-                  "allowedCipherSuites": [65535],
-                  "defaultCipherSuite": 65535,
+                  "allowedCipherSuites": [1],
+                  "defaultCipherSuite": 1,
                   "defaultProtocol": "proteus",
                   "protocolToggleUsers": [],
                   "supportedProtocols": ["proteus"]
@@ -694,7 +720,7 @@ public class DeviceManagementServiceTest {
             "              \"access_role\": [\n" +
             "                \"team_member\"\n" +
             "              ],\n" +
-            "              \"cipher_suite\": 65535,\n" +
+            "              \"cipher_suite\": 1,\n" +
             "              \"creator\": \"99db9768-04e3-4b5d-9268-831b6a25c4ab\",\n" +
             "              \"epoch\": 18446744073709552000,\n" +
             "              \"epoch_timestamp\": \"2021-05-12T10:52:02Z\",\n" +

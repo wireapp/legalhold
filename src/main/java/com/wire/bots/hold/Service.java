@@ -84,7 +84,7 @@ public class Service extends Application<Config> {
     @Override
     public void initialize(Bootstrap<Config> bootstrap) {
         bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
-                bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+            bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
 
         bootstrap.addBundle(new SwaggerBundle<>() {
             @Override
@@ -173,12 +173,12 @@ public class Service extends Application<Config> {
         final HoldClientRepo repo = new HoldClientRepo(jdbi, cf, httpClient, config.coreCryptoPassword);
 
         final HoldMessageResource holdMessageResource = new HoldMessageResource(new MessageHandler(jdbi), repo);
-        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource);
+        final NotificationProcessor notificationProcessor = new NotificationProcessor(httpClient, accessDAO, holdMessageResource, deviceManagementService);
 
         environment.lifecycle()
-                .scheduledExecutorService("notifications")
-                .build()
-                .scheduleWithFixedDelay(notificationProcessor, 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
+            .scheduledExecutorService("notifications")
+            .build()
+            .scheduleWithFixedDelay(notificationProcessor, 10, config.sleep.toSeconds(), TimeUnit.SECONDS);
 
         CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
 
@@ -199,24 +199,24 @@ public class Service extends Application<Config> {
 
     private Client createHttpClient(Config config, Environment env) {
         return new JerseyClientBuilder(env)
-                .using(config.getJerseyClient())
-                .withProvider(MultiPartFeature.class)
-                .withProvider(JacksonJsonProvider.class)
-                .build(getName());
+            .using(config.getJerseyClient())
+            .withProvider(MultiPartFeature.class)
+            .withProvider(JacksonJsonProvider.class)
+            .build(getName());
     }
 
     protected Jdbi buildJdbi(Config.Database database, Environment env) {
         return Jdbi
-                .create(database.build(env.metrics(), getName()))
-                .installPlugin(new SqlObjectPlugin());
+            .create(database.build(env.metrics(), getName()))
+            .installPlugin(new SqlObjectPlugin());
     }
 
     protected void setupDatabase(Config.Database database) {
         Flyway flyway = Flyway
-                .configure()
-                .dataSource(database.getUrl(), database.getUser(), database.getPassword())
-                .baselineOnMigrate(database.baseline)
-                .load();
+            .configure()
+            .dataSource(database.getUrl(), database.getUser(), database.getPassword())
+            .baselineOnMigrate(database.baseline)
+            .load();
         flyway.migrate();
     }
 

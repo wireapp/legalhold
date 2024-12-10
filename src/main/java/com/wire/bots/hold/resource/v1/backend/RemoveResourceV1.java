@@ -32,7 +32,7 @@ public class RemoveResourceV1 {
         @ApiResponse(code = 200, message = "Legal Hold Device was removed")})
     public Response remove(@ApiParam @Valid InitPayloadV1 payload) {
         try {
-            deviceManagementService.removeDevice(payload.userId, payload.teamId);
+            deviceManagementService.removeDevice(payload.userId);
 
             return Response
                 .ok()

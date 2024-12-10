@@ -6,7 +6,7 @@
 
     <groupId>com.wire.bots</groupId>
     <artifactId>hold</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
 
     <name>Legal Hold</name>
     <description>Legal Hold Service For Wire</description>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.wire</groupId>
             <artifactId>helium</artifactId>
-            <version>1.6.0</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.smoketurner</groupId>

@@ -36,7 +36,6 @@ public class ConfirmResourceV0 {
         try {
             deviceManagementService.confirmDevice(
                 new QualifiedId(payload.userId, null),
-                payload.teamId,
                 payload.clientId,
                 payload.refreshToken
             );

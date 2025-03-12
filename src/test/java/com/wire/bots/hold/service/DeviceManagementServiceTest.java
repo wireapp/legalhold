@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.wire.bots.hold.utils.Constant.CUSTOM_CIPHERSUITE_IDENTIFIER;
 import static com.wire.bots.hold.utils.Constant.DEFAULT_CIPHERSUITE_IDENTIFIER;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.*;
@@ -510,6 +511,62 @@ public class DeviceManagementServiceTest {
     }
 
     @Test
+    public void givenEnabledMls_whenConfirmingDevice_thenCorrectCipherSuiteIsSet() throws IOException {
+        // given
+        QualifiedId conversationId = new QualifiedId(UUID.randomUUID(), MetadataDAO.FALLBACK_DOMAIN_KEY);
+
+        stubFor(get(urlEqualTo("/v6/feature-configs"))
+            .willReturn(okJson(enabledCustomMlsFeatureConfigJsonResponse)));
+        stubFor(post(urlEqualTo("/v6/access?client_id=" + clientId))
+            .willReturn(okJson(accessResponse)));
+        stubFor(get(urlEqualTo("/v6/mls/public-keys"))
+            .willReturn(okJson(mlsPublicKeysSuccessResponse)));
+        stubFor(put(urlEqualTo("/v6/clients/" + clientId))
+            .willReturn(ok()));
+        stubFor(post(urlEqualTo("/v6/mls/key-packages/self/" + clientId))
+            .willReturn(created()));
+        stubFor(post(urlEqualTo("/v6/conversations/list-ids"))
+            .willReturn(okJson(getConversationsListIdsSuccessResponse(conversationId))));
+        stubFor(post(urlEqualTo("/v6/conversations/list"))
+            .willReturn(okJson(getConversationsListSuccessResponse(conversationId))));
+        // GroupInfo of a real conversation, stored in a binary test file
+        try (InputStream inputStream = new FileInputStream("src/test/resources/dummy_mls_conversation_groupinfo.bin")) {
+            byte[] groupInfo = inputStream.readAllBytes();
+            stubFor(get(urlEqualTo("/v6/conversations/" + conversationId.domain + "/" + conversationId.id.toString() + "/groupinfo"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withBody(groupInfo)));
+        }
+        stubFor(post(urlEqualTo("/v6/mls/commit-bundles"))
+            .willReturn(ok()));
+
+        when(
+            accessDAO.insert(
+                userId.id,
+                userId.domain,
+                clientId,
+                refreshToken,
+                true,
+                CUSTOM_CIPHERSUITE_IDENTIFIER
+            )
+        ).thenReturn(1);
+
+        // when
+        deviceManagementService.confirmDevice(userId, clientId, refreshToken);
+
+        // then
+        verify(accessDAO, times(1)).insert(
+            userId.id,
+            userId.domain,
+            clientId,
+            refreshToken,
+            true,
+            CUSTOM_CIPHERSUITE_IDENTIFIER
+        );
+    }
+
+    @Test
     public void givenUnknownUser_whenRemovingDevice_thenNoMlsCallsAreMade() throws IOException, CryptoException {
         // given
         when(accessDAO.get(userId.id, userId.domain)).thenReturn(null);
@@ -637,6 +694,23 @@ public class DeviceManagementServiceTest {
                   "defaultProtocol": "proteus",
                   "protocolToggleUsers": [],
                   "supportedProtocols": ["proteus"]
+                },
+                "lockStatus": "locked",
+                "status": "enabled",
+                "ttl": "unlimited"
+            }
+        }
+    """;
+
+    private static final String enabledCustomMlsFeatureConfigJsonResponse = """
+        {
+            "mls": {
+                "config": {
+                  "allowedCipherSuites": [7],
+                  "defaultCipherSuite": 7,
+                  "defaultProtocol": "mls",
+                  "protocolToggleUsers": [],
+                  "supportedProtocols": ["mls"]
                 },
                 "lockStatus": "locked",
                 "status": "enabled",
